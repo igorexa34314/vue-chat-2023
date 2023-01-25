@@ -1,9 +1,11 @@
 <template>
-	<v-container class="container">
-		<div class="chat__content">
+	<v-container class="container pt-6">
+		<div class="chat__content mb-10">
 			<div class="messages-field">
-				<MessageItem v-for="m in messages.getAllMessages" :key="m.id" :textContent="m.textContent"
-					:sender="m.user" />
+				<TransitionGroup name="messages-list">
+					<MessageItem v-for="m in messages.getAllMessages" :key="m.id" :textContent="m.textContent"
+						:sender="m.user" />
+				</TransitionGroup>
 			</div>
 			<MessageForm class="message-form" @submitForm="createMessage" />
 		</div>
@@ -44,9 +46,19 @@ export default {
 	position: relative;
 }
 .message-form {
-	position: absolute;
+	position: fixed;
 	left: 0;
 	right: 0;
 	bottom: 0;
+}
+
+.messages-list-enter-active,
+.messages-list-leave-active {
+	transition: all 0.5s ease;
+}
+.messages-list-enter-from,
+.messages-list-leave-to {
+	opacity: 0;
+	transform: translateX(30px);
 }
 </style>

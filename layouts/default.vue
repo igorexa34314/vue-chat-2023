@@ -8,25 +8,17 @@
 
 			<v-spacer></v-spacer>
 
-			<v-btn variant="text" icon="mdi-magnify"></v-btn>
+			<Transition name="append-search"><v-text-field v-show="searchEnabled" ref="search" @blur="searchEnabled=false"
+					class="mr-3" placeholder="Поиск" variant="solo" density="compact" hide-details /></Transition>
+
+			<v-btn variant="text" icon="mdi-magnify" @click="enableSearch"></v-btn>
 
 			<v-btn variant="text" icon="mdi-filter"></v-btn>
 
 			<v-btn variant="text" icon="mdi-dots-vertical"></v-btn>
 		</v-app-bar>
 
-		<v-navigation-drawer v-model="drawer" location="left" :rail="rail" rail-width="85" width="320" @click="rail=!rail"
-			permanent>
-			<v-list lines="false">
-				<v-list-item title="User 1">
-					<template v-slot:prepend>
-						<v-avatar image="https://cdn.vuetifyjs.com/images/john.png" variant="plain">
-
-						</v-avatar>
-					</template>
-				</v-list-item>
-			</v-list>
-		</v-navigation-drawer>
+		<NavDrawer v-model="drawer" :rail="rail" @click="rail=!rail" />
 
 		<v-main>
 			<slot />
@@ -37,16 +29,31 @@
 <script>
 export default {
 	setup() {
-
+		const searchEnabled = ref(false);
+		const search = ref(null);
 		const drawer = ref(true);
 		const rail = ref(false);
+
+		const enableSearch = () => {
+			searchEnabled.value = true;
+		};
+		watch(searchEnabled, newVal => { if (newVal) search.value.focus(); });
 		return {
-			drawer, rail
+			drawer, rail,
+			searchEnabled, search, enableSearch,
 		}
 	}
 }
 </script>
 
 <style lang="scss" scoped>
+.append-search-enter-active,
+.append-search-leave-active {
+	transition: opacity 0.3s ease;
+}
 
+.append-search-enter-from,
+.append-search-leave-to {
+	opacity: 0;
+}
 </style>

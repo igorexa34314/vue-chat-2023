@@ -10,6 +10,7 @@
 	"dependencies": {
 		"@mdi/font": "^7.1.96",
 		"@pinia/nuxt": "^0.4.6",
+		"nuxt-socket-io": "^3.0.12",
 		"pinia": "^2.0.29",
 		"uuid": "^9.0.0",
 		"vuetify": "^3.0.5"
@@ -18,5 +19,8 @@
 		"nuxt": "^3.0.0",
 		"sass": "^1.57.1",
 		"vite-plugin-vuetify": "^1.0.1"
+	},
+	"overrides": {
+		"vue": "latest"
 	}
 }
