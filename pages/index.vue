@@ -5,11 +5,11 @@
 </template>
 
 <script>
+
+
 definePageMeta({ layout: 'empty' })
 export default {
 	setup() {
-
-
 		return {}
 	}
 }

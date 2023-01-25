@@ -20,8 +20,7 @@
 			<v-list lines="false">
 				<v-list-item title="User 1">
 					<template v-slot:prepend>
-						<v-avatar image="https://cdn.vuetifyjs.com/images/john.png" variant="plain"
-							style="pointer-events: none;">
+						<v-avatar image="https://cdn.vuetifyjs.com/images/john.png" variant="plain">
 
 						</v-avatar>
 					</template>
