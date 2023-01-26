@@ -8,8 +8,10 @@
 
 			<v-spacer></v-spacer>
 
-			<Transition name="append-search"><v-text-field v-show="searchEnabled" ref="search" @blur="searchEnabled=false"
-					class="mr-3" placeholder="Поиск" variant="solo" density="compact" hide-details /></Transition>
+			<Transition name="append-search">
+				<v-text-field v-show="searchEnabled" ref="search" @blur="searchEnabled = false" class="mr-3"
+					placeholder="Поиск" variant="solo" density="compact" hide-details />
+			</Transition>
 
 			<v-btn variant="text" icon="mdi-magnify" @click="enableSearch"></v-btn>
 
@@ -18,7 +20,7 @@
 			<v-btn variant="text" icon="mdi-dots-vertical"></v-btn>
 		</v-app-bar>
 
-		<NavDrawer v-model="drawer" :rail="rail" @click="rail=!rail" />
+		<NavDrawer v-model="drawer" :rail="rail" @click="rail = !rail" />
 
 		<v-main>
 			<slot />

@@ -32,8 +32,6 @@ export default defineNuxtConfig({
 	},
 	modules: [
 		'@pinia/nuxt',
-		'nuxt-socket-io',
-
 		async (options, nuxt) => {
 			nuxt.hooks.hook('vite:extendConfig', config =>
 				// eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -41,28 +39,5 @@ export default defineNuxtConfig({
 				config.plugins.push(vuetify())
 			);
 		}
-	],
-	io: {
-		sockets: [
-			{
-				// At least one entry is required
-				name: 'home',
-				url: process.env.BASE_URL + '/' || 'http://localhost:3000',
-				default: true,
-				vuex: {
-					/* see section below */
-				},
-				namespaces: {
-					/* see section below */
-				}
-			}
-			//  iox: [
-			//    'chatMessage --> chats/message',
-			//    'progress --> examples/progress',
-			//    'examples/sample <-- examples/sample',
-			//    'examples/someObj', // Bidirectional
-			//    'bidirectional'
-			//  ],
-		]
-	}
+	]
 });

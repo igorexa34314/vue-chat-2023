@@ -8,21 +8,15 @@
 	</div>
 </template>
 
-<script>
-export default {
-	name: 'message-form',
-	setup(props, { emit }) {
-		const text = ref('');
+<script setup>
+const emit = defineEmits(['submitForm'])
 
-		const createMessage = () => {
-			if (text.value) {
-				emit('submitForm', text.value);
-				text.value = '';
-			}
-		}
-		return {
-			text, createMessage
-		}
+const text = ref('');
+
+const createMessage = () => {
+	if (text.value) {
+		emit('submitForm', text.value);
+		text.value = '';
 	}
 }
 </script>

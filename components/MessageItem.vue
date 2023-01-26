@@ -13,25 +13,17 @@
 	</div>
 </template>
 
-<script>
-export default {
-	props: {
-		sender: {
-			type: String,
-			required: true,
-		},
-		textContent: {
-			type: String,
-			required: true,
-		}
+<script setup>
+const props = defineProps({
+	sender: {
+		type: String,
+		required: true,
 	},
-	setup(props, { }) {
-
-
-		return {}
-	},
-	name: 'message-item',
-}
+	textContent: {
+		type: String,
+		required: true,
+	}
+});
 </script>
 
 <style lang="scss" scoped>

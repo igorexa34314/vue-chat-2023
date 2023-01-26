@@ -4,15 +4,9 @@
 	</v-container>
 </template>
 
-<script>
-
-
+<script setup>
 definePageMeta({ layout: 'empty' })
-export default {
-	setup() {
-		return {}
-	}
-}
+const socket = ref();
 </script>
 
 <style lang="scss" scoped>

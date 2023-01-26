@@ -6,14 +6,13 @@
 
 		<v-card-text class="mt-3">
 			<v-form ref="form" v-model="valid" lazy-validation>
-				<v-text-field v-model="name" :counter="20" :rules="nameRules" label="Ваше имя" variant="underlined"
-					clearable required></v-text-field>
+				<v-text-field v-model="name" :rules="nameRules" label="Ваше имя" variant="underlined" clearable required />
 
 				<v-text-field v-model="email" :rules="emailRules" label="Ваша почта" variant="underlined" clearable
-					required></v-text-field>
+					required />
 
 				<v-text-field v-model="room" :rules="roomRules" label="Номер комнаты" variant="underlined" clearable
-					required></v-text-field>
+					required />
 
 				<v-radio-group v-model="gender" inline label="Ваш пол" class="mt-6">
 					<v-radio v-for="gender in genderItems" :key="gender.value" :label="gender.name" :value="gender.value"
@@ -36,54 +35,43 @@
 
 </template>
 
-<script>
-export default {
-	name: 'login-form',
-	setup(props, { router }) {
-		const form = ref();
+<script setup>
+const form = ref();
+const genderItems = [
+	{ name: 'Мужской', value: 'male' },
+	{ name: 'Женский', value: 'female' },
+	{ name: 'Не указывать', value: 'unknown' },
+];
+const gender = ref('unknown');
+const valid = ref(true);
+const name = ref('');
+const nameRules = [
+	v => !!v || 'Введите имя',
+	v => (v && v.length >= 2 && v.length <= 16) || 'Имя должно быть в пределах от 2 до 16 символов',
+];
+const room = ref('');
+const roomRules = [
+	v => !!v || 'Введите номер комнаты',
+	v => (v % 1 === 0) || 'Номер комнаты должен быть числом',
+];
+const email = ref('');
+const emailRules = [
+	v => !!v || 'Введите почту',
+	v => /.+@.+\..+/.test(v) || 'Введите корректную почту',
+];
 
-		const genderItems = [
-			{ name: 'Мужской', value: 'male' },
-			{ name: 'Женский', value: 'female' },
-			{ name: 'Не указывать', value: 'unknown' },
-		];
-		const gender = ref('unknown');
-		const valid = ref(true);
-		const name = '';
-		const nameRules = [
-			v => !!v || 'Введите имя',
-			v => (v && v.length >= 2) || 'Имя должно содержать более 2 символов',
-			v => (v && v.length <= 20) || 'Имя должно содержать менее 16 символов',
-		];
-		const room = ref('');
-		const roomRules = [
-			v => !!v || 'Введите номер комнаты',
-			v => (v % 1 === 0) || 'Номер комнаты должен быть числом',
-		];
-		const email = ref('');
-		const emailRules = [
-			v => !!v || 'Введите почту',
-			v => /.+@.+\..+/.test(v) || 'Введите корректную почту',
-		];
+const agreeTerms = ref(false);
+const submitForm = async () => {
+	const { valid } = await form.value.validate();
 
-		const agreeTerms = ref(false);
-		const submitForm = async () => {
-			const { valid } = await form.value.validate();
-
-			if (valid) {
-				return navigateTo('/chatroom');
-			}
-		};
-		return {
-			genderItems, gender,
-			name, nameRules,
-			room, roomRules,
-			email, emailRules,
-			agreeTerms,
-			valid, form, submitForm,
+	if (valid) {
+		const user = {
+			name: name,
+			email: email,
 		}
-	},
-}
+		return navigateTo('/chatroom');
+	}
+};
 </script>
 
 <style lang="scss" scoped>

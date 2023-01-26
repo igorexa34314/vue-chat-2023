@@ -11,31 +11,23 @@
 	</v-navigation-drawer>
 </template>
 
-<script>
-
-export default {
-	name: 'nav-drawer',
-	props: {
-		rail: {
-			type: Boolean,
-			default: false,
-		},
-		modelValue: {
-			type: Boolean,
-			default: true,
-		},
+<script setup>
+const props = defineProps({
+	rail: {
+		type: Boolean,
+		default: false,
 	},
-	setup(props, { emit }) {
-		const drawer = computed({
-			get: () => props.modelValue,
-			set: value => emit('update:modelValue', value),
-		});
+	modelValue: {
+		type: Boolean,
+		default: true,
+	},
+});
+const emit = defineEmits(['update:modelValue']);
 
-		return {
-			drawer
-		}
-	}
-}
+const drawer = computed({
+	get: () => props.modelValue,
+	set: value => emit('update:modelValue', value),
+});
 </script>
 
 <style lang="scss" scoped>

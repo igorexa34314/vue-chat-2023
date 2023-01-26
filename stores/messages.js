@@ -10,6 +10,9 @@ export const useMessagesStore = defineStore('messages', {
 	actions: {
 		addMessage(message) {
 			this.messages.push(message);
+		},
+		messageRecieved() {
+			console.log('Message');
 		}
 	}
 });

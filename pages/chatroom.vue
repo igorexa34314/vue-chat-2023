@@ -3,7 +3,7 @@
 		<div class="chat__content mb-10">
 			<div class="messages-field">
 				<TransitionGroup name="messages-list">
-					<MessageItem v-for="m in messages.getAllMessages" :key="m.id" :textContent="m.textContent"
+					<MessageItem v-for="m in messagesStore.getAllMessages" :key="m.id" :textContent="m.textContent"
 						:sender="m.user" />
 				</TransitionGroup>
 			</div>
@@ -12,27 +12,22 @@
 	</v-container>
 </template>
 
-<script>
+<script setup>
 import { useMessagesStore } from '@/stores/messages';
 import { v4 as uuidv4 } from 'uuid';
 
-// definePageMeta({ layout: 'default' })
-export default {
-	setup() {
-		const messagesStore = useMessagesStore();
-		const createMessage = messageText => {
-			messagesStore.addMessage({
-				id: uuidv4(),
-				user: 'Igor Kononenko',
-				textContent: messageText,
-				date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString(),
-			})
-		};
-		return {
-			messages: messagesStore, createMessage,
-		}
-	}
-}
+definePageMeta({ layout: 'default' })
+
+const messagesStore = useMessagesStore();
+
+const createMessage = messageText => {
+	messagesStore.addMessage({
+		id: uuidv4(),
+		user: 'Igor Kononenko',
+		textContent: messageText,
+		date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString(),
+	})
+};
 </script>
 
 <style lang="scss" scoped>
