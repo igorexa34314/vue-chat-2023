@@ -1,9 +1,10 @@
 <template>
 	<v-container class="container pt-6">
+		<h2>Чат страница {{ user.name }}</h2>
 		<div class="chat__content mb-10">
 			<div class="messages-field">
 				<TransitionGroup name="messages-list">
-					<MessageItem v-for="m in messagesStore.getAllMessages" :key="m.id" :textContent="m.textContent"
+					<MessageItem v-for="m in messagesStore.messages" :key="m.id" :textContent="m.textContent"
 						:sender="m.user" />
 				</TransitionGroup>
 			</div>
@@ -14,11 +15,14 @@
 
 <script setup>
 import { useMessagesStore } from '@/stores/messages';
+import { useUsersStore } from '@/stores/users';
 import { v4 as uuidv4 } from 'uuid';
 
-definePageMeta({ layout: 'default' })
-
+definePageMeta({ layout: 'default', middleware: 'chatroom' })
 const messagesStore = useMessagesStore();
+const usersStore = useUsersStore();
+const user = usersStore.user;
+useHead({ title: `Комната ${user.room}`, });
 
 const createMessage = messageText => {
 	messagesStore.addMessage({

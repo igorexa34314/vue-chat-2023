@@ -4,9 +4,6 @@ export const useMessagesStore = defineStore('messages', {
 	state: () => ({
 		messages: []
 	}),
-	getters: {
-		getAllMessages: state => state.messages
-	},
 	actions: {
 		addMessage(message) {
 			this.messages.push(message);

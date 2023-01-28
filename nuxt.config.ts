@@ -31,6 +31,7 @@ export default defineNuxtConfig({
 		}
 	},
 	modules: [
+		'nuxt-socket-io',
 		'@pinia/nuxt',
 		async (options, nuxt) => {
 			nuxt.hooks.hook('vite:extendConfig', config =>
@@ -39,5 +40,39 @@ export default defineNuxtConfig({
 				config.plugins.push(vuetify())
 			);
 		}
-	]
+	],
+	io: {
+		sockets: [
+			{
+				// At least one entry is required
+				name: 'main',
+				url: process.env.BASE_URL || 'http://localhost:3000',
+				default: true,
+				vuex: {},
+				namespaces: {},
+				// @ts-ignore
+				iox: [
+					// 'sendMessage'
+					// 'progress --> examples/progress',
+					// 'examples/sample <-- examples/sample'
+					// 'examples/someObj', // Bidirectional
+					// 'bidirectional'
+				],
+				// @ts-ignore
+				vuex: {
+					// mutations: ['progress --> examples/SET_PROGRESS'],
+					// actions: ['sendMessage --> messages/messageRecieved']
+					// emitBacks: [
+					// 	'examples/someObj',
+					// 	'examples/sample',
+					// 	'sample2 <-- examples/sample2',
+					// 	'io/titleFromUser' // TBD: update tests
+					// ]
+				}
+			}
+		],
+		server: {
+			ioSvc: './server/socket/io.js'
+		}
+	}
 });

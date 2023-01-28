@@ -5,8 +5,36 @@
 </template>
 
 <script setup>
-definePageMeta({ layout: 'empty' })
-const socket = ref();
+definePageMeta({ layout: 'empty' });
+useHead({ title: 'Главная', });
+
+const ctx = useNuxtApp();
+let socket = null;
+ctx.onUnmounted = onUnmounted;
+onMounted(() => {
+	socket = ctx.$nuxtSocket({
+		name: 'main',
+		reconnection: true,
+	})
+	console.log(socket);
+	console.log(ctx.$ioState);
+	// socket.on('messageRecieved', (msg, cb) => {
+	// 	console.log('Its your message')
+	// })
+	mt1();
+	socket.on('newMessage', data => {
+		console.log('Message from server recieved', data)
+	})
+});
+
+const mt1 = () => {
+	socket.emit('sendMessage', {
+		hello: 'world'
+	}, (resp) => {
+		console.log('Message was send')
+	})
+};
+
 </script>
 
 <style lang="scss" scoped>

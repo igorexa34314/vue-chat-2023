@@ -6,13 +6,14 @@
 
 		<v-card-text class="mt-3">
 			<v-form ref="form" v-model="valid" lazy-validation>
-				<v-text-field v-model="name" :rules="nameRules" label="Ваше имя" variant="underlined" clearable required />
+				<v-text-field v-model="name" :rules="nameRules" label="Ваше имя" class="" variant="underlined" counter="16"
+					clearable required />
 
-				<v-text-field v-model="email" :rules="emailRules" label="Ваша почта" variant="underlined" clearable
-					required />
+				<v-text-field v-model="email" :rules="emailRules" label="Ваша почта" class="mt-5" variant="underlined"
+					clearable required />
 
-				<v-text-field v-model="room" :rules="roomRules" label="Номер комнаты" variant="underlined" clearable
-					required />
+				<v-text-field v-model="room" :rules="roomRules" label="Номер комнаты" class="mt-5" variant="underlined"
+					clearable required />
 
 				<v-radio-group v-model="gender" inline label="Ваш пол" class="mt-6">
 					<v-radio v-for="gender in genderItems" :key="gender.value" :label="gender.name" :value="gender.value"
@@ -36,6 +37,9 @@
 </template>
 
 <script setup>
+import { useUsersStore } from '@/stores/users';
+
+const usersStore = useUsersStore();
 const form = ref();
 const genderItems = [
 	{ name: 'Мужской', value: 'male' },
@@ -68,8 +72,11 @@ const submitForm = async () => {
 		const user = {
 			name: name,
 			email: email,
+			gender: gender,
+			room: room,
 		}
-		return navigateTo('/chatroom');
+		usersStore.setUser(user);
+		navigateTo('/chatroom');
 	}
 };
 </script>

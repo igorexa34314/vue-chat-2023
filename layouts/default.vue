@@ -1,10 +1,12 @@
 <template>
 	<v-layout class="app">
 		<v-app-bar color="blue-grey-darken-4" :elevation="7" prominent>
-			<v-app-bar-nav-icon variant="text" @click.stop="rail = !rail"></v-app-bar-nav-icon>
-			<v-btn variant="text" icon="mdi-eye-off-outline" @click="drawer = !drawer"></v-btn>
 
-			<v-toolbar-title>Чат комнаты 1</v-toolbar-title>
+			<v-app-bar-nav-icon variant="text" @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
+
+			<v-btn variant="text" icon="mdi-arrow-left" @click="exit"></v-btn>
+
+			<v-toolbar-title>Чат комнаты {{ useRequestEvent.room }}</v-toolbar-title>
 
 			<v-spacer></v-spacer>
 
@@ -20,7 +22,7 @@
 			<v-btn variant="text" icon="mdi-dots-vertical"></v-btn>
 		</v-app-bar>
 
-		<NavDrawer v-model="drawer" :rail="rail" @click="rail = !rail" />
+		<NavDrawer v-model="drawer" />
 
 		<v-main>
 			<slot />
@@ -28,23 +30,23 @@
 	</v-layout>
 </template>
 
-<script>
-export default {
-	setup() {
-		const searchEnabled = ref(false);
-		const search = ref(null);
-		const drawer = ref(true);
-		const rail = ref(false);
+<script setup>
+import { useUsersStore } from '@/stores/users';
+const usersStore = useUsersStore();
+const user = usersStore.user;
 
-		const enableSearch = () => {
-			searchEnabled.value = true;
-		};
-		watch(searchEnabled, newVal => { if (newVal) search.value.focus(); });
-		return {
-			drawer, rail,
-			searchEnabled, search, enableSearch,
-		}
-	}
+const searchEnabled = ref(false);
+const search = ref(null);
+const drawer = ref(true);
+
+const enableSearch = () => {
+	searchEnabled.value = true;
+};
+watch(searchEnabled, newVal => { if (newVal) search.value.focus(); });
+
+const exit = () => {
+	navigateTo({ path: '/', query: { message: 'leftChat' } });
+	usersStore.clearData();
 }
 </script>
 
