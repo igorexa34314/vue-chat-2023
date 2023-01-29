@@ -48,7 +48,11 @@ export default defineNuxtConfig({
 				name: 'main',
 				url: process.env.BASE_URL || 'http://localhost:3000',
 				default: true,
-				vuex: {},
+
+				vuex: {
+					// @ts-ignore
+					actions: [{ newMessage: 'chat/addMessage' }]
+				},
 				namespaces: {},
 				// @ts-ignore
 				iox: [

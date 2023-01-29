@@ -6,7 +6,7 @@
 
 			<v-btn variant="text" icon="mdi-arrow-left" @click="exit"></v-btn>
 
-			<v-toolbar-title>Чат комнаты {{ useRequestEvent.room }}</v-toolbar-title>
+			<v-toolbar-title>Чат комнаты {{ user.room }}</v-toolbar-title>
 
 			<v-spacer></v-spacer>
 

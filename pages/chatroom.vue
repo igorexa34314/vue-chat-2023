@@ -3,9 +3,9 @@
 		<h2>Чат страница {{ user.name }}</h2>
 		<div class="chat__content mb-10">
 			<div class="messages-field">
-				<TransitionGroup name="messages-list">
-					<MessageItem v-for="m in messages" :key="m.id" :textContent="m.textContent" :sender="m.user" />
-				</TransitionGroup>
+				<!-- <TransitionGroup name="messages-list">
+					<MessageItem v-for="(m, index) in messages" :key="index" :textContent="m.textContent" :sender="m.user" />
+				</TransitionGroup> -->
 			</div>
 			<MessageForm class="message-form" @submitForm="createMessage" />
 		</div>
@@ -13,14 +13,21 @@
 </template>
 
 <script setup>
-import { useMessagesStore } from '@/stores/messages';
+import { useChatStore } from '@/stores/chat';
 import { useUsersStore } from '@/stores/users';
 import { v4 as uuidv4 } from 'uuid';
 
 definePageMeta({ layout: 'default', middleware: 'chatroom' })
-const messagesStore = useMessagesStore();
+const messagesStore = useChatStore();
 const usersStore = useUsersStore();
 const messages = computed(() => messagesStore.messages);
+
+const m = useNuxtApp().$ioState().value.messages;
+const mesState = useState('message', () => m)
+onMounted(() => {
+	// console.log(mesState);
+	console.log(messages);
+});
 const user = usersStore.user;
 useHead({ title: `Комната ${user.room}`, });
 

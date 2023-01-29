@@ -17,9 +17,6 @@ onMounted(() => {
 		reconnection: true,
 	})
 	console.log(socket);
-	watch(ctx.$ioState, () => {
-		console.log(ctx.$ioState);
-	})
 	// socket.on('messageRecieved', (msg, cb) => {
 	// 	console.log('Its your message')
 	// })

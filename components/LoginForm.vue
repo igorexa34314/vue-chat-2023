@@ -78,10 +78,10 @@ const submitForm = async () => {
 
 	if (valid) {
 		const user = {
-			name: name,
-			email: email,
-			gender: gender,
-			room: room,
+			name: name.value,
+			email: email.value,
+			gender: gender.value,
+			room: room.value,
 		}
 		socket.emit('userJoined', user, data => {
 			console.log(data);
@@ -90,7 +90,7 @@ const submitForm = async () => {
 			} else {
 				user.id = data.userId;
 				usersStore.setUser(user);
-				console.log(ctx.$ioState().value.messages);
+				console.log('IO state:', ctx.$ioState().value.messages);
 				navigateTo('/chatroom');
 			}
 		});

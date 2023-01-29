@@ -10,7 +10,7 @@ export default function (socket, io) {
 				if (!data.name || !data.room) {
 					rej(new Error('Данные не корректны'));
 				}
-				socket.emit('newMessage', toObj('admin', `Добро пожаловать ${data.name}`));
+				socket.emit('newMessage', mesItem('admin', `Добро пожаловать ${data.name}`));
 				res({ userId: socket.id });
 			});
 		}
@@ -40,4 +40,4 @@ export default function (socket, io) {
 	});
 }
 
-const toObj = (name, text, id) => ({ name, text, id });
+const mesItem = (user, textContent, id) => ({ user, textContent, id });
