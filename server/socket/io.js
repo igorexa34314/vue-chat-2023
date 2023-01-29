@@ -1,18 +1,26 @@
 // Svc
 export default function (socket, io) {
-	// 	socket.emit('newMessage', 'message');
 	return Object.freeze({
 		// Methods = v.on + callback
 		sendMessage(message) {
 			console.log(message);
 		},
-		test1(msg) {
-			return { status: 'ok' };
-		},
-		async test2(msg) {
-			const users = await getUsers(msg);
-			return users;
+		userJoined(data) {
+			return new Promise((res, rej) => {
+				if (!data.name || !data.room) {
+					rej(new Error('Данные не корректны'));
+				}
+				socket.emit('newMessage', toObj('admin', `Добро пожаловать ${data.name}`));
+				res({ userId: socket.id });
+			});
 		}
+		// test1(msg) {
+		// 	return { status: 'ok' };
+		// },
+		// async test2(msg) {
+		// 	const users = await getUsers(msg);
+		// 	return users;
+		// }
 		// test3(msg) {
 		// 	return new Promise((resolve, reject) => {
 		// 		someTimeConsumingFunction(msg, (err, progress) => {
@@ -31,3 +39,5 @@ export default function (socket, io) {
 		// }
 	});
 }
+
+const toObj = (name, text, id) => ({ name, text, id });

@@ -4,9 +4,6 @@ export const useUsersStore = defineStore('users', {
 	state: () => ({
 		user: {}
 	}),
-	getters: {
-		getAllUsers: state => state.users
-	},
 	actions: {
 		clearData() {
 			this.user = {};

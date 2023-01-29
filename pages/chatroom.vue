@@ -4,8 +4,7 @@
 		<div class="chat__content mb-10">
 			<div class="messages-field">
 				<TransitionGroup name="messages-list">
-					<MessageItem v-for="m in messagesStore.messages" :key="m.id" :textContent="m.textContent"
-						:sender="m.user" />
+					<MessageItem v-for="m in messages" :key="m.id" :textContent="m.textContent" :sender="m.user" />
 				</TransitionGroup>
 			</div>
 			<MessageForm class="message-form" @submitForm="createMessage" />
@@ -21,6 +20,7 @@ import { v4 as uuidv4 } from 'uuid';
 definePageMeta({ layout: 'default', middleware: 'chatroom' })
 const messagesStore = useMessagesStore();
 const usersStore = useUsersStore();
+const messages = computed(() => messagesStore.messages);
 const user = usersStore.user;
 useHead({ title: `Комната ${user.room}`, });
 

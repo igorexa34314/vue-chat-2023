@@ -39,6 +39,9 @@
 <script setup>
 import { useUsersStore } from '@/stores/users';
 
+const ctx = useNuxtApp();
+let socket = null;
+ctx.onUnmounted = onUnmounted;
 const usersStore = useUsersStore();
 const form = ref();
 const genderItems = [
@@ -63,6 +66,11 @@ const emailRules = [
 	v => !!v || 'Введите почту',
 	v => /.+@.+\..+/.test(v) || 'Введите корректную почту',
 ];
+onMounted(() => {
+	socket = ctx.$nuxtSocket({
+		name: 'main',
+	})
+});
 
 const agreeTerms = ref(false);
 const submitForm = async () => {
@@ -75,8 +83,17 @@ const submitForm = async () => {
 			gender: gender,
 			room: room,
 		}
-		usersStore.setUser(user);
-		navigateTo('/chatroom');
+		socket.emit('userJoined', user, data => {
+			console.log(data);
+			if (data.emitError) {
+				console.error(data.emitError);
+			} else {
+				user.id = data.userId;
+				usersStore.setUser(user);
+				console.log(ctx.$ioState().value.messages);
+				navigateTo('/chatroom');
+			}
+		});
 	}
 };
 </script>

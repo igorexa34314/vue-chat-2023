@@ -53,22 +53,11 @@ export default defineNuxtConfig({
 				// @ts-ignore
 				iox: [
 					// 'sendMessage'
-					// 'progress --> examples/progress',
+					'newMessage --> messages'
 					// 'examples/sample <-- examples/sample'
 					// 'examples/someObj', // Bidirectional
 					// 'bidirectional'
-				],
-				// @ts-ignore
-				vuex: {
-					// mutations: ['progress --> examples/SET_PROGRESS'],
-					// actions: ['sendMessage --> messages/messageRecieved']
-					// emitBacks: [
-					// 	'examples/someObj',
-					// 	'examples/sample',
-					// 	'sample2 <-- examples/sample2',
-					// 	'io/titleFromUser' // TBD: update tests
-					// ]
-				}
+				]
 			}
 		],
 		server: {
