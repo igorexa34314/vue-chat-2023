@@ -1,11 +1,11 @@
 <template>
 	<v-container class="container pt-6">
-		<h2>Чат страница {{ user.name }}</h2>
+		<h2 class="mb-5">Чат страница {{ user.name }}</h2>
 		<div class="chat__content mb-10">
 			<div class="messages-field">
-				<!-- <TransitionGroup name="messages-list">
+				<TransitionGroup name="messages-list">
 					<MessageItem v-for="(m, index) in messages" :key="index" :textContent="m.textContent" :sender="m.user" />
-				</TransitionGroup> -->
+				</TransitionGroup>
 			</div>
 			<MessageForm class="message-form" @submitForm="createMessage" />
 		</div>
@@ -13,26 +13,25 @@
 </template>
 
 <script setup>
+// useHead({ title: `Комната ${user.room}`, });
+
+import MessageItem from '@/components/MessageItem.vue';
+import MessageForm from '@/components/MessageForm.vue';
+
 import { useChatStore } from '@/stores/chat';
 import { useUsersStore } from '@/stores/users';
 import { v4 as uuidv4 } from 'uuid';
+import { computed } from 'vue';
 
-definePageMeta({ layout: 'default', middleware: 'chatroom' })
-const messagesStore = useChatStore();
+const chatStore = useChatStore();
 const usersStore = useUsersStore();
-const messages = computed(() => messagesStore.messages);
 
-const m = useNuxtApp().$ioState().value.messages;
-const mesState = useState('message', () => m)
-onMounted(() => {
-	// console.log(mesState);
-	console.log(messages);
-});
+const messages = computed(() => chatStore.messages);
+
 const user = usersStore.user;
-useHead({ title: `Комната ${user.room}`, });
 
 const createMessage = messageText => {
-	messagesStore.addMessage({
+	chatStore.addMessage({
 		id: uuidv4(),
 		user: 'Igor Kononenko',
 		textContent: messageText,
@@ -68,3 +67,8 @@ const createMessage = messageText => {
 	transform: translateX(30px);
 }
 </style>
+
+<route lang="yaml">
+meta:
+  layout: default
+</route>

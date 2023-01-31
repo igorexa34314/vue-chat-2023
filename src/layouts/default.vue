@@ -25,13 +25,18 @@
 		<NavDrawer v-model="drawer" />
 
 		<v-main>
-			<slot />
+			<RouterView />
 		</v-main>
 	</v-layout>
 </template>
 
 <script setup>
+import NavDrawer from '@/components/NavDrawer.vue';
+import { ref, watch } from 'vue';
 import { useUsersStore } from '@/stores/users';
+import { useRouter } from 'vue-router'
+
+const router = useRouter();
 const usersStore = useUsersStore();
 const user = usersStore.user;
 
@@ -42,10 +47,11 @@ const drawer = ref(true);
 const enableSearch = () => {
 	searchEnabled.value = true;
 };
+
 watch(searchEnabled, newVal => { if (newVal) search.value.focus(); });
 
 const exit = () => {
-	navigateTo({ path: '/', query: { message: 'leftChat' } });
+	router.push({ path: '/', query: { message: 'leftChat' } });
 	usersStore.clearData();
 }
 </script>

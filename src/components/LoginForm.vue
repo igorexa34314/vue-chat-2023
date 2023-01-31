@@ -37,11 +37,11 @@
 </template>
 
 <script setup>
+import { ref } from 'vue';
 import { useUsersStore } from '@/stores/users';
+import { useRouter } from 'vue-router';
 
-const ctx = useNuxtApp();
-let socket = null;
-ctx.onUnmounted = onUnmounted;
+const router = useRouter();
 const usersStore = useUsersStore();
 const form = ref();
 const genderItems = [
@@ -66,11 +66,6 @@ const emailRules = [
 	v => !!v || 'Введите почту',
 	v => /.+@.+\..+/.test(v) || 'Введите корректную почту',
 ];
-onMounted(() => {
-	socket = ctx.$nuxtSocket({
-		name: 'main',
-	})
-});
 
 const agreeTerms = ref(false);
 const submitForm = async () => {
@@ -83,17 +78,8 @@ const submitForm = async () => {
 			gender: gender.value,
 			room: room.value,
 		}
-		socket.emit('userJoined', user, data => {
-			console.log(data);
-			if (data.emitError) {
-				console.error(data.emitError);
-			} else {
-				user.id = data.userId;
-				usersStore.setUser(user);
-				console.log('IO state:', ctx.$ioState().value.messages);
-				navigateTo('/chatroom');
-			}
-		});
+		usersStore.setUser(user);
+		return router.push({ path: '/chatroom' });
 	}
 };
 </script>

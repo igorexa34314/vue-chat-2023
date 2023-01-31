@@ -1,19 +1,13 @@
 <template>
 	<v-layout>
 		<v-main>
-			<slot />
+			<RouterView />
 		</v-main>
 	</v-layout>
 </template>
 
-<script>
-export default {
-	setup() {
+<script setup>
 
-
-		return {}
-	}
-}
 </script>
 
 <style lang="scss" scoped>
