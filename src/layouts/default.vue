@@ -32,13 +32,15 @@
 
 <script setup>
 import NavDrawer from '@/components/NavDrawer.vue';
-import { ref, watch } from 'vue';
-import { useUsersStore } from '@/stores/users';
-import { useRouter } from 'vue-router'
+import { ref, watch, computed } from 'vue';
+import { useRouter } from 'vue-router';
+import { useUserdataStore } from '@/stores/userdata';
+
 
 const router = useRouter();
-const usersStore = useUsersStore();
-const user = usersStore.user;
+const userdataStore = useUserdataStore();
+
+const user = computed(() => userdataStore.userdata);
 
 const searchEnabled = ref(false);
 const search = ref(null);
@@ -52,7 +54,6 @@ watch(searchEnabled, newVal => { if (newVal) search.value.focus(); });
 
 const exit = () => {
 	router.push({ path: '/', query: { message: 'leftChat' } });
-	usersStore.clearData();
 }
 </script>
 

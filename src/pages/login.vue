@@ -6,7 +6,9 @@
 
 <script setup>
 import LoginForm from '@/components/LoginForm.vue';
-// useHead({ title: 'Главная', });
+import { useMeta } from 'vue-meta'
+
+useMeta({ title: 'Главная' })
 </script>
 
 <style lang="scss" scoped>

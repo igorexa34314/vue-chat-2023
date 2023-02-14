@@ -13,22 +13,23 @@
 </template>
 
 <script setup>
-// useHead({ title: `Комната ${user.room}`, });
-
 import MessageItem from '@/components/MessageItem.vue';
 import MessageForm from '@/components/MessageForm.vue';
-
 import { useChatStore } from '@/stores/chat';
-import { useUsersStore } from '@/stores/users';
+import { useUserdataStore } from '@/stores/userdata';
 import { v4 as uuidv4 } from 'uuid';
 import { computed } from 'vue';
+import { useMeta } from 'vue-meta';
+
 
 const chatStore = useChatStore();
-const usersStore = useUsersStore();
+const userdataStore = useUserdataStore();
 
 const messages = computed(() => chatStore.messages);
 
-const user = usersStore.user;
+const user = computed(() => userdataStore.userdata);
+
+useMeta({ title: `Комната ${user.room}` });
 
 const createMessage = messageText => {
 	chatStore.addMessage({

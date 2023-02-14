@@ -6,26 +6,14 @@
 
 		<v-card-text class="mt-3">
 			<v-form ref="form" v-model="valid" lazy-validation>
-				<v-text-field v-model="name" :rules="nameRules" label="Ваше имя" class="" variant="underlined" counter="16"
+				<v-text-field v-model.trim="name" :rules="nameRules" label="Ваше имя" class="" variant="underlined"
+					counter="16" clearable required />
+
+				<v-text-field v-model.trim="email" :rules="emailRules" label="Ваша почта" class="mt-5" variant="underlined"
 					clearable required />
 
-				<v-text-field v-model="email" :rules="emailRules" label="Ваша почта" class="mt-5" variant="underlined"
-					clearable required />
+				<pass-field v-model="password" class="mt-5" />
 
-				<v-text-field v-model="room" :rules="roomRules" label="Номер комнаты" class="mt-5" variant="underlined"
-					clearable required />
-
-				<v-radio-group v-model="gender" inline label="Ваш пол" class="mt-6">
-					<v-radio v-for="gender in genderItems" :key="gender.value" :label="gender.name" :value="gender.value"
-						color="primary" />
-				</v-radio-group>
-
-				<v-checkbox v-model="agreeTerms" :rules="[v => !!v || 'Вы должны согласиться с правилами!']" required
-					density="compact">
-					<template v-slot:label>
-						<div class="">Согласен с <a href="#" target="_blank">правилами</a></div>
-					</template>
-				</v-checkbox>
 
 				<v-btn color="success" class="btn mt-3" @click="submitForm">
 					Войти
@@ -38,47 +26,30 @@
 
 <script setup>
 import { ref } from 'vue';
-import { useUsersStore } from '@/stores/users';
+import { useUserdataStore } from '@/stores/userdata';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
-const usersStore = useUsersStore();
+const userdataStore = useUserdataStore();
 const form = ref();
-const genderItems = [
-	{ name: 'Мужской', value: 'male' },
-	{ name: 'Женский', value: 'female' },
-	{ name: 'Не указывать', value: 'unknown' },
-];
-const gender = ref('unknown');
 const valid = ref(true);
-const name = ref('');
-const nameRules = [
-	v => !!v || 'Введите имя',
-	v => (v && v.length >= 2 && v.length <= 16) || 'Имя должно быть в пределах от 2 до 16 символов',
-];
-const room = ref('');
-const roomRules = [
-	v => !!v || 'Введите номер комнаты',
-	v => (v % 1 === 0) || 'Номер комнаты должен быть числом',
-];
+const password = ref('');
+
 const email = ref('');
 const emailRules = [
 	v => !!v || 'Введите почту',
 	v => /.+@.+\..+/.test(v) || 'Введите корректную почту',
 ];
 
-const agreeTerms = ref(false);
 const submitForm = async () => {
 	const { valid } = await form.value.validate();
 
 	if (valid) {
-		const user = {
-			name: name.value,
+		const user = await userdataStore.addInfoToDB({
 			email: email.value,
-			gender: gender.value,
-			room: room.value,
-		}
-		usersStore.setUser(user);
+			password: password.value,
+		});
+		console.log(user);
 		return router.push({ path: '/chatroom' });
 	}
 };
