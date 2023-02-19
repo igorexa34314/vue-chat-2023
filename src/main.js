@@ -16,5 +16,4 @@ app.use(VueFire, {
 		VueFireAuth()
 	]
 });
-
-app.use(createPinia()).use(vuetify).use(router).use(createMetaManager()).mount('#app');
+app.use(vuetify).use(router).use(createPinia()).use(createMetaManager()).mount('#app');

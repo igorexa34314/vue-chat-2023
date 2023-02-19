@@ -1,16 +1,20 @@
 <template>
 	<v-navigation-drawer v-model="drawer" @click="rail = !rail" :rail="rail" rail-width="85" width="320" location="left">
-		<v-btn variant="text" icon="mdi-eye-off-outline" @click.stop="rail = !rail"></v-btn>
-		<v-list density="comfortable">
-			<v-list-item v-for="u in users" :key="u.id" :title="u.name" class="mb-3"
-				prepend-avatar="https://cdn.vuetifyjs.com/images/john.png">
-			</v-list-item>
+		<!-- <v-btn variant="text" icon="mdi-eye-off-outline" @click.stop="rail = !rail"></v-btn> -->
+		<v-list density="comfortable" class="mt-4">
+			<v-list-item :title="user.displayName" class="mb-3" :prepend-avatar="user.photoURL || googleImg" />
 		</v-list>
 	</v-navigation-drawer>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue';
+import { useUserdataStore } from '@/stores/userdata';
+
+const googleImg = new URL('@/assets/img/google.png', import.meta.url).href;
+const userdataStore = useUserdataStore();
+
+const user = computed(() => userdataStore.userdata);
 
 const props = defineProps({
 	modelValue: {
@@ -19,10 +23,7 @@ const props = defineProps({
 	},
 });
 const emit = defineEmits(['update:modelValue']);
-const users = ref([
-	{ id: 1, name: 'Igor 1' },
-	{ id: 2, name: 'Igor 2' }
-])
+
 const rail = ref(false);
 const drawer = computed({
 	get: () => props.modelValue,
@@ -30,6 +31,4 @@ const drawer = computed({
 });
 </script>
 
-<style lang="scss" scoped>
-
-</style>
+<style lang="scss" scoped></style>

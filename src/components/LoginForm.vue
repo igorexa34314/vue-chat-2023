@@ -5,52 +5,70 @@
 		</v-card-item>
 
 		<v-card-text class="mt-3">
-			<v-form ref="form" v-model="valid" lazy-validation>
-				<v-text-field v-model.trim="name" :rules="nameRules" label="Ваше имя" class="" variant="underlined"
-					counter="16" clearable required />
+			<v-form ref="form" v-model="valid" @submit.prevent="submitForm" lazy-validation>
 
-				<v-text-field v-model.trim="email" :rules="emailRules" label="Ваша почта" class="mt-5" variant="underlined"
-					clearable required />
+				<v-text-field v-model.trim="email" :rules="validations.email" label="Ваша почта" placeholder="Введите почту"
+					class="mt-5" variant="underlined" clearable required />
 
-				<pass-field v-model="password" class="mt-5" />
+				<pass-field v-model.trim="password" class="mt-5" />
 
-
-				<v-btn color="success" class="btn mt-3" @click="submitForm">
+				<v-btn type="submit" color="success" class="btn mt-6">
 					Войти
 				</v-btn>
 			</v-form>
 		</v-card-text>
+		<v-card-actions class="flex-column justify-center">
+			<div class="providers d-flex">
+				<v-btn type="button" @click="signInWithGoogle" variant="plain" stacked density="compact" size="small"> <v-img
+						:src="googleImg" width="36px" alt="Войти через Google" /></v-btn>
+			</div>
+			<div class="text-center mt-4">Нет аккаунта? <router-link to="/register">Зарегистрироваться</router-link></div>
+		</v-card-actions>
 	</v-card>
-
 </template>
 
 <script setup>
+import passField from '@/components/UI/passField.vue';
 import { ref } from 'vue';
-import { useUserdataStore } from '@/stores/userdata';
 import { useRouter } from 'vue-router';
+import { useAuthStore } from '@/stores/auth';
+import { useSnackbarStore } from '@/stores/snackbar';
+import messages from '@/utils/messages';
+import validations from '@/utils/validations';
+
+const googleImg = new URL('@/assets/img/google.png', import.meta.url).href;
 
 const router = useRouter();
-const userdataStore = useUserdataStore();
+const authStore = useAuthStore();
+const snackbar = useSnackbarStore();
+
 const form = ref();
 const valid = ref(true);
-const password = ref('');
 
 const email = ref('');
-const emailRules = [
-	v => !!v || 'Введите почту',
-	v => /.+@.+\..+/.test(v) || 'Введите корректную почту',
-];
+const password = ref('');
 
 const submitForm = async () => {
 	const { valid } = await form.value.validate();
 
 	if (valid) {
-		const user = await userdataStore.addInfoToDB({
-			email: email.value,
-			password: password.value,
-		});
-		console.log(user);
-		return router.push({ path: '/chatroom' });
+		try {
+			await authStore.loginWithEmail({
+				email: email.value,
+				password: password.value,
+			});
+			router.push({ path: '/chatroom' });
+		} catch (e) {
+			snackbar.showMessage(messages[e], 'red-darken-3', 2000);
+		}
+	}
+};
+const signInWithGoogle = async () => {
+	try {
+		await authStore.signInWithGoogle();
+		router.push({ path: '/profile' });
+	} catch (e) {
+		snackbar.showMessage(messages[e], 'red-darken-3', 2000);
 	}
 };
 </script>
@@ -59,6 +77,6 @@ const submitForm = async () => {
 .btn {
 	position: relative;
 	left: 100%;
-	transform: translate(-100%);
+	transform: translate(-120%);
 }
 </style>

@@ -22,7 +22,7 @@ export default defineConfig({
 		}),
 		Layouts({
 			layoutsDirs: 'src/layouts',
-			defaultLayout: 'dafault'
+			defaultLayout: 'default'
 		}),
 		vue(),
 		vuetify()

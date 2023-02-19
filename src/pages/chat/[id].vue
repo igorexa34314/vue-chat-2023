@@ -1,13 +1,15 @@
 <template>
 	<v-container class="container pt-6">
-		<h2 class="mb-5">Чат страница {{ user.name }}</h2>
-		<div class="chat__content mb-10">
-			<div class="messages-field">
-				<TransitionGroup name="messages-list">
-					<MessageItem v-for="(m, index) in messages" :key="index" :textContent="m.textContent" :sender="m.user" />
-				</TransitionGroup>
+		<div v-if="interloc">
+			<h2 class="mb-5">Страница чата с {{ interloc.displayName }}</h2>
+			<div class="chat__content mb-10">
+				<!-- <div class="messages-field">
+									<TransitionGroup name="messages-list">
+										<MessageItem v-for="(m, index) in messages" :key="index" :textContent="m.textContent" :sender="m.user" />
+									</TransitionGroup>
+								</div> -->
+				<MessageForm class="message-form" @submitForm="createMessage" />
 			</div>
-			<MessageForm class="message-form" @submitForm="createMessage" />
 		</div>
 	</v-container>
 </template>
@@ -17,13 +19,21 @@ import MessageItem from '@/components/MessageItem.vue';
 import MessageForm from '@/components/MessageForm.vue';
 import { useChatStore } from '@/stores/chat';
 import { useUserdataStore } from '@/stores/userdata';
+import { useAuthStore } from '@/stores/auth';
 import { uuidv4 } from '@firebase/util';
-import { computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useMeta } from 'vue-meta';
+import { useRoute } from 'vue-router';
 
-
+const route = useRoute();
+const auth = useAuthStore();
 const chatStore = useChatStore();
 const userdataStore = useUserdataStore();
+const interloc = ref();
+
+onMounted(async () => {
+	interloc.value = await userdataStore.getUserdataById(route.params.id);
+});
 
 const messages = computed(() => chatStore.messages);
 
@@ -31,13 +41,14 @@ const user = computed(() => userdataStore.userdata);
 
 useMeta({ title: `Комната ${user.room}` });
 
-const createMessage = messageText => {
-	chatStore.addMessage({
-		id: uuidv4(),
-		user: 'Igor Kononenko',
-		textContent: messageText,
-		date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString(),
-	})
+const createMessage = async messageText => {
+	await chatStore.createMessage({
+		to: route.params.id,
+		content: {
+			text: messageText,
+		},
+		date: new Date(),
+	});
 };
 </script>
 
