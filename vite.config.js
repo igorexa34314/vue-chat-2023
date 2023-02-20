@@ -1,6 +1,9 @@
 import { defineConfig } from 'vite';
+import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'url';
 import vue from '@vitejs/plugin-vue';
 import vuetify from 'vite-plugin-vuetify';
+import vueI18n from '@intlify/vite-plugin-vue-i18n';
 import Layouts from 'vite-plugin-vue-layouts';
 import Pages from 'vite-plugin-pages';
 
@@ -13,7 +16,7 @@ export default defineConfig({
 	},
 	resolve: {
 		alias: {
-			'@': path.resolve(__dirname, './src')
+			'@': resolve(dirname(fileURLToPath(import.meta.url)), './src')
 		}
 	},
 	plugins: [
@@ -25,7 +28,11 @@ export default defineConfig({
 			defaultLayout: 'default'
 		}),
 		vue(),
-		vuetify()
+		vuetify(),
+		vueI18n({
+			// you need to set i18n resource including paths !
+			include: resolve(dirname(fileURLToPath(import.meta.url)), './src/locales/**')
+		})
 	],
 	define: {
 		'process.env.DEBUG': false

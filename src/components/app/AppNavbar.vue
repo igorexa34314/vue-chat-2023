@@ -3,8 +3,6 @@
 
 		<v-app-bar-nav-icon variant="text" @click.stop="$emit('drawer')"></v-app-bar-nav-icon>
 
-		<v-btn variant="text" icon="mdi-arrow-left" @click="exit"></v-btn>
-
 		<v-toolbar-title>Чат комнаты</v-toolbar-title>
 
 		<v-spacer></v-spacer>
@@ -57,9 +55,6 @@ const search = ref();
 
 watch(searchEnabled, newVal => !!newVal ? search.value.focus() : '');
 
-const exit = () => {
-	router.push({ path: '/', query: { message: 'leftChat' } });
-}
 const logout = async () => {
 	await authStore.logout();
 	userdataStore.clearData();

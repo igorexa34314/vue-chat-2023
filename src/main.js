@@ -3,6 +3,7 @@ import { firebaseApp } from '@/firebase';
 import { VueFire, VueFireAuth } from 'vuefire';
 import { createMetaManager } from 'vue-meta';
 import { createPinia } from 'pinia';
+import vueI18n from '@/plugins/vue-i18n';
 import App from '@/App.vue';
 import router from '@/router';
 import vuetify from '@/plugins/vuetify';
@@ -16,4 +17,4 @@ app.use(VueFire, {
 		VueFireAuth()
 	]
 });
-app.use(vuetify).use(router).use(createPinia()).use(createMetaManager()).mount('#app');
+app.use(vuetify).use(vueI18n).use(router).use(createPinia()).use(createMetaManager()).mount('#app');

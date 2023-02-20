@@ -2,12 +2,13 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { useAuthStore } from '@/stores/auth';
 import { useUserdataStore } from '@/stores/userdata';
-import { getFirestore, collection, doc, addDoc, setDoc, updateDoc, arrayUnion, orderBy, query, where, getDocs, Timestamp, onSnapshot } from 'firebase/firestore';
+import { getFirestore, collection, doc, addDoc, setDoc, updateDoc, arrayUnion, orderBy, query, where, getDocs, Timestamp, onSnapshot, limit } from 'firebase/firestore';
 
 export const useMessagesStore = defineStore('messages', () => {
 	const { getUid } = useAuthStore();
 	const { getUserdataById } = useUserdataStore();
 	const db = getFirestore();
+
 	const messages = ref([]);
 
 	const chatCol = collection(db, 'chat');
@@ -34,16 +35,18 @@ export const useMessagesStore = defineStore('messages', () => {
 	};
 	const fetchChatMessages = async chatId => {
 		const messagesCol = collection(doc(chatCol, chatId), 'messages');
-		const q = query(messagesCol, orderBy('created_at', 'asc'));
-		onSnapshot(q, messagesRef => {
-			console.log(messagesRef);
-			messagesRef.forEach(async doc => {
+		const q = query(messagesCol, orderBy('created_at', 'desc'), limit(10));
+		onSnapshot(q, async messagesRef => {
+			let initialMessages = [];
+			messagesRef.forEach(doc => {
 				if (!messages.value.find(m => m.id === doc.id)) {
-					const mData = doc.data();
-					const { displayName, photoURL } = await getUserdataById(mData.sender);
-					addMessage({ ...mData, sender: { id: mData.sender, displayName, photoURL } });
+					initialMessages.unshift({ ...doc.data(), created_at: doc.data().created_at.toDate() });
 				}
 			});
+			for (let m of initialMessages) {
+				const { displayName, photoURL } = await getUserdataById(m.sender);
+				addMessage({ ...m, sender: { id: m.sender, displayName, photoURL } });
+			}
 		});
 	};
 	return {

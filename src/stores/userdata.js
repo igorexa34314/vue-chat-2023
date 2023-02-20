@@ -6,7 +6,7 @@ import { useAuthStore } from '@/stores/auth';
 import { uuidv4 } from '@firebase/util';
 
 export const useUserdataStore = defineStore('userdata', () => {
-	const { getUid } = useAuthStore();
+	const auth = useAuthStore();
 	const storage = getStorage();
 	const db = getFirestore();
 	const usersCol = collection(db, 'userdata');
@@ -23,7 +23,7 @@ export const useUserdataStore = defineStore('userdata', () => {
 		if (uid) {
 			return doc(usersCol, uid);
 		}
-		return doc(usersCol, await getUid());
+		return doc(usersCol, await auth.getUid());
 	};
 	const createUser = async ({ uid, displayName, phoneNumber, photoURL, metadata }) => {
 		try {

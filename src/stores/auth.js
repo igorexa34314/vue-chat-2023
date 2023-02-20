@@ -2,7 +2,6 @@ import { defineStore } from 'pinia';
 import { useUserdataStore } from '@/stores/userdata';
 import { getAuth, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { getStorage, ref, getDownloadURL } from 'firebase/storage';
-
 import { getCurrentUser } from 'vuefire';
 
 export const useAuthStore = defineStore('auth', () => {
@@ -10,9 +9,9 @@ export const useAuthStore = defineStore('auth', () => {
 	const auth = getAuth();
 
 	const getUid = async () => {
-		const user = await getCurrentUser();
-		if (user) {
-			return user.uid;
+		const currentUser = await getCurrentUser();
+		if (currentUser.uid) {
+			return currentUser.uid;
 		}
 		return;
 	};
