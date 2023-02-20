@@ -3,7 +3,7 @@
 		<v-main>
 			<RouterView />
 		</v-main>
-</v-layout>
+	</v-layout>
 </template>
 
 <script setup>
@@ -12,10 +12,10 @@ import { useSnackbarStore } from '@/stores/snackbar';
 import messages from '@/utils/messages';
 
 const route = useRoute();
-const snackbar = useSnackbarStore();
+const { showMessage } = useSnackbarStore();
 
 if (messages[route.query.message]) {
-	snackbar.showMessage(messages[route.query.message]);
+	showMessage(messages[route.query.message]);
 }
 </script>
 

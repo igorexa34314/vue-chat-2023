@@ -27,7 +27,7 @@
 					</template>
 					<v-list-item-title>Профиль</v-list-item-title>
 				</v-list-item>
-				<v-list-item density="compact" @click="logout">
+				<v-list-item density="compact" @click="exit">
 					<template v-slot:prepend>
 						<v-icon icon="mdi-logout" class="mr-6" />
 					</template>
@@ -44,9 +44,9 @@ import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { useUserdataStore } from '@/stores/userdata';
 
-const router = useRouter();
-const authStore = useAuthStore();
-const userdataStore = useUserdataStore();
+const { push } = useRouter();
+const { logout } = useAuthStore();
+const { clearData } = useUserdataStore();
 
 const emit = defineEmits(['drawer']);
 
@@ -55,10 +55,10 @@ const search = ref();
 
 watch(searchEnabled, newVal => !!newVal ? search.value.focus() : '');
 
-const logout = async () => {
-	await authStore.logout();
-	userdataStore.clearData();
-	router.push('/login');
+const exit = async () => {
+	await logout();
+	clearData();
+	push('/login');
 }
 </script>
 

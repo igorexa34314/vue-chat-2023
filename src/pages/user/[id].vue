@@ -1,14 +1,15 @@
 <template>
-	<div v-if="user">
+	<div v-if="userdata">
 		<v-card class="pa-5">
 			<v-card-title>
 				<v-row align="center" justify="space-between">
 					<v-col cols="10" class="d-flex align-center">
-						<v-img :lazy-src="defaultAvatar" :src="user.photoURL" alt="Фото" max-width="100px" class="mr-5" />
+						<v-img :lazy-src="defaultAvatar" :src="userdata.info.photoURL" alt="Фото" max-width="100px"
+							class="mr-5" />
 						<div class="">
-							<h2 class="mb-2">{{ user.displayName }}</h2>
+							<h2 class="mb-2">{{ userdata.info.displayName }}</h2>
 							<small><v-icon
-									:icon="user.gender === 'unknown' ? 'mdi-help' : user.gender === 'male' ? 'mdi-gender-male' : 'mdi-gender-female'"></v-icon>
+									:icon="userdata.info.gender === 'unknown' ? 'mdi-help' : userdata.info.gender === 'male' ? 'mdi-gender-male' : 'mdi-gender-female'"></v-icon>
 							</small>
 						</div>
 					</v-col>
@@ -46,23 +47,24 @@ import { useChatStore } from '@/stores/chat';
 
 const defaultAvatar = new URL('@/assets/img/default_user_avatar.jpg', import.meta.url).href;
 
-const auth = useAuthStore();
+const { getUid } = useAuthStore();
 const { joinPrivateChat } = useChatStore();
 const route = useRoute();
-const router = useRouter();
+const { push } = useRouter();
 const userdataStore = useUserdataStore();
-const user = ref();
+
+const userdata = ref();
 const uid = ref('');
 
 onMounted(async () => {
-	user.value = await userdataStore.getUserdataById(route.params.id);
-	uid.value = await auth.getUid();
+	userdata.value = await userdataStore.getUserdataById(route.params.id);
+	uid.value = await getUid();
 });
 
 const goToChat = async () => {
 	try {
 		const chatId = await joinPrivateChat(route.params.id);
-		router.push({ name: 'chat-id', params: { id: chatId } });
+		push({ name: 'chat-id', params: { id: chatId } });
 	} catch (e) {
 		console.error(e);
 	}

@@ -44,7 +44,7 @@ export const useMessagesStore = defineStore('messages', () => {
 				}
 			});
 			for (let m of initialMessages) {
-				const { displayName, photoURL } = await getUserdataById(m.sender);
+				const { displayName, photoURL } = (await getUserdataById(m.sender)).info;
 				addMessage({ ...m, sender: { id: m.sender, displayName, photoURL } });
 			}
 		});

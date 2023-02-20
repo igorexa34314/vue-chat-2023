@@ -56,7 +56,7 @@ export const useUserdataStore = defineStore('userdata', () => {
 				'info.gender': gender
 			});
 			if (avatar) {
-				const avatarRef = storageRef(storage, `userdata/${await getUid()}/avatar/${uuidv4() + '.' + avatar.name.split('.')[avatar.name.split('.').length - 1]}`);
+				const avatarRef = storageRef(storage, `userdata/${await auth.getUid()}/avatar/${uuidv4() + '.' + avatar.name.split('.')[avatar.name.split('.').length - 1]}`);
 				await uploadBytes(avatarRef, avatar, {
 					contentType: avatar.type
 				});
@@ -72,10 +72,10 @@ export const useUserdataStore = defineStore('userdata', () => {
 	};
 	const fetchAuthUserdata = async () => {
 		try {
-			const infoRef = await getUserRef();
-			onSnapshot(infoRef, udata => {
+			const userRef = await getUserRef();
+			onSnapshot(userRef, udata => {
 				if (udata && udata.exists()) {
-					setUserdata(udata.data().info);
+					setUserdata(udata.data());
 				}
 			});
 		} catch (e) {
@@ -87,7 +87,7 @@ export const useUserdataStore = defineStore('userdata', () => {
 		try {
 			const udata = await getDoc(await getUserRef(uid));
 			if (udata && udata.exists()) {
-				return udata.data().info;
+				return udata.data();
 			}
 		} catch (e) {
 			console.error(e);

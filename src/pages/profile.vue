@@ -14,7 +14,7 @@
 			<div class="w-50 mt-5">
 
 				<v-card variant="outlined" max-width="200" class="mb-4" elevation="9">
-					<v-img :lazy-src="defaultAvatar" :src="user.photoURL" alt="Ваш аватар" cover />
+					<v-img :lazy-src="defaultAvatar" :src="profileURL" alt="Ваш аватар" cover />
 				</v-card>
 				<div class="mb-4">Загрузите ваше фото</div>
 				<v-file-input v-model="avatar" label="Аватар" :rules="validations.file" variant="solo"
@@ -30,27 +30,36 @@
 
 <script setup>
 import { useUserdataStore } from '@/stores/userdata';
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, watch, inject } from 'vue';
 import { useSnackbarStore } from '@/stores/snackbar';
 import validations from '@/utils/validations';
 import messages from '@/utils/messages';
 
 const defaultAvatar = new URL('@/assets/img/default_user_avatar.jpg', import.meta.url).href;
 
-const userdataStore = useUserdataStore();
-const snackbar = useSnackbarStore();
+const { updateUserdata } = useUserdataStore();
+const { showMessage } = useSnackbarStore();
 
-const user = computed(() => userdataStore.userdata);
+const userdata = inject('userdata');
 
 const form = ref();
 const valid = ref(true);
-const name = ref(user.value.displayName || '');
-const gender = ref(user.value.gender || 'unknown');
+const name = ref('');
+const gender = ref('unknown');
 const avatar = ref();
+let profileURL = '';
 
-watch(user, () => {
-	name.value = user.value.displayName;
-	gender.value = user.value.gender;
+const fillProfileForm = () => {
+	if (userdata.value.info && Object.keys(userdata.value.info).length) {
+		name.value = userdata.value.info.displayName;
+		gender.value = userdata.value.info.gender;
+		profileURL = userdata.value.info.photoURL;
+	}
+};
+
+fillProfileForm();
+watch(userdata, () => {
+	fillProfileForm();
 });
 
 const genderItems = [
@@ -60,20 +69,18 @@ const genderItems = [
 ];
 const submitForm = async () => {
 	const { valid } = await form.value.validate();
-
-
 	if (valid) {
 		try {
-			await userdataStore.updateUserdata({
+			await updateUserdata({
 				name: name.value,
 				gender: gender.value,
 				avatar: avatar.value ? avatar.value[0] : null
 			});
 			avatar.value = [];
-			snackbar.showMessage('succesfully_updated');
+			showMessage('succesfully_updated');
 		} catch (e) {
 			console.error(e);
-			snackbar.showMessage(messages[e], 'red-darken-3', 2000);
+			showMessage(messages[e], 'red-darken-3', 2000);
 		}
 
 	}

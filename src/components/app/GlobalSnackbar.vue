@@ -7,22 +7,23 @@
 				<v-icon icon="mdi-close" />
 			</v-btn>
 		</template>
-</v-snackbar>
+	</v-snackbar>
 </template>
 
 <script setup>
 import { reactive } from 'vue';
 import { useSnackbarStore } from '@/stores/snackbar';
 
-const snackbarStore = useSnackbarStore();
+const { $onAction } = useSnackbarStore();
 
 const sbProps = reactive({
 	show: false,
 	color: '',
 	text: '',
 	timeout: 0,
-})
-snackbarStore.$onAction(({ name, store, after }) => {
+});
+
+$onAction(({ name, store, after }) => {
 	after(() => {
 		if (name === 'showMessage') {
 			sbProps.text = store.text;

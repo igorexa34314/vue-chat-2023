@@ -17,15 +17,14 @@ import { ref, computed, onMounted, provide } from 'vue';
 import { useUserdataStore } from '@/stores/userdata';
 
 const userdataStore = useUserdataStore();
+const drawer = ref(true);
 
 onMounted(async () => {
 	await userdataStore.fetchAuthUserdata();
 });
 
-const user = computed(() => userdataStore.userdata);
-// provide('userdata', user);
-
-const drawer = ref(true);
+const userdata = computed(() => userdataStore.userdata);
+provide('userdata', userdata);
 </script>
 
 <style lang="scss" scoped></style>

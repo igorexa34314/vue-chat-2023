@@ -19,7 +19,7 @@
 		</v-card-text>
 		<v-card-actions class="flex-column justify-center">
 			<div class="providers d-flex">
-				<v-btn type="button" @click="signInWithGoogle" variant="plain" stacked density="compact" size="small"> <v-img
+				<v-btn type="button" @click="loginWithGoogle" variant="plain" stacked density="compact" size="small"> <v-img
 						:src="googleImg" width="36px" alt="Войти через Google" /></v-btn>
 			</div>
 			<div class="text-center mt-4">Нет аккаунта? <router-link to="/register">Зарегистрироваться</router-link></div>
@@ -38,9 +38,9 @@ import validations from '@/utils/validations';
 
 const googleImg = new URL('@/assets/img/google.png', import.meta.url).href;
 
-const router = useRouter();
-const authStore = useAuthStore();
-const snackbar = useSnackbarStore();
+const { push } = useRouter();
+const { loginWithEmail, signInWithGoogle } = useAuthStore();
+const { showMessage } = useSnackbarStore();
 
 const form = ref();
 const valid = ref(true);
@@ -53,22 +53,22 @@ const submitForm = async () => {
 
 	if (valid) {
 		try {
-			await authStore.loginWithEmail({
+			await loginWithEmail({
 				email: email.value,
 				password: password.value,
 			});
-			router.push({ path: '/profile' });
+			push({ path: '/profile' });
 		} catch (e) {
-			snackbar.showMessage(messages[e], 'red-darken-3', 2000);
+			showMessage(messages[e], 'red-darken-3', 2000);
 		}
 	}
 };
-const signInWithGoogle = async () => {
+const loginWithGoogle = async () => {
 	try {
-		await authStore.signInWithGoogle();
-		router.push({ path: '/profile' });
+		await signInWithGoogle();
+		push({ path: '/profile' });
 	} catch (e) {
-		snackbar.showMessage(messages[e], 'red-darken-3', 2000);
+		showMessage(messages[e], 'red-darken-3', 2000);
 	}
 };
 </script>
