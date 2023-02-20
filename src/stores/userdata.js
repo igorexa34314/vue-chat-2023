@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import { getFirestore, getDoc, addDoc, setDoc, onSnapshot, doc, updateDoc, arrayUnion, Timestamp, collection } from 'firebase/firestore';
+import { getFirestore, getDoc, setDoc, onSnapshot, doc, updateDoc, arrayUnion, Timestamp, collection } from 'firebase/firestore';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useAuthStore } from '@/stores/auth';
 import { uuidv4 } from '@firebase/util';
@@ -31,6 +31,7 @@ export const useUserdataStore = defineStore('userdata', () => {
 				await getUserRef(uid),
 				{
 					info: {
+						uid,
 						displayName,
 						phoneNumber,
 						photoURL,
@@ -72,7 +73,7 @@ export const useUserdataStore = defineStore('userdata', () => {
 	const fetchAuthUserdata = async () => {
 		try {
 			const infoRef = await getUserRef();
-			await onSnapshot(infoRef, udata => {
+			onSnapshot(infoRef, udata => {
 				if (udata && udata.exists()) {
 					setUserdata(udata.data().info);
 				}

@@ -1,16 +1,17 @@
 <template>
 	<v-container class="container pt-6">
-		<div v-if="interloc">
-			<h2 class="mb-5">Страница чата с {{ interloc.displayName }}</h2>
+		<div v-if="messages">
+			<h2 class="mb-5">Страница чата </h2>
 			<div class="chat__content mb-10">
-				<!-- <div class="messages-field">
-									<TransitionGroup name="messages-list">
-										<MessageItem v-for="(m, index) in messages" :key="index" :textContent="m.textContent" :sender="m.user" />
-									</TransitionGroup>
-								</div> -->
-				<MessageForm class="message-form" @submitForm="createMessage" />
+				<div class="messages-field">
+					<TransitionGroup name="messages-list">
+						<MessageItem v-for="m in messages" :key="m.id" :own="uid === m.sender.id" :textContent="m.content.text"
+							:sender="m.sender" />
+					</TransitionGroup>
+				</div>
 			</div>
 		</div>
+		<MessageForm class="message-form" @submitForm="createMessage" />
 	</v-container>
 </template>
 
@@ -18,36 +19,38 @@
 import MessageItem from '@/components/MessageItem.vue';
 import MessageForm from '@/components/MessageForm.vue';
 import { useChatStore } from '@/stores/chat';
+import { useCurrentUser } from 'vuefire'
+import { useMessagesStore } from '@/stores/messages';
 import { useUserdataStore } from '@/stores/userdata';
 import { useAuthStore } from '@/stores/auth';
-import { uuidv4 } from '@firebase/util';
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useMeta } from 'vue-meta';
 import { useRoute } from 'vue-router';
 
 const route = useRoute();
-const auth = useAuthStore();
-const chatStore = useChatStore();
+const { getUid } = useAuthStore();
+// const chat = useChatStore();
+const messagesStore = useMessagesStore();
 const userdataStore = useUserdataStore();
 const interloc = ref();
+const uid = await getUid();
 
 onMounted(async () => {
-	interloc.value = await userdataStore.getUserdataById(route.params.id);
+	await messagesStore.fetchChatMessages(route.params.id);
 });
-
-const messages = computed(() => chatStore.messages);
+onUnmounted(() => messagesStore.clearMessages);
+const messages = computed(() => messagesStore.messages);
 
 const user = computed(() => userdataStore.userdata);
 
-useMeta({ title: `Комната ${user.room}` });
+useMeta({ title: route.params.id });
 
 const createMessage = async messageText => {
-	await chatStore.createMessage({
-		to: route.params.id,
+	await messagesStore.createMessage({
+		chatId: route.params.id,
 		content: {
 			text: messageText,
 		},
-		date: new Date(),
 	});
 };
 </script>

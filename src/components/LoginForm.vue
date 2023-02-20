@@ -57,7 +57,7 @@ const submitForm = async () => {
 				email: email.value,
 				password: password.value,
 			});
-			router.push({ path: '/chatroom' });
+			router.push({ path: '/profile' });
 		} catch (e) {
 			snackbar.showMessage(messages[e], 'red-darken-3', 2000);
 		}

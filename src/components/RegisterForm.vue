@@ -13,19 +13,19 @@
 					placeholder="Введите вашу почту" class="mt-4" variant="underlined" clearable required />
 
 				<!-- <v-text-field v-model.trim="password" :type="showPassword ? 'text' : 'password'" :rules="
-													validations.password" label="Пароль" placeholder="Введите пароль" class="mt-5" variant="underlined" required>
-														<template v-slot:append-inner>
-															<v-icon :icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'" @mousedown="showPassword = true"
-																@mouseup="showPassword = false" class="mr-2" style="cursor: pointer" />
-														</template>
-													</v-text-field> -->
+														validations.password" label="Пароль" placeholder="Введите пароль" class="mt-5" variant="underlined" required>
+															<template v-slot:append-inner>
+																<v-icon :icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'" @mousedown="showPassword = true"
+																	@mouseup="showPassword = false" class="mr-2" style="cursor: pointer" />
+															</template>
+														</v-text-field> -->
 				<pass-field v-model="password" class="mt-4" repeater />
 
 				<!-- 
-													<v-radio-group v-model="gender" inline label="Ваш пол" class="mt-6">
-														<v-radio v-for="gender in genderItems" :key="gender.value" :label="gender.name" :value="gender.value"
-															color="primary" />
-													</v-radio-group> -->
+														<v-radio-group v-model="gender" inline label="Ваш пол" class="mt-6">
+															<v-radio v-for="gender in genderItems" :key="gender.value" :label="gender.name" :value="gender.value"
+																color="primary" />
+														</v-radio-group> -->
 
 				<v-checkbox v-model="agreeTerms" :rules="validations.terms" required density="compact" class="mt-3">
 					<template v-slot:label>
@@ -40,8 +40,8 @@
 		</v-card-text>
 		<v-card-actions class="flex-column justify-center">
 			<div class="providers d-flex">
-				<v-btn type="button" @click="signInWithGoogle" variant="plain" stacked density="compact"
-					size="small"> <v-img :src="googleImg" width="36px" alt="Войти через Google" /></v-btn>
+				<v-btn type="button" @click="signInWithGoogle" variant="plain" stacked density="compact" size="small"> <v-img
+						:src="googleImg" width="36px" alt="Войти через Google" /></v-btn>
 			</div>
 			<div class="mt-4 text-center">Уже зарегистрированы? <router-link to="/login">Войти</router-link></div>
 		</v-card-actions>
@@ -84,7 +84,7 @@ const submitForm = async () => {
 				email: email.value,
 				password: password.value
 			});
-			router.push({ path: '/chatroom' });
+			router.push({ path: '/profile' });
 		} catch (e) {
 			snackbar.showMessage(messages[e], 'red-darken-3', 2000);
 		}
@@ -92,12 +92,12 @@ const submitForm = async () => {
 	}
 };
 const signInWithGoogle = async () => {
-		try {
-			await authStore.signInWithGoogle();
-			router.push({ path: '/chatroom' });
-		} catch (e) {
-			snackbar.showMessage(messages[e], 'red-darken-3', 2000);
-		}
+	try {
+		await authStore.signInWithGoogle();
+		router.push({ path: '/chatroom' });
+	} catch (e) {
+		snackbar.showMessage(messages[e], 'red-darken-3', 2000);
+	}
 };
 </script>
 

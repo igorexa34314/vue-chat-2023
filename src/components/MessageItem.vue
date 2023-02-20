@@ -1,10 +1,11 @@
 <template>
-	<div class="message d-flex">
-		<v-avatar size="30px" image="https://cdn.vuetifyjs.com/images/john.png" class="mr-2" />
-
-		<v-card min-width="80" max-width="650" density="compact" class="message__card  mb-4" variant="tonal">
+	<div :class="{ self }" class="message d-flex">
+		<v-avatar size="30px" :image="sender.photoURL" :class="self ? 'ml-2' : 'mr-2'" class="sender__avatar"
+			@click="$router.push({ name: 'user-id', params: { id: sender.id } })" />
+		<v-card min-width="80" max-width="650" density="compact" class="message__card mb-4" variant="tonal">
 			<v-card-title class="message__head d-flex flex-row align-center">
-				<small class="sender__name">{{ sender }}</small>
+				<small class="sender__name" @click="$router.push({ name: 'user-id', params: { id: sender.id } })">{{
+					sender.displayName }}</small>
 			</v-card-title>
 			<v-card-text class="message__content">
 				<p>{{ textContent }}</p>
@@ -15,8 +16,12 @@
 
 <script setup>
 const props = defineProps({
+	self: {
+		type: Boolean,
+		default: false,
+	},
 	sender: {
-		type: String,
+		type: Object,
 		required: true,
 	},
 	textContent: {
@@ -28,7 +33,6 @@ const props = defineProps({
 
 <style lang="scss" scoped>
 .message {
-
 	&__card {}
 	&__head {}
 }
@@ -39,5 +43,14 @@ const props = defineProps({
 		letter-spacing: 0.03rem;
 	}
 	&__avatar {}
+}
+.self {
+	justify-content: flex-end;
+	.sender__avatar {
+		order: 2 !important;
+	}
+	.message__card {
+		order: 1 !important;
+	}
 }
 </style>
