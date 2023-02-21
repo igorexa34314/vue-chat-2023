@@ -42,13 +42,13 @@
 import { useUserdataStore } from '@/stores/userdata';
 import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useAuthStore } from '@/stores/auth';
-import { useChatStore } from '@/stores/chat';
+import { useAuth } from '@/composables/auth';
+import { useChat } from '@/composables/chat';
 
 const defaultAvatar = new URL('@/assets/img/default_user_avatar.jpg', import.meta.url).href;
 
-const { getUid } = useAuthStore();
-const { joinPrivateChat } = useChatStore();
+const { getUid } = useAuth();
+const { joinPrivateChat } = useChat();
 const route = useRoute();
 const { push } = useRouter();
 const userdataStore = useUserdataStore();

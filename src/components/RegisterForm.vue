@@ -4,17 +4,17 @@
 			<v-card-title class="text-center">Регистрация</v-card-title>
 		</v-card-item>
 		<v-card-text class="mt-3">
-			<v-form ref="form" v-model="valid" lazy-validation @submit.prevent="submitForm">
+			<v-form ref="form" lazy-validation @submit.prevent="submitForm">
 
-				<v-text-field v-model.trim="name" :rules="validations.name" label="Ваше имя" placeholder="Введите ваше имя"
-					class="" variant="underlined" counter="16" clearable required />
+				<v-text-field v-model.trim="formState.displayName" :rules="validations.name" label="Ваше имя"
+					placeholder="Введите ваше имя" class="" variant="underlined" counter="16" clearable required />
 
-				<v-text-field v-model.trim="email" :rules="validations.email" label="Ваша почта"
+				<v-text-field v-model.trim="formState.email" :rules="validations.email" label="Ваша почта"
 					placeholder="Введите вашу почту" class="mt-4" variant="underlined" clearable required />
 
-				<pass-field v-model="password" class="mt-4" repeater />
+				<pass-field v-model="formState.password" class="mt-4" repeater />
 
-				<v-checkbox v-model="agreeTerms" :rules="validations.terms" required density="compact" class="mt-3">
+				<v-checkbox v-model="formState.agreeTerms" :rules="validations.terms" required density="compact" class="mt-3">
 					<template v-slot:label>
 						<div class="">Согласен с <router-link to="" target="_blank">правилами</router-link></div>
 					</template>
@@ -37,8 +37,8 @@
 
 <script setup>
 import passField from '@/components/UI/passField.vue';
-import { ref } from 'vue';
-import { useAuthStore } from '@/stores/auth';
+import { reactive, ref } from 'vue';
+import { useAuth } from '@/composables/auth';
 import { useRouter } from 'vue-router';
 import { useSnackbarStore } from '@/stores/snackbar';
 import validations from '@/utils/validations';
@@ -46,15 +46,17 @@ import validations from '@/utils/validations';
 const googleImg = new URL('@/assets/img/google.png', import.meta.url).href;
 
 const { push } = useRouter();
-const { registerWithEmail, signInWithGoogle } = useAuthStore();
+const { registerWithEmail, signInWithGoogle } = useAuth();
 const { showMessage } = useSnackbarStore();
 
 const form = ref();
-const valid = ref(true);
-const name = ref('');
-const password = ref('');
-const email = ref('');
-const agreeTerms = ref(false);
+
+const formState = reactive({
+	displayName: '',
+	password: '',
+	email: '',
+	agreeTerms: false
+});
 
 const submitForm = async () => {
 	const { valid } = await form.value.validate();
@@ -62,11 +64,11 @@ const submitForm = async () => {
 	if (valid) {
 		try {
 			await registerWithEmail({
-				name: name.value,
-				email: email.value,
-				password: password.value
+				displayName: formState.displayName,
+				email: formState.email,
+				password: formState.password
 			});
-			push({ path: '/profile' });
+			push('/profile');
 		} catch (e) {
 			showMessage(messages[e], 'red-darken-3', 2000);
 		}
@@ -75,7 +77,7 @@ const submitForm = async () => {
 const loginWithGoogle = async () => {
 	try {
 		await signInWithGoogle();
-		push({ path: '/profile' });
+		push('/profile');
 	} catch (e) {
 		showMessage(messages[e], 'red-darken-3', 2000);
 	}

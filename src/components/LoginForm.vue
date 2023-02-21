@@ -5,12 +5,12 @@
 		</v-card-item>
 
 		<v-card-text class="mt-3">
-			<v-form ref="form" v-model="valid" @submit.prevent="submitForm" lazy-validation>
+			<v-form ref="form" @submit.prevent="submitForm" lazy-validation>
 
-				<v-text-field v-model.trim="email" :rules="validations.email" label="Ваша почта" placeholder="Введите почту"
-					class="mt-5" variant="underlined" clearable required />
+				<v-text-field v-model.trim="formState.email" :rules="validations.email" label="Ваша почта"
+					placeholder="Введите почту" class="mt-5" variant="underlined" clearable required />
 
-				<pass-field v-model.trim="password" class="mt-5" />
+				<pass-field v-model.trim="formState.password" class="mt-5" />
 
 				<v-btn type="submit" color="success" class="btn mt-6">
 					Войти
@@ -29,9 +29,9 @@
 
 <script setup>
 import passField from '@/components/UI/passField.vue';
-import { ref } from 'vue';
+import { reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { useAuthStore } from '@/stores/auth';
+import { useAuth } from '@/composables/auth';
 import { useSnackbarStore } from '@/stores/snackbar';
 import messages from '@/utils/messages';
 import validations from '@/utils/validations';
@@ -39,25 +39,22 @@ import validations from '@/utils/validations';
 const googleImg = new URL('@/assets/img/google.png', import.meta.url).href;
 
 const { push } = useRouter();
-const { loginWithEmail, signInWithGoogle } = useAuthStore();
+const { loginWithEmail, signInWithGoogle } = useAuth();
 const { showMessage } = useSnackbarStore();
 
 const form = ref();
-const valid = ref(true);
-
-const email = ref('');
-const password = ref('');
+const formState = reactive({
+	email: '',
+	password: ''
+});
 
 const submitForm = async () => {
 	const { valid } = await form.value.validate();
 
 	if (valid) {
 		try {
-			await loginWithEmail({
-				email: email.value,
-				password: password.value,
-			});
-			push({ path: '/profile' });
+			await loginWithEmail(formState);
+			push('/profile');
 		} catch (e) {
 			showMessage(messages[e], 'red-darken-3', 2000);
 		}
@@ -66,7 +63,7 @@ const submitForm = async () => {
 const loginWithGoogle = async () => {
 	try {
 		await signInWithGoogle();
-		push({ path: '/profile' });
+		push('/profile');
 	} catch (e) {
 		showMessage(messages[e], 'red-darken-3', 2000);
 	}

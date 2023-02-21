@@ -1,13 +1,17 @@
 <template>
 	<v-container class="container" fluid>
-		<div style="height: 100%; position: relative;">
-			<div class="chat__content px-12" ref="chat">
-				<div class="messages-field" v-if="messages">
+		<div v-if="userChats && userChats.length && !userChats.some(el => el === $route.params.id)" class="text-h5 pa-5">
+			Такого чата не существует либо вы не состоите в нем</div>
+		<div v-else-if="userChats && userChats.length" style="height: 100%; position: relative;">
+			<div v-if="!messages"><page-loader /></div>
+			<div v-else-if="messages && messages.length" class="chat__content px-12" ref="chat">
+				<div class="messages-field mt-4" v-if="messages && messages.length">
 					<TransitionGroup name="messages-list">
 						<MessageItem v-for="m in messages" :key="m.id" :self="uid === m.sender.id" :textContent="m.content.text"
 							:sender="m.sender" :time="$d(m.created_at, 'message', 'uk-UA')" />
 					</TransitionGroup>
 				</div>
+				<div v-else>Сообщений в чате пока нет</div>
 			</div>
 			<MessageForm class="message-form pa-4" @submitForm="createMessage" />
 		</div>
@@ -15,35 +19,40 @@
 </template>
 
 <script setup>
+import pageLoader from '@/components/UI/pageLoader.vue';
 import MessageItem from '@/components/MessageItem.vue';
 import MessageForm from '@/components/MessageForm.vue';
 import { useMessagesStore } from '@/stores/messages';
 import { useCurrentUser } from 'vuefire';
-import { useChatStore } from '@/stores/chat';
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
+import { useChat } from '@/composables/chat';
+import { ref, computed, onUnmounted, watch, watchEffect, inject } from 'vue';
 import { useMeta } from 'vue-meta';
 import { useRoute } from 'vue-router';
 
 const route = useRoute();
 const messagesStore = useMessagesStore();
-const { getChatMembers } = useChatStore();
+const { getChatMembers } = useChat();
+const userChats = inject('userChats');
 const chat = ref();
 const members = ref([]);
-
-onMounted(async () => {
-	const chatId = route.params.id;
-	members.value = await getChatMembers(chatId);
-	await messagesStore.fetchChatMessages(chatId);
-});
-onUnmounted(() => messagesStore.clearMessages);
-
 const messages = computed(() => messagesStore.messages);
-watch(messages.value, () => {
-	setTimeout(() => chat.value.scrollTop = chat.value.scrollHeight, 0);
-});
-const uid = useCurrentUser().value.uid;
 
 useMeta({ title: route.params.id });
+const uid = useCurrentUser().value.uid;
+
+watchEffect(async () => {
+	messagesStore.clearMessages();
+	await messagesStore.fetchChatMessages(route.params.id);
+	members.value = await getChatMembers(route.params.id);
+});
+
+watch(messages, () => {
+	if (chat.value) {
+		setTimeout(() => chat.value.scrollTop = chat.value.scrollHeight, 0);
+	}
+}, { deep: true });
+
+onUnmounted(() => messagesStore.clearMessages());
 
 const createMessage = async messageText => {
 	await messagesStore.createMessage({

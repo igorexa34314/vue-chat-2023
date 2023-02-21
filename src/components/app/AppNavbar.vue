@@ -8,11 +8,12 @@
 		<v-spacer></v-spacer>
 
 		<Transition name="append-search">
-			<v-text-field v-show="searchEnabled" ref="search" @blur="searchEnabled = false" class="mr-3" placeholder="Поиск"
-				variant="solo" density="compact" hide-details />
+			<v-text-field v-show="searchState.enabled" v-model="searchState.text" ref="search"
+				@blur="searchState.enabled = false" class="mr-3" placeholder="Поиск" variant="solo" density="compact"
+				hide-details />
 		</Transition>
 
-		<v-btn variant="text" icon="mdi-magnify" @click="searchEnabled = true"></v-btn>
+		<v-btn variant="text" icon="mdi-magnify" @click="enableSearch"></v-btn>
 
 		<v-btn variant="text" icon="mdi-filter"></v-btn>
 
@@ -39,22 +40,27 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+import { reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { useAuthStore } from '@/stores/auth';
+import { useAuth } from '@/composables/auth';
 import { useUserdataStore } from '@/stores/userdata';
 
 const { push } = useRouter();
-const { logout } = useAuthStore();
+const { logout } = useAuth();
 const { clearData } = useUserdataStore();
 
 const emit = defineEmits(['drawer']);
 
-const searchEnabled = ref(false);
 const search = ref();
+const searchState = reactive({
+	enabled: false,
+	text: '',
+});
 
-watch(searchEnabled, newVal => !!newVal ? search.value.focus() : '');
-
+const enableSearch = () => {
+	searchState.enabled = true;
+	setTimeout(() => search.value.focus(), 0);
+};
 const exit = async () => {
 	await logout();
 	clearData();

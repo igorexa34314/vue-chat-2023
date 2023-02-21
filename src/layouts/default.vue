@@ -24,7 +24,9 @@ onMounted(async () => {
 });
 
 const userdata = computed(() => userdataStore.userdata);
+const userChats = computed(() => userdata.value.chats);
 provide('userdata', userdata);
+provide('userChats', userChats);
 </script>
 
 <style lang="scss" scoped></style>

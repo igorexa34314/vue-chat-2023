@@ -1,10 +1,9 @@
-import { defineStore } from 'pinia';
 import { useUserdataStore } from '@/stores/userdata';
 import { getAuth, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { getStorage, ref, getDownloadURL } from 'firebase/storage';
 import { getCurrentUser } from 'vuefire';
 
-export const useAuthStore = defineStore('auth', () => {
+export const useAuth = () => {
 	const userdata = useUserdataStore();
 	const auth = getAuth();
 
@@ -24,11 +23,11 @@ export const useAuthStore = defineStore('auth', () => {
 			console.error(e);
 		}
 	};
-	const registerWithEmail = async ({ email, password, name }) => {
+	const registerWithEmail = async ({ email, password, displayName }) => {
 		try {
 			const avatarURL = await getDownloadURL(ref(getStorage(), 'assets/default_user_avatar.jpg'));
 			const user = (await createUserWithEmailAndPassword(auth, email, password)).user;
-			await updateProfile(user, { displayName: name, photoURL: avatarURL });
+			await updateProfile(user, { displayName, photoURL: avatarURL });
 			await userdata.createUser(user);
 			return user.uid;
 		} catch (e) {
@@ -39,6 +38,7 @@ export const useAuthStore = defineStore('auth', () => {
 	const loginWithEmail = async ({ email, password }) => {
 		try {
 			await signInWithEmailAndPassword(auth, email, password);
+			await userdata.createUser(await getCurrentUser());
 		} catch (e) {
 			console.error(e);
 			throw e.code || e;
@@ -59,4 +59,4 @@ export const useAuthStore = defineStore('auth', () => {
 		loginWithEmail,
 		logout
 	};
-});
+};

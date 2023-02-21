@@ -1,11 +1,11 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import { useAuthStore } from '@/stores/auth';
+import { useAuth } from '@/composables/auth';
 import { useUserdataStore } from '@/stores/userdata';
-import { getFirestore, collection, doc, addDoc, setDoc, updateDoc, arrayUnion, orderBy, query, where, getDocs, Timestamp, onSnapshot, limit } from 'firebase/firestore';
+import { getFirestore, collection, doc, setDoc, orderBy, query, Timestamp, onSnapshot, limit } from 'firebase/firestore';
 
 export const useMessagesStore = defineStore('messages', () => {
-	const { getUid } = useAuthStore();
+	const { getUid } = useAuth();
 	const { getUserdataById } = useUserdataStore();
 	const db = getFirestore();
 
@@ -16,8 +16,8 @@ export const useMessagesStore = defineStore('messages', () => {
 	const clearMessages = () => {
 		messages.value = [];
 	};
-	const addMessage = message => {
-		messages.value.push(message);
+	const addMessage = msg => {
+		messages.value.push(msg);
 	};
 
 	const createMessage = async ({ chatId, content }) => {
@@ -27,10 +27,20 @@ export const useMessagesStore = defineStore('messages', () => {
 				id: messageRef.id,
 				content,
 				created_at: Timestamp.fromDate(new Date()),
-				sender: await getUid()
+				sender_id: await getUid()
 			});
 		} catch (e) {
 			console.error(e);
+		}
+	};
+	const getMessageSenderInfo = async message => {
+		try {
+			const { sender_id, ...m } = message;
+			const { displayName, photoURL } = (await getUserdataById(sender_id)).info;
+			return { ...m, sender: { id: sender_id, displayName, photoURL } };
+		} catch (e) {
+			console.error(e);
+			throw e.code || e;
 		}
 	};
 	const fetchChatMessages = async chatId => {
@@ -43,10 +53,13 @@ export const useMessagesStore = defineStore('messages', () => {
 					initialMessages.unshift({ ...doc.data(), created_at: doc.data().created_at.toDate() });
 				}
 			});
-			for (let m of initialMessages) {
-				const { displayName, photoURL } = (await getUserdataById(m.sender)).info;
-				addMessage({ ...m, sender: { id: m.sender, displayName, photoURL } });
-			}
+			const promises = [];
+			initialMessages.forEach(m => {
+				promises.push(getMessageSenderInfo(m));
+			});
+			(await Promise.all(promises)).forEach(m => {
+				addMessage(m);
+			});
 		});
 	};
 	return {

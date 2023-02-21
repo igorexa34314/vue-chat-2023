@@ -2,11 +2,11 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { getFirestore, getDoc, setDoc, onSnapshot, doc, updateDoc, arrayUnion, Timestamp, collection } from 'firebase/firestore';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { useAuthStore } from '@/stores/auth';
+import { useAuth } from '@/composables/auth';
 import { uuidv4 } from '@firebase/util';
 
 export const useUserdataStore = defineStore('userdata', () => {
-	const auth = useAuthStore();
+	const auth = useAuth();
 	const storage = getStorage();
 	const db = getFirestore();
 	const usersCol = collection(db, 'userdata');
@@ -49,10 +49,10 @@ export const useUserdataStore = defineStore('userdata', () => {
 			console.error('Error adding document: ', e);
 		}
 	};
-	const updateUserdata = async ({ name, gender, avatar }) => {
+	const updateUserdata = async ({ displayName, gender, avatar }) => {
 		try {
 			await updateDoc(await getUserRef(), {
-				'info.displayName': name,
+				'info.displayName': displayName,
 				'info.gender': gender
 			});
 			if (avatar) {

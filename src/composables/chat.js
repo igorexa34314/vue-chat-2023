@@ -1,10 +1,9 @@
-import { defineStore } from 'pinia';
-import { useAuthStore } from '@/stores/auth';
+import { useAuth } from '@/composables/auth';
 import { useUserdataStore } from '@/stores/userdata';
 import { getFirestore, collection, doc, setDoc, updateDoc, arrayUnion, query, where, getDoc, getDocs, Timestamp } from 'firebase/firestore';
 
-export const useChatStore = defineStore('chat', () => {
-	const { getUid } = useAuthStore();
+export const useChat = () => {
+	const { getUid } = useAuth();
 	const { getUserRef } = useUserdataStore();
 	const db = getFirestore();
 	const chatCol = collection(db, 'chat');
@@ -38,17 +37,23 @@ export const useChatStore = defineStore('chat', () => {
 			return (await isPrivateChatExists(senderId, companionId)) || (await createPrivateChat(senderId, companionId));
 		} catch (e) {
 			console.error(e);
+			throw e.code || e;
 		}
 	};
 	const getChatMembers = async chatId => {
-		const chat = await getDoc(doc(chatCol, chatId));
-		if (chat.exists()) {
-			return chat.data().members;
+		try {
+			const chat = await getDoc(doc(chatCol, chatId));
+			if (chat.exists()) {
+				return chat.data().members;
+			}
+			return;
+		} catch (e) {
+			console.error(e);
+			throw e.code || e;
 		}
-		return;
 	};
 	return {
 		joinPrivateChat,
 		getChatMembers
 	};
-});
+};
