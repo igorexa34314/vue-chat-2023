@@ -1,5 +1,5 @@
 <template>
-	<div v-if="!userdata || !Object.keys(userdata).length">Пользователь не найден</div>
+	<div v-if="!userdata || !Object.keys(userdata).length" class="text-h5 pa-4 mt-5">Пользователь не найден</div>
 	<div v-else>
 		<v-card class="pa-5">
 			<v-card-title>
@@ -44,11 +44,9 @@
 <script setup>
 import pageLoader from '@/components/UI/pageLoader.vue';
 import { useUserdataStore } from '@/stores/userdata';
-import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuth } from '@/composables/auth';
 import { useChat } from '@/composables/chat';
-import { useMeta } from 'vue-meta';
 
 const defaultAvatar = new URL('@/assets/img/default_user_avatar.jpg', import.meta.url).href;
 
@@ -60,8 +58,6 @@ const userdataStore = useUserdataStore();
 
 const userdata = await userdataStore.getUserdataById(route.params.id);
 const uid = await getUid();
-
-useMeta({ title: userdata.value && Object.keys(userdata.value).length ? userdata.value.displayName : '' });
 
 const goToChat = async () => {
 	try {

@@ -13,14 +13,16 @@
 <script setup>
 import AppNavbar from '@/components/app/AppNavbar.vue';
 import AppSidebar from '@/components/app/AppSidebar.vue';
-import { ref, computed, onMounted, provide } from 'vue';
+import { ref, computed, provide, onUnmounted } from 'vue';
 import { useUserdataStore } from '@/stores/userdata';
 
 const userdataStore = useUserdataStore();
 const drawer = ref(true);
 
-onMounted(async () => {
-	await userdataStore.fetchAuthUserdata();
+const unsubscribe = await userdataStore.fetchAuthUserdata();
+
+onUnmounted(() => {
+	if (unsubscribe) unsubscribe();
 });
 
 const userdata = computed(() => userdataStore.userdata);

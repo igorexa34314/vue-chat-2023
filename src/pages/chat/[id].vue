@@ -3,10 +3,10 @@
 		<div v-if="userChats && userChats.length && !userChats.some(el => el === $route.params.id)" class="text-h5 pa-5">
 			Такого чата не существует либо вы не состоите в нем</div>
 		<div v-else-if="userChats && userChats.length" style="height: 100%; position: relative;">
-			<div v-if="!messages"><page-loader /></div>
-			<div v-else-if="messages && messages.length" class="chat__content px-12" ref="chat">
+			<div v-if="loading"><page-loader /></div>
+			<div v-else-if="messages && messages.length && !loading" class="chat__content px-12" ref="chat">
 				<div class="messages-field mt-4" v-if="messages && messages.length">
-					<div v-intersect.quiet="loadMore" class="observer"
+					<div v-intersect.quiet="onIntersect" class="observer"
 						style="visibility: hidden; height: 1em; margin-top: -1rem;">
 					</div>
 					<TransitionGroup name="messages-list">
@@ -14,8 +14,8 @@
 							:sender="m.sender" :time="m.created_at" />
 					</TransitionGroup>
 				</div>
-				<div v-else>Сообщений в чате пока нет</div>
 			</div>
+			<div v-else class="text-h5 pa-4">Сообщений в чате пока нет</div>
 			<MessageForm class="message-form pa-4" @submitForm="createMessage" />
 		</div>
 	</v-container>
@@ -27,27 +27,33 @@ import MessageItem from '@/components/MessageItem.vue';
 import MessageForm from '@/components/MessageForm.vue';
 import { useMessagesStore } from '@/stores/messages';
 import { useCurrentUser } from 'vuefire';
-import { useChat } from '@/composables/chat';
 import { ref, computed, onUnmounted, watch, watchEffect, inject } from 'vue';
 import { useMeta } from 'vue-meta';
 import { useRoute } from 'vue-router';
 
 const route = useRoute();
 const messagesStore = useMessagesStore();
-const { getChatMembers } = useChat();
 const userChats = inject('userChats');
 const chat = ref();
 const page = ref(0);
-const members = ref([]);
+const loading = ref(true);
 const messages = computed(() => messagesStore.messages);
+let unsubscribe;
+
 
 useMeta({ title: route.params.id });
 const uid = useCurrentUser().value.uid;
 
 watchEffect(async () => {
 	messagesStore.clearMessages();
-	await messagesStore.fetchChatMessages(route.params.id);
-	members.value = await getChatMembers(route.params.id);
+	if (unsubscribe) {
+		unsubscribe();
+	}
+	if (route.params && route.params.id) {
+		loading.value = true;
+		unsubscribe = await messagesStore.fetchChatMessages(route.params.id);
+		loading.value = false;
+	}
 });
 watch(messages, () => {
 	if (chat.value) {
@@ -55,7 +61,10 @@ watch(messages, () => {
 	}
 }, { deep: true, flush: 'post' });
 
-onUnmounted(() => messagesStore.clearMessages());
+onUnmounted(() => {
+	messagesStore.clearMessages();
+	if (unsubscribe) unsubscribe();
+});
 
 const createMessage = async messageText => {
 	await messagesStore.createMessage({
@@ -66,10 +75,12 @@ const createMessage = async messageText => {
 	});
 };
 
-const loadMore = async () => {
-	console.log('Пересек');
-	page.value++;
-	// await messagesStore.loadMoreChatMessages(route.params.id);
+const onIntersect = async (isIntersecting, entries, observer) => {
+	if (isIntersecting) {
+		console.log('Пересек');
+		page.value++;
+		// await messagesStore.loadMoreChatMessages(route.params.id);
+	}
 };
 </script>
 

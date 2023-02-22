@@ -27,42 +27,49 @@ export const useUserdataStore = defineStore('userdata', () => {
 	};
 	const createUser = async ({ uid, displayName, phoneNumber, photoURL, metadata }) => {
 		try {
-			await setDoc(
-				await getUserRef(uid),
-				{
-					info: {
-						uid,
-						displayName,
-						phoneNumber,
-						photoURL,
-						gender: 'unknown',
-						created_at: Timestamp.fromDate(new Date(metadata.creationTime) || new Date())
-						// location: (await navigator.geolocation.getCurrentPosition()) || 'unknown'
+			const userRef = await getUserRef(uid);
+			const user = await getDoc(userRef);
+			if (user.exists()) {
+				await updateUserdata({ displayName, avatar: photoURL, phoneNumber });
+			} else {
+				await setDoc(
+					await getUserRef(uid),
+					{
+						info: {
+							uid,
+							displayName,
+							phoneNumber,
+							photoURL,
+							gender: 'unknown',
+							created_at: Timestamp.fromDate(new Date(metadata.creationTime) || new Date())
+							// location: (await navigator.geolocation.getCurrentPosition()) || 'unknown'
+						},
+						chats: [],
+						friends: []
 					},
-					chats: [],
-					friends: []
-				},
-				{ merge: true }
-			);
+					{ merge: true }
+				);
+			}
 			setUserdata({ uid, displayName, phoneNumber, photoURL, metadata });
 		} catch (e) {
 			console.error('Error adding document: ', e);
 		}
 	};
-	const updateUserdata = async ({ displayName, gender, avatar }) => {
+	const updateUserdata = async ({ displayName, gender, avatar, phoneNumber }) => {
 		try {
 			await updateDoc(await getUserRef(), {
-				'info.displayName': displayName,
-				'info.gender': gender
+				'info.displayName': displayName || null,
+				'info.phoneNumber': phoneNumber || null,
+				'info.gender': gender || 'unknown'
 			});
-			if (avatar) {
+			if (avatar && avatar.name) {
 				const avatarRef = storageRef(storage, `userdata/${await auth.getUid()}/avatar/${uuidv4() + '.' + avatar.name.split('.')[avatar.name.split('.').length - 1]}`);
 				await uploadBytes(avatarRef, avatar, {
 					contentType: avatar.type
 				});
 				const avatarURL = await getDownloadURL(avatarRef);
 				await updateDoc(await getUserRef(), {
-					'info.photoURL': avatarURL
+					'info.photoURL': avatarURL || null
 				});
 			}
 		} catch (e) {
@@ -73,11 +80,12 @@ export const useUserdataStore = defineStore('userdata', () => {
 	const fetchAuthUserdata = async () => {
 		try {
 			const userRef = await getUserRef();
-			onSnapshot(userRef, udata => {
+			const unsubscribe = onSnapshot(userRef, udata => {
 				if (udata && udata.exists()) {
 					setUserdata(udata.data());
 				}
 			});
+			return unsubscribe;
 		} catch (e) {
 			console.error(e);
 			throw e.code || e;

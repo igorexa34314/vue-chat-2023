@@ -9,7 +9,7 @@ export const useAuth = () => {
 
 	const getUid = async () => {
 		const currentUser = await getCurrentUser();
-		if (currentUser.uid) {
+		if (currentUser && currentUser.uid) {
 			return currentUser.uid;
 		}
 		return;

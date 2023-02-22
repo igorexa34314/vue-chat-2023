@@ -8,10 +8,9 @@ export const useMessagesStore = defineStore('messages', () => {
 	const { getUid } = useAuth();
 	const { getUserdataById } = useUserdataStore();
 	const db = getFirestore();
+	const chatCol = collection(db, 'chat');
 
 	const messages = ref([]);
-
-	const chatCol = collection(db, 'chat');
 
 	const clearMessages = () => {
 		messages.value = [];
@@ -47,12 +46,12 @@ export const useMessagesStore = defineStore('messages', () => {
 		try {
 			const messagesCol = collection(doc(chatCol, chatId), 'messages');
 			const q = query(messagesCol, orderBy('created_at', 'desc'), limit(10));
-			onSnapshot(q, async messagesRef => {
-				let initialMessages = [];
+			const unsubscribe = onSnapshot(q, async messagesRef => {
+				const initialMessages = [];
 				const promises = [];
-				messagesRef.forEach(doc => {
-					if (!messages.value.find(m => m.id === doc.id)) {
-						initialMessages.unshift({ ...doc.data(), created_at: doc.data().created_at.toDate() });
+				messagesRef.docChanges().forEach(change => {
+					if (change.type === 'added') {
+						initialMessages.unshift({ ...change.doc.data(), created_at: change.doc.data().created_at.toDate() });
 					}
 				});
 				initialMessages.forEach(m => {
@@ -62,6 +61,7 @@ export const useMessagesStore = defineStore('messages', () => {
 					addMessage(m);
 				});
 			});
+			return unsubscribe;
 		} catch (e) {
 			console.error(e);
 			throw e.code || e;

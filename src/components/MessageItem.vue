@@ -2,7 +2,7 @@
 	<div :class="{ self }" class="message d-flex">
 		<v-avatar size="30px" :image="sender.photoURL" :class="self ? 'ml-2' : 'mr-2'" class="sender__avatar"
 			@click="$router.push({ name: 'user-id', params: { id: sender.id } })" />
-		<v-card min-width="80" max-width="650" density="compact" class="message__card mb-4"
+		<v-card min-width="100" max-width="650" density="compact" class="message__card mb-4"
 			:class="self ? 'bg-light-blue-darken-3' : ''" variant="tonal">
 			<v-card-title class="message__head d-flex flex-row align-center">
 				<small class="sender__name" @click="$router.push({ name: 'user-id', params: { id: sender.id } })">{{
@@ -47,6 +47,9 @@ const messagesDateFormat = computed(() => {
 .message {
 	&__card {}
 	&__head {}
+	&__content {
+		line-height: 1.5;
+	}
 	&__time {
 		display: block;
 		text-align: end;
@@ -57,6 +60,7 @@ const messagesDateFormat = computed(() => {
 	&__name {
 		cursor: pointer;
 		font-size: 0.7rem;
+		line-height: 1.55;
 		font-weight: 600;
 		letter-spacing: 0.03rem;
 	}

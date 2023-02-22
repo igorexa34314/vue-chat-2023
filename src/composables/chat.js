@@ -4,7 +4,7 @@ import { getFirestore, collection, doc, setDoc, updateDoc, arrayUnion, query, wh
 
 export const useChat = () => {
 	const { getUid } = useAuth();
-	const { getUserRef } = useUserdataStore();
+	const { getUserRef, getUserdataById } = useUserdataStore();
 	const db = getFirestore();
 	const chatCol = collection(db, 'chat');
 
@@ -40,13 +40,28 @@ export const useChat = () => {
 			throw e.code || e;
 		}
 	};
-	const getChatMembers = async chatId => {
+	const getChatInfoById = async chatId => {
 		try {
+			const uid = await getUid();
 			const chat = await getDoc(doc(chatCol, chatId));
 			if (chat.exists()) {
-				return chat.data().members;
+				const { members, ...data } = chat.data();
+				if (chat.data().type === 'private') {
+					const opponentInfo = (await Promise.all(members.filter(mId => mId !== uid).map(getUserdataById))).map(m => m.info);
+					return {
+						...data,
+						opponent: opponentInfo.length === 1 ? opponentInfo[0] : opponentInfo,
+						created_at: chat.data().created_at.toDate()
+					};
+				} else {
+					const membersInfo = (await Promise.all(chat.data().members.map(getUserdataById))).map(m => m.info);
+					return {
+						...data,
+						members: membersInfo,
+						created_at: chat.data().created_at.toDate()
+					};
+				}
 			}
-			return;
 		} catch (e) {
 			console.error(e);
 			throw e.code || e;
@@ -54,6 +69,6 @@ export const useChat = () => {
 	};
 	return {
 		joinPrivateChat,
-		getChatMembers
+		getChatInfoById
 	};
 };
