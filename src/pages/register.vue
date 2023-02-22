@@ -8,12 +8,10 @@
 import RegisterForm from '@/components/RegisterForm.vue';
 import { useMeta } from 'vue-meta'
 
-useMeta({ title: 'Главная' })
+useMeta({ title: 'Регистрация' });
 </script>
 
-<style lang="scss" scoped>
-
-</style>
+<style lang="scss" scoped></style>
 
 <route lang="yaml">
 meta:

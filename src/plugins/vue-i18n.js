@@ -19,25 +19,43 @@ export default createI18n({
 				minute: 'numeric'
 			}
 		},
-		'uk-UA': {
-			short: {
-				year: 'numeric',
-				month: 'short',
-				day: 'numeric'
-			},
-			long: {
-				year: 'numeric',
-				month: 'short',
+		'ru-RU': {
+			messageLarge: {
+				month: '2-digit',
 				day: 'numeric',
-				weekday: 'short',
+				year: 'numeric',
 				hour: 'numeric',
 				minute: 'numeric'
 			},
-			message: {
+			messageLong: {
+				month: 'short',
+				day: 'numeric',
+				hour: 'numeric',
+				minute: 'numeric'
+			},
+			messageShort: {
+				hour: 'numeric',
+				minute: 'numeric'
+			}
+		},
+		'uk-UA': {
+			messageLarge: {
+				month: '2-digit',
+				day: 'numeric',
+				year: 'numeric',
+				hour: 'numeric',
+				minute: 'numeric'
+			},
+			messageLong: {
+				month: 'short',
+				day: 'numeric',
+				hour: 'numeric',
+				minute: 'numeric'
+			},
+			messageShort: {
 				hour: 'numeric',
 				minute: 'numeric'
 			}
 		}
 	}
-	// something vue-i18n options here ...
 });

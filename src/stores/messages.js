@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { useAuth } from '@/composables/auth';
 import { useUserdataStore } from '@/stores/userdata';
-import { getFirestore, collection, doc, setDoc, orderBy, query, Timestamp, onSnapshot, limit } from 'firebase/firestore';
+import { getFirestore, collection, doc, setDoc, orderBy, query, Timestamp, onSnapshot, limit, startAt, getDoc } from 'firebase/firestore';
 
 export const useMessagesStore = defineStore('messages', () => {
 	const { getUid } = useAuth();
@@ -44,28 +44,39 @@ export const useMessagesStore = defineStore('messages', () => {
 		}
 	};
 	const fetchChatMessages = async chatId => {
+		try {
+			const messagesCol = collection(doc(chatCol, chatId), 'messages');
+			const q = query(messagesCol, orderBy('created_at', 'desc'), limit(10));
+			onSnapshot(q, async messagesRef => {
+				let initialMessages = [];
+				const promises = [];
+				messagesRef.forEach(doc => {
+					if (!messages.value.find(m => m.id === doc.id)) {
+						initialMessages.unshift({ ...doc.data(), created_at: doc.data().created_at.toDate() });
+					}
+				});
+				initialMessages.forEach(m => {
+					promises.push(getMessageSenderInfo(m));
+				});
+				(await Promise.all(promises)).forEach(m => {
+					addMessage(m);
+				});
+			});
+		} catch (e) {
+			console.error(e);
+			throw e.code || e;
+		}
+	};
+	const loadMoreChatMessages = async (chatId, page = 0, perPage = 10) => {
+		const lastVisible = await fetchChatMessages(chatId);
 		const messagesCol = collection(doc(chatCol, chatId), 'messages');
-		const q = query(messagesCol, orderBy('created_at', 'desc'), limit(10));
-		onSnapshot(q, async messagesRef => {
-			let initialMessages = [];
-			messagesRef.forEach(doc => {
-				if (!messages.value.find(m => m.id === doc.id)) {
-					initialMessages.unshift({ ...doc.data(), created_at: doc.data().created_at.toDate() });
-				}
-			});
-			const promises = [];
-			initialMessages.forEach(m => {
-				promises.push(getMessageSenderInfo(m));
-			});
-			(await Promise.all(promises)).forEach(m => {
-				addMessage(m);
-			});
-		});
+		const q = query(messagesCol, orderBy('created_at', 'desc'), startAfter(lastVisible + page), limit(perPage));
 	};
 	return {
 		messages,
 		clearMessages,
 		createMessage,
-		fetchChatMessages
+		fetchChatMessages,
+		loadMoreChatMessages
 	};
 });

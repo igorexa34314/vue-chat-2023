@@ -6,9 +6,12 @@
 			<div v-if="!messages"><page-loader /></div>
 			<div v-else-if="messages && messages.length" class="chat__content px-12" ref="chat">
 				<div class="messages-field mt-4" v-if="messages && messages.length">
+					<div v-intersect.quiet="loadMore" class="observer"
+						style="visibility: hidden; height: 1em; margin-top: -1rem;">
+					</div>
 					<TransitionGroup name="messages-list">
 						<MessageItem v-for="m in messages" :key="m.id" :self="uid === m.sender.id" :textContent="m.content.text"
-							:sender="m.sender" :time="$d(m.created_at, 'message', 'uk-UA')" />
+							:sender="m.sender" :time="m.created_at" />
 					</TransitionGroup>
 				</div>
 				<div v-else>Сообщений в чате пока нет</div>
@@ -34,6 +37,7 @@ const messagesStore = useMessagesStore();
 const { getChatMembers } = useChat();
 const userChats = inject('userChats');
 const chat = ref();
+const page = ref(0);
 const members = ref([]);
 const messages = computed(() => messagesStore.messages);
 
@@ -45,12 +49,11 @@ watchEffect(async () => {
 	await messagesStore.fetchChatMessages(route.params.id);
 	members.value = await getChatMembers(route.params.id);
 });
-
 watch(messages, () => {
 	if (chat.value) {
 		setTimeout(() => chat.value.scrollTop = chat.value.scrollHeight, 0);
 	}
-}, { deep: true });
+}, { deep: true, flush: 'post' });
 
 onUnmounted(() => messagesStore.clearMessages());
 
@@ -61,6 +64,12 @@ const createMessage = async messageText => {
 			text: messageText,
 		},
 	});
+};
+
+const loadMore = async () => {
+	console.log('Пересек');
+	page.value++;
+	// await messagesStore.loadMoreChatMessages(route.params.id);
 };
 </script>
 

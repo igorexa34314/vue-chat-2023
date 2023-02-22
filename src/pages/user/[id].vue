@@ -1,5 +1,6 @@
 <template>
-	<div v-if="userdata">
+	<div v-if="!userdata || !Object.keys(userdata).length">Пользователь не найден</div>
+	<div v-else>
 		<v-card class="pa-5">
 			<v-card-title>
 				<v-row align="center" justify="space-between">
@@ -8,9 +9,12 @@
 							class="mr-5" />
 						<div class="">
 							<h2 class="mb-2">{{ userdata.info.displayName }}</h2>
-							<small><v-icon
-									:icon="userdata.info.gender === 'unknown' ? 'mdi-help' : userdata.info.gender === 'male' ? 'mdi-gender-male' : 'mdi-gender-female'"></v-icon>
-							</small>
+							<div class="d-flex align-center mt-2">
+								<span class="text-subtitle-1 mr-2">Пол:</span>
+								<small><v-icon
+										:icon="userdata.info.gender === 'unknown' ? 'mdi-help' : userdata.info.gender === 'male' ? 'mdi-gender-male' : 'mdi-gender-female'"></v-icon>
+								</small>
+							</div>
 						</div>
 					</v-col>
 					<v-col class="" v-if="route.params.id !== uid">
@@ -35,15 +39,16 @@
 			<v-card-actions></v-card-actions>
 		</v-card>
 	</div>
-	<div v-else>Пользователь не найден</div>
 </template>
 
 <script setup>
+import pageLoader from '@/components/UI/pageLoader.vue';
 import { useUserdataStore } from '@/stores/userdata';
 import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuth } from '@/composables/auth';
 import { useChat } from '@/composables/chat';
+import { useMeta } from 'vue-meta';
 
 const defaultAvatar = new URL('@/assets/img/default_user_avatar.jpg', import.meta.url).href;
 
@@ -53,13 +58,10 @@ const route = useRoute();
 const { push } = useRouter();
 const userdataStore = useUserdataStore();
 
-const userdata = ref();
-const uid = ref('');
+const userdata = await userdataStore.getUserdataById(route.params.id);
+const uid = await getUid();
 
-onMounted(async () => {
-	userdata.value = await userdataStore.getUserdataById(route.params.id);
-	uid.value = await getUid();
-});
+useMeta({ title: userdata.value && Object.keys(userdata.value).length ? userdata.value.displayName : '' });
 
 const goToChat = async () => {
 	try {
