@@ -27,23 +27,36 @@ import MessageItem from '@/components/MessageItem.vue';
 import MessageForm from '@/components/MessageForm.vue';
 import { useMessagesStore } from '@/stores/messages';
 import { useCurrentUser } from 'vuefire';
-import { ref, computed, onUnmounted, watch, watchEffect, inject, onMounted } from 'vue';
+import { useChat } from '@/composables/chat';
+import { ref, computed, onUnmounted, watch, watchEffect, inject } from 'vue';
 import { useMeta } from 'vue-meta';
 import { useRoute } from 'vue-router';
 
+
 const route = useRoute();
+const { getChatInfoById } = useChat();
+const chatInfo = ref({});
 const messagesStore = useMessagesStore();
 const userChats = inject('userChats');
 const chat = ref();
-const page = ref(0);
 const loading = ref(true);
 const messages = computed(() => messagesStore.messages);
 const lastVisible = computed(() => messagesStore.lastVisible);
 let unsubscribe;
 
-
-useMeta({ title: route.params.id });
 const uid = useCurrentUser().value.uid;
+
+// let time;
+// const scrollVisibility = ref('hidden');
+// const showScroll = () => {
+// 	scrollVisibility.value = 'visible';
+// 	if (!time) {
+// 		time = setTimeout(() => {
+// 			scrollVisibility.value = 'hidden';
+// 			console.log('timeout');
+// 		}, 1000);
+// 	}
+// };
 
 watchEffect(async () => {
 	messagesStore.clearMessages();
@@ -52,19 +65,25 @@ watchEffect(async () => {
 	}
 	if (route.params && route.params.id) {
 		loading.value = true;
+		chatInfo.value = await getChatInfoById(route.params.id);
 		unsubscribe = await messagesStore.fetchChatMessages(route.params.id);
 		loading.value = false;
 	}
 });
+useMeta(computed(() => {
+	if (Object.keys(chatInfo.value).length)
+		return { title: chatInfo.value.type === 'private' ? chatInfo.value.opponent.displayName : chatInfo.value.name };
+	return { title: 'Чат' };
+}));
 watch(messages, () => {
 	if (chat.value) {
-		setTimeout(() => chat.value.scrollTop = chat.value.scrollHeight, 0);
+		setTimeout(() => chat.value.scrollTop = chat.scrollHeight, 0);
 	}
 }, { deep: true, flush: 'post' });
 
-watch(page, () => {
-	if (chat.value) {
-		setTimeout(() => chat.value.scrollTop = chat.value.scrollHeight / 3, 0);
+watchEffect(() => {
+	if (chat.value && messages.value.length) {
+		setTimeout(() => chat.value.scrollTop = (chat.value.scrollHeight / messages.value.length) * ((messages.value.length % 10) || 10), 0);
 	}
 }, { flush: 'post' });
 
@@ -82,11 +101,9 @@ const createMessage = async messageText => {
 	});
 };
 
-
 const onIntersect = async (isIntersecting, entries, obs) => {
 	if (isIntersecting && lastVisible.value) {
 		await messagesStore.loadMoreChatMessages(route.params.id)
-		page.value++;
 	}
 };
 </script>
@@ -119,6 +136,26 @@ const onIntersect = async (isIntersecting, entries, obs) => {
 .messages-list-leave-to {
 	opacity: 0;
 	transform: translateX(30px);
+}
+/* width */
+::-webkit-scrollbar {
+	width: 0.55rem;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+	border-radius: 0.5rem;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+	// visibility: v-bind('scrollVisibility');
+	background-color: rgba($color: #ffffff, $alpha: .2);
+	border-radius: 0.5rem;
+	transition: all 0.35s ease-in 0s;
+	&:hover {
+		background-color: rgba($color: #ffffff, $alpha: .4);
+	}
 }
 </style>
 

@@ -43,10 +43,12 @@
 
 <script setup>
 import pageLoader from '@/components/UI/pageLoader.vue';
+import { computed } from 'vue';
 import { useUserdataStore } from '@/stores/userdata';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuth } from '@/composables/auth';
 import { useChat } from '@/composables/chat';
+import { useMeta } from 'vue-meta';
 
 const defaultAvatar = new URL('@/assets/img/default_user_avatar.jpg', import.meta.url).href;
 
@@ -58,6 +60,13 @@ const userdataStore = useUserdataStore();
 
 const userdata = await userdataStore.getUserdataById(route.params.id);
 const uid = await getUid();
+
+useMeta(computed(() => {
+	if (Object.keys(userdata).length) {
+		return { title: `${userdata.info.displayName}` }
+	}
+	return { title: 'Профиль' }
+}));
 
 const goToChat = async () => {
 	try {

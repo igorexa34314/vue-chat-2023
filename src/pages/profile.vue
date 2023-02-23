@@ -4,12 +4,15 @@
 		<v-form v-if="Object.keys(userdata).length" ref="form" @submit.prevent="submitForm" lazy-validation
 			class="pa-4 mt-6">
 			<v-text-field v-model.trim="formState.displayName" :rules="validations.name" label="Ваше имя"
-				placeholder="Введите ваше имя" class="" variant="underlined" counter="16" clearable required />
+				placeholder="Введите ваше имя" class="" variant="underlined" counter="16" clearable required
+				style="max-width: 600px" />
 
 			<v-radio-group v-model="formState.gender" inline label="Ваш пол" class="mt-6">
 				<v-radio v-for="(gender, index) in genderItems" :key="gender.value" :label="gender.name" :value="gender.value"
 					:color="index === 0 ? 'blue-darken-3' : 'red-darken-3'" class="mr-2" />
 			</v-radio-group>
+
+			<birthdayPicker v-model="formState.birthdayDate" class="birthday-picker mt-5" />
 
 			<div class="w-50 mt-5">
 				<v-card variant="outlined" max-width="200" class="mb-4" elevation="9">
@@ -29,7 +32,8 @@
 </template>
 
 <script setup>
-import pageLoader from '@/components/UI/pageLoader.vue'
+import birthdayPicker from '@/components/UI/birthdayPicker.vue';
+import pageLoader from '@/components/UI/pageLoader.vue';
 import { useUserdataStore } from '@/stores/userdata';
 import { ref, inject, watchEffect, reactive } from 'vue';
 import { useSnackbarStore } from '@/stores/snackbar';
@@ -49,6 +53,7 @@ const form = ref();
 const formState = reactive({
 	displayName: '',
 	gender: '',
+	birthdayDate: new Date(),
 	avatar: []
 });
 let profileURL = '';
@@ -56,7 +61,8 @@ let profileURL = '';
 const fillProfileForm = () => {
 	if (userdata.value.info && Object.keys(userdata.value.info).length) {
 		formState.displayName = userdata.value.info.displayName;
-		formState.gender = userdata.value.info.gender;
+		formState.gender = userdata.value.info.gender || 'unknown';
+		formState.birthdayDate = userdata.value.info.birthday_date || new Date();
 		profileURL = userdata.value.info.photoURL;
 	}
 };
@@ -75,9 +81,9 @@ const submitForm = async () => {
 	const { valid } = await form.value.validate();
 	if (valid) {
 		try {
+			const { avatar, ...data } = formState;
 			await updateUserdata({
-				displayName: formState.displayName,
-				gender: formState.gender,
+				...data,
 				avatar: formState.avatar.length ? formState.avatar[0] : null
 			});
 			formState.avatar = [];
@@ -91,7 +97,11 @@ const submitForm = async () => {
 };
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.birthday-picker {
+	max-width: 550px;
+}
+</style>
 
 <route lang="yaml">
 meta:

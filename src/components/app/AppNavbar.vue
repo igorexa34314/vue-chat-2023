@@ -3,7 +3,7 @@
 
 		<v-app-bar-nav-icon variant="text" @click.stop="$emit('drawer')"></v-app-bar-nav-icon>
 
-		<v-toolbar-title>Чат комнаты</v-toolbar-title>
+		<v-toolbar-title>Мой чат</v-toolbar-title>
 
 		<v-spacer></v-spacer>
 

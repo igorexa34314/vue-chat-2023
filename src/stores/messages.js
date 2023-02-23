@@ -90,10 +90,10 @@ export const useMessagesStore = defineStore('messages', () => {
 				(await Promise.all(promises)).forEach(m => {
 					addMessageToStart(m);
 				});
-				if (messagesRef.size > perPage) {
-					lastVisible.value = messagesRef.docs[messagesRef.docs.length - 1];
-				} else {
+				if (messagesRef.size < perPage) {
 					lastVisible.value = null;
+				} else {
+					lastVisible.value = messagesRef.docs[messagesRef.docs.length - 1];
 				}
 			}
 		} catch (e) {

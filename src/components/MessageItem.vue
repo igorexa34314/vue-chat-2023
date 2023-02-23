@@ -10,7 +10,7 @@
 			</v-card-title>
 			<v-card-text class="message__content pb-1">
 				<p>{{ textContent }}</p>
-				<i18n-d tag="small" :value="time" :format="messagesDateFormat" scope="global" locale="ru-RU"
+				<i18n-d tag="small" :value="time" :format="messagesDate" scope="global" locale="ru-RU"
 					class="message__time mt-2" />
 			</v-card-text>
 		</v-card>
@@ -19,6 +19,9 @@
 
 <script setup>
 import { computed } from 'vue';
+import { useDateFormat } from '@/utils/dateFormat';
+
+const { messagesDateFormat } = useDateFormat();
 const props = defineProps({
 	self: {
 		type: Boolean,
@@ -36,11 +39,8 @@ const props = defineProps({
 		type: [Date, String],
 	}
 });
-const messagesDateFormat = computed(() => {
-	const day = (new Date() - props.time) / (60 * 60 * 24 * 1000);
-	return (day < 1 && new Date().getDay() === props.time.getDay()) ? 'messageShort' :
-		(day < 24) ? 'messageLong' : 'messageLarge';
-});
+
+const messagesDate = computed(() => messagesDateFormat(props.time));
 </script>
 
 <style lang="scss" scoped>

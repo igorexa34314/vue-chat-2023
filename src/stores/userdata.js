@@ -40,7 +40,6 @@ export const useUserdataStore = defineStore('userdata', () => {
 							displayName,
 							phoneNumber,
 							photoURL,
-							gender: 'unknown',
 							created_at: Timestamp.fromDate(new Date(metadata.creationTime) || new Date())
 							// location: (await navigator.geolocation.getCurrentPosition()) || 'unknown'
 						},
@@ -55,11 +54,12 @@ export const useUserdataStore = defineStore('userdata', () => {
 			console.error('Error adding document: ', e);
 		}
 	};
-	const updateUserdata = async ({ displayName, gender, avatar, phoneNumber }) => {
+	const updateUserdata = async ({ displayName, gender, avatar, phoneNumber, birthdayDate }) => {
 		try {
 			await updateDoc(await getUserRef(), {
 				'info.displayName': displayName || null,
 				'info.phoneNumber': phoneNumber || null,
+				'info.birthday_date': birthdayDate || null,
 				'info.gender': gender || 'unknown'
 			});
 			if (avatar && avatar.name) {
@@ -82,7 +82,15 @@ export const useUserdataStore = defineStore('userdata', () => {
 			const userRef = await getUserRef();
 			const unsubscribe = onSnapshot(userRef, udata => {
 				if (udata && udata.exists()) {
-					setUserdata(udata.data());
+					const { info, ...data } = udata.data();
+					const { birthday_date, ...rest } = info;
+					setUserdata({
+						...data,
+						info: {
+							...rest,
+							birthday_date: birthday_date.toDate()
+						}
+					});
 				}
 			});
 			return unsubscribe;
