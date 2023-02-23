@@ -16,8 +16,12 @@
 <script setup>
 import GlobalSnackbar from '@/components/app/GlobalSnackbar.vue';
 import pageLoader from '@/components/UI/pageLoader.vue';
+import { onErrorCaptured } from 'vue';
 
 const AppName = import.meta.env.VITE_APP_NAME || 'My Chat';
+onErrorCaptured((err, instance, info) => {
+  console.error(err, info);
+});
 </script>
 
 <style lang="scss"></style>

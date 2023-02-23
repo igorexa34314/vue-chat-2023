@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { useAuth } from '@/composables/auth';
 import { useUserdataStore } from '@/stores/userdata';
-import { getFirestore, collection, doc, setDoc, orderBy, query, Timestamp, onSnapshot, limit, startAt, getDoc } from 'firebase/firestore';
+import { getFirestore, collection, doc, setDoc, orderBy, query, Timestamp, onSnapshot, limit, startAt, getDoc, getDocs, startAfter } from 'firebase/firestore';
 
 export const useMessagesStore = defineStore('messages', () => {
 	const { getUid } = useAuth();
@@ -11,12 +11,15 @@ export const useMessagesStore = defineStore('messages', () => {
 	const chatCol = collection(db, 'chat');
 
 	const messages = ref([]);
-
+	const lastVisible = ref(null);
 	const clearMessages = () => {
 		messages.value = [];
 	};
 	const addMessage = msg => {
 		messages.value.push(msg);
+	};
+	const addMessageToStart = msg => {
+		messages.value.unshift(msg);
 	};
 
 	const createMessage = async ({ chatId, content }) => {
@@ -42,10 +45,10 @@ export const useMessagesStore = defineStore('messages', () => {
 			throw e.code || e;
 		}
 	};
-	const fetchChatMessages = async chatId => {
+	const fetchChatMessages = async (chatId, lmt = 10) => {
 		try {
 			const messagesCol = collection(doc(chatCol, chatId), 'messages');
-			const q = query(messagesCol, orderBy('created_at', 'desc'), limit(10));
+			const q = query(messagesCol, orderBy('created_at', 'desc'), limit(lmt));
 			const unsubscribe = onSnapshot(q, async messagesRef => {
 				const initialMessages = [];
 				const promises = [];
@@ -60,6 +63,7 @@ export const useMessagesStore = defineStore('messages', () => {
 				(await Promise.all(promises)).forEach(m => {
 					addMessage(m);
 				});
+				lastVisible.value = messagesRef.docs[messagesRef.docs.length - 1];
 			});
 			return unsubscribe;
 		} catch (e) {
@@ -67,13 +71,38 @@ export const useMessagesStore = defineStore('messages', () => {
 			throw e.code || e;
 		}
 	};
-	const loadMoreChatMessages = async (chatId, page = 0, perPage = 10) => {
-		const lastVisible = await fetchChatMessages(chatId);
-		const messagesCol = collection(doc(chatCol, chatId), 'messages');
-		const q = query(messagesCol, orderBy('created_at', 'desc'), startAfter(lastVisible + page), limit(perPage));
+	const loadMoreChatMessages = async (chatId, perPage = 10) => {
+		try {
+			if (lastVisible.value) {
+				const messagesCol = collection(doc(chatCol, chatId), 'messages');
+				const q = query(messagesCol, orderBy('created_at', 'desc'), startAfter(lastVisible.value), limit(perPage));
+				const messagesRef = await getDocs(q);
+				const initialMessages = [];
+				const promises = [];
+				messagesRef.forEach(doc => {
+					if (doc.exists()) {
+						initialMessages.unshift({ ...doc.data(), created_at: doc.data().created_at.toDate() });
+					}
+				});
+				initialMessages.forEach(m => {
+					promises.unshift(getMessageSenderInfo(m));
+				});
+				(await Promise.all(promises)).forEach(m => {
+					addMessageToStart(m);
+				});
+				if (messagesRef.size > perPage) {
+					lastVisible.value = messagesRef.docs[messagesRef.docs.length - 1];
+				} else {
+					lastVisible.value = null;
+				}
+			}
+		} catch (e) {
+			console.error(e);
+		}
 	};
 	return {
 		messages,
+		lastVisible,
 		clearMessages,
 		createMessage,
 		fetchChatMessages,

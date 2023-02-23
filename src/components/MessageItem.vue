@@ -10,7 +10,7 @@
 			</v-card-title>
 			<v-card-text class="message__content pb-1">
 				<p>{{ textContent }}</p>
-				<i18n-d tag="small" :value="time" :format="messagesDateFormat" scope="global" locale="uk-UA"
+				<i18n-d tag="small" :value="time" :format="messagesDateFormat" scope="global" locale="ru-RU"
 					class="message__time mt-2" />
 			</v-card-text>
 		</v-card>

@@ -4,18 +4,18 @@
 			Такого чата не существует либо вы не состоите в нем</div>
 		<div v-else-if="userChats && userChats.length" style="height: 100%; position: relative;">
 			<div v-if="loading"><page-loader /></div>
-			<div v-else-if="messages && messages.length && !loading" class="chat__content px-12" ref="chat">
-				<div class="messages-field mt-4" v-if="messages && messages.length">
-					<div v-intersect.quiet="onIntersect" class="observer"
-						style="visibility: hidden; height: 1em; margin-top: -1rem;">
+			<div v-else-if="messages && messages.length" class="chat__content px-12" ref="chat">
+				<div class="messages-field mt-4">
+					<div v-if="lastVisible" v-intersect.quiet="onIntersect" class="observer"
+						style="visibility: hidden; height: 1em; margin-top: -1.2rem;">
 					</div>
 					<TransitionGroup name="messages-list">
 						<MessageItem v-for="m in messages" :key="m.id" :self="uid === m.sender.id" :textContent="m.content.text"
 							:sender="m.sender" :time="m.created_at" />
 					</TransitionGroup>
 				</div>
+				<!-- <div v-if="!messages || !messages.length" class="text-h5 pa-4">Сообщений в чате пока нет</div> -->
 			</div>
-			<div v-else class="text-h5 pa-4">Сообщений в чате пока нет</div>
 			<MessageForm class="message-form pa-4" @submitForm="createMessage" />
 		</div>
 	</v-container>
@@ -27,7 +27,7 @@ import MessageItem from '@/components/MessageItem.vue';
 import MessageForm from '@/components/MessageForm.vue';
 import { useMessagesStore } from '@/stores/messages';
 import { useCurrentUser } from 'vuefire';
-import { ref, computed, onUnmounted, watch, watchEffect, inject } from 'vue';
+import { ref, computed, onUnmounted, watch, watchEffect, inject, onMounted } from 'vue';
 import { useMeta } from 'vue-meta';
 import { useRoute } from 'vue-router';
 
@@ -38,6 +38,7 @@ const chat = ref();
 const page = ref(0);
 const loading = ref(true);
 const messages = computed(() => messagesStore.messages);
+const lastVisible = computed(() => messagesStore.lastVisible);
 let unsubscribe;
 
 
@@ -61,6 +62,12 @@ watch(messages, () => {
 	}
 }, { deep: true, flush: 'post' });
 
+watch(page, () => {
+	if (chat.value) {
+		setTimeout(() => chat.value.scrollTop = chat.value.scrollHeight / 3, 0);
+	}
+}, { flush: 'post' });
+
 onUnmounted(() => {
 	messagesStore.clearMessages();
 	if (unsubscribe) unsubscribe();
@@ -75,11 +82,11 @@ const createMessage = async messageText => {
 	});
 };
 
-const onIntersect = async (isIntersecting, entries, observer) => {
-	if (isIntersecting) {
-		console.log('Пересек');
+
+const onIntersect = async (isIntersecting, entries, obs) => {
+	if (isIntersecting && lastVisible.value) {
+		await messagesStore.loadMoreChatMessages(route.params.id)
 		page.value++;
-		// await messagesStore.loadMoreChatMessages(route.params.id);
 	}
 };
 </script>
