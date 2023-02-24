@@ -13,13 +13,13 @@
 				hide-details />
 		</Transition>
 
-		<v-btn variant="text" icon="mdi-magnify" @click="enableSearch"></v-btn>
+		<v-btn variant="text" icon="mdi-magnify" @click="enableSearch"/>
 
-		<v-btn variant="text" icon="mdi-filter"></v-btn>
+		<v-btn variant="text" icon="mdi-filter" disabled/>
 
 		<v-menu>
 			<template v-slot:activator="{ props }">
-				<v-btn v-bind="props" variant="text" icon="mdi-dots-vertical"></v-btn>
+				<v-btn v-bind="props" variant="text" icon="mdi-dots-vertical"/>
 			</template>
 			<v-list density="compact">
 				<v-list-item density="compact" to="/profile">

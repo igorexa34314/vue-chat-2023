@@ -3,11 +3,14 @@ import { ref } from 'vue';
 import { useAuth } from '@/composables/auth';
 import { useUserdataStore } from '@/stores/userdata';
 import { getFirestore, collection, doc, setDoc, orderBy, query, Timestamp, onSnapshot, limit, startAt, getDoc, getDocs, startAfter } from 'firebase/firestore';
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { uuidv4 } from '@firebase/util';
 
 export const useMessagesStore = defineStore('messages', () => {
 	const { getUid } = useAuth();
 	const { getUserdataById } = useUserdataStore();
 	const db = getFirestore();
+	const storage = getStorage();
 	const chatCol = collection(db, 'chat');
 
 	const messages = ref([]);
@@ -22,17 +25,29 @@ export const useMessagesStore = defineStore('messages', () => {
 		messages.value.unshift(msg);
 	};
 
-	const createMessage = async ({ chatId, content }) => {
+	const createMessage = async ({ chatId, type, content }) => {
 		try {
 			const messageRef = doc(collection(doc(chatCol, chatId), 'messages'));
+			if (content.image instanceof File) {
+				const { subtitle, image } = content;
+				const imageRef = storageRef(storage, `chat/${chatId}/messageData/${messageRef.id}/${uuidv4() + '.' + image.name.split('.')[image.name.split('.').length - 1]}`);
+				await uploadBytes(imageRef, image, {
+					name: image.name,
+					contentType: image.type
+				});
+				const imageURL = await getDownloadURL(imageRef);
+				content = { subtitle, imageURL };
+			}
 			await setDoc(messageRef, {
 				id: messageRef.id,
+				type,
 				content,
 				created_at: Timestamp.fromDate(new Date()),
 				sender_id: await getUid()
 			});
 		} catch (e) {
 			console.error(e);
+			throw e.code || e;
 		}
 	};
 	const getMessageSenderInfo = async message => {
@@ -52,6 +67,7 @@ export const useMessagesStore = defineStore('messages', () => {
 			const unsubscribe = onSnapshot(q, async messagesRef => {
 				const initialMessages = [];
 				const promises = [];
+
 				messagesRef.docChanges().forEach(change => {
 					if (change.type === 'added') {
 						initialMessages.unshift({ ...change.doc.data(), created_at: change.doc.data().created_at.toDate() });
@@ -63,7 +79,7 @@ export const useMessagesStore = defineStore('messages', () => {
 				(await Promise.all(promises)).forEach(m => {
 					addMessage(m);
 				});
-				lastVisible.value = messagesRef.docs[messagesRef.docs.length - 1];
+				if (messagesRef.size >= 10) lastVisible.value = messagesRef.docs[messagesRef.docs.length - 1];
 			});
 			return unsubscribe;
 		} catch (e) {

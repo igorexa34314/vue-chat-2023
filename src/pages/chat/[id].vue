@@ -10,21 +10,21 @@
 						style="visibility: hidden; height: 1em; margin-top: -1.2rem;">
 					</div>
 					<TransitionGroup name="messages-list">
-						<MessageItem v-for="m in messages" :key="m.id" :self="uid === m.sender.id" :textContent="m.content.text"
-							:sender="m.sender" :time="m.created_at" />
+						<MessageItem v-for="m in messages" :key="m.id" :self="uid === m.sender.id" :type="m.type" :content="m.content"
+							:sender="m.sender" :created_at="m.created_at" />
 					</TransitionGroup>
 				</div>
 				<!-- <div v-if="!messages || !messages.length" class="text-h5 pa-4">Сообщений в чате пока нет</div> -->
 			</div>
-			<MessageForm class="message-form pa-4" @submitForm="createMessage" />
+			<MessageForm class="message-form py-4 px-6" @submitForm="createMessage" />
 		</div>
 	</v-container>
 </template>
 
 <script setup>
 import pageLoader from '@/components/UI/pageLoader.vue';
-import MessageItem from '@/components/MessageItem.vue';
-import MessageForm from '@/components/MessageForm.vue';
+import MessageItem from '@/components/message/MessageItem.vue';
+import MessageForm from '@/components/message/MessageForm.vue';
 import { useMessagesStore } from '@/stores/messages';
 import { useCurrentUser } from 'vuefire';
 import { useChat } from '@/composables/chat';
@@ -58,6 +58,7 @@ const uid = useCurrentUser().value.uid;
 // 	}
 // };
 
+// Reset messages when switching chat
 watchEffect(async () => {
 	messagesStore.clearMessages();
 	if (unsubscribe) {
@@ -70,6 +71,7 @@ watchEffect(async () => {
 		loading.value = false;
 	}
 });
+// Page dynamic title
 useMeta(computed(() => {
 	if (Object.keys(chatInfo.value).length)
 		return { title: chatInfo.value.type === 'private' ? chatInfo.value.opponent.displayName : chatInfo.value.name };
@@ -77,7 +79,7 @@ useMeta(computed(() => {
 }));
 watch(messages, () => {
 	if (chat.value) {
-		setTimeout(() => chat.value.scrollTop = chat.scrollHeight, 0);
+		setTimeout(() => chat.value.scrollTop = chat.value.scrollHeight, 0);
 	}
 }, { deep: true, flush: 'post' });
 
@@ -92,15 +94,18 @@ onUnmounted(() => {
 	if (unsubscribe) unsubscribe();
 });
 
-const createMessage = async messageText => {
+const createMessage = async (content, type = 'text') => {
 	await messagesStore.createMessage({
 		chatId: route.params.id,
-		content: {
-			text: messageText,
-		},
+		type,
+		content,
 	});
+	if (chat.value && messages.value.length) {
+		setTimeout(() => chat.value.scrollTop = chat.value.scrollHeight, 0);
+	}
 };
 
+// Observer top
 const onIntersect = async (isIntersecting, entries, obs) => {
 	if (isIntersecting && lastVisible.value) {
 		await messagesStore.loadMoreChatMessages(route.params.id)

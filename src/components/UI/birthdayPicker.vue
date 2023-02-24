@@ -22,7 +22,7 @@ const emit = defineEmits(['update:modelValue']);
 const datePickerState = ref([
 	{ type: 'month', title: 'Месяц', value: props.modelValue.getMonth() + 1, items: monthsForLocale('ru-RU', 'long').map((title, i) => ({ title, value: ++i })) },
 	{ type: 'day', title: 'День', value: props.modelValue.getDate(), items: Array.from({ length: 31 }, (v, i) => ++i) },
-	{ type: 'year', title: 'Год', value: props.modelValue.getFullYear(), items: Array.from({ length: 100 }, (v, i) => (new Date().getFullYear() - 99) + i) },
+	{ type: 'year', title: 'Год', value: props.modelValue.getFullYear(), items: Array.from({ length: 100 }, (v, i) => (new Date().getFullYear() - 99) + i).reverse() },
 ]);
 
 watchEffect(() => emit('update:modelValue', new Date(datePickerState.value.map(item => item.value).join('-'))));

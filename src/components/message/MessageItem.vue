@@ -2,15 +2,19 @@
 	<div :class="{ self }" class="message d-flex">
 		<v-avatar size="30px" :image="sender.photoURL" :class="self ? 'ml-2' : 'mr-2'" class="sender__avatar"
 			@click="$router.push({ name: 'user-id', params: { id: sender.id } })" />
-		<v-card min-width="100" max-width="650" density="compact" class="message__card mb-4"
+		<v-card min-width="100px" max-width="650px" density="compact" class="message__card mb-4"
 			:class="self ? 'bg-light-blue-darken-3' : ''" variant="tonal">
 			<v-card-title class="message__head d-flex flex-row align-center">
 				<small class="sender__name" @click="$router.push({ name: 'user-id', params: { id: sender.id } })">{{
 					sender.displayName }}</small>
 			</v-card-title>
 			<v-card-text class="message__content pb-1">
-				<p>{{ textContent }}</p>
-				<i18n-d tag="small" :value="time" :format="messagesDate" scope="global" locale="ru-RU"
+				<p class="message__text" :class="type !== 'text' && content.subtitle ? 'mb-4' : ''">
+					{{ type === 'text' ? content.text : type === 'media' ? content.subtitle : '' }}</p>
+				<v-card v-if="type === 'media'" max-width="550px" max-height="350px" class="image__wrapper my-2">
+					<img :src="content.imageURL" :alt="content.subtitle" />
+				</v-card>
+				<i18n-d tag="small" :value="created_at" :format="messagesDate" scope="global" locale="ru-RU"
 					class="message__time mt-2" />
 			</v-card-text>
 		</v-card>
@@ -27,20 +31,25 @@ const props = defineProps({
 		type: Boolean,
 		default: false,
 	},
+	type: {
+		type: String,
+		default: 'text',
+	},
 	sender: {
 		type: Object,
 		required: true,
 	},
-	textContent: {
-		type: String,
+	content: {
+		type: Object,
 		required: true,
 	},
-	time: {
+	created_at: {
+		required: true,
 		type: [Date, String],
 	}
 });
 
-const messagesDate = computed(() => messagesDateFormat(props.time));
+const messagesDate = computed(() => messagesDateFormat(props.created_at));
 </script>
 
 <style lang="scss" scoped>
@@ -76,5 +85,10 @@ const messagesDate = computed(() => messagesDateFormat(props.time));
 	.message__card {
 		order: 1 !important;
 	}
+}
+.image__wrapper img {
+	display: block;
+	max-width: 100%;
+	height: auto;
 }
 </style>

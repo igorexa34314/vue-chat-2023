@@ -65,6 +65,7 @@ export const useUserdataStore = defineStore('userdata', () => {
 			if (avatar && avatar.name) {
 				const avatarRef = storageRef(storage, `userdata/${await auth.getUid()}/avatar/${uuidv4() + '.' + avatar.name.split('.')[avatar.name.split('.').length - 1]}`);
 				await uploadBytes(avatarRef, avatar, {
+					name: avatar.name,
 					contentType: avatar.type
 				});
 				const avatarURL = await getDownloadURL(avatarRef);
