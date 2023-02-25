@@ -28,7 +28,8 @@
 
 <script setup>
 import pageLoader from '@/components/UI/pageLoader.vue';
-import { ref, computed, inject, watchEffect } from 'vue';
+import { ref, computed, inject } from 'vue';
+import { computedAsync } from '@vueuse/core';
 import { useChat } from '@/composables/chat';
 
 const defaultAvatar = new URL('@/assets/img/default_user_avatar.jpg', import.meta.url).href;
@@ -45,12 +46,6 @@ const drawer = computed({
 	set: value => emit('update:modelValue', value),
 });
 
-const { getChatInfoById } = useChat();
-const userdata = inject('userdata');
-const userChats = inject('userChats');
-const userChatsInfo = ref([]);
-const loading = ref(true);
-
 const fetchChatsInfo = async () => {
 	if (userChats.value && userChats.value.length) {
 		loading.value = true;
@@ -61,11 +56,11 @@ const fetchChatsInfo = async () => {
 	loading.value = false;
 };
 
-userChatsInfo.value = await fetchChatsInfo();
-
-watchEffect(async () => {
-	userChatsInfo.value = await fetchChatsInfo();
-});
+const { getChatInfoById } = useChat();
+const userdata = inject('userdata');
+const userChats = inject('userChats');
+const userChatsInfo = computedAsync(async () => await fetchChatsInfo());
+const loading = ref(true);
 </script>
 
 <style lang="scss" scoped>

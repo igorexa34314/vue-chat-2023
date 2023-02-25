@@ -5,7 +5,7 @@
 		</v-card-item>
 
 		<v-card-text class="mt-3">
-			<v-form ref="form" @submit.prevent="submitForm" lazy-validation>
+			<v-form ref="formEl" @submit.prevent="submitForm" lazy-validation>
 
 				<v-text-field v-model.trim="formState.email" :rules="validations.email" label="Ваша почта"
 					placeholder="Введите почту" class="mt-5" variant="underlined" clearable required />
@@ -42,21 +42,21 @@ const { push } = useRouter();
 const { loginWithEmail, signInWithGoogle } = useAuth();
 const { showMessage } = useSnackbarStore();
 
-const form = ref();
+const formEl = ref();
 const formState = reactive({
 	email: '',
 	password: ''
 });
 
 const submitForm = async () => {
-	const { valid } = await form.value.validate();
+	const { valid } = await formEl.value.validate();
 
 	if (valid) {
 		try {
 			await loginWithEmail(formState);
 			push('/profile');
 		} catch (e) {
-			showMessage(messages[e], 'red-darken-3', 2000);
+			showMessage(messages[e] || e, 'red-darken-3', 2000);
 		}
 	}
 };
@@ -65,7 +65,7 @@ const loginWithGoogle = async () => {
 		await signInWithGoogle();
 		push('/profile');
 	} catch (e) {
-		showMessage(messages[e], 'red-darken-3', 2000);
+		showMessage(messages[e] || e, 'red-darken-3', 2000);
 	}
 };
 </script>

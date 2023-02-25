@@ -1,7 +1,7 @@
 <template>
 	<section class="mt-5 pa-5">
 		<h2 class="ml-4 mt-5">Ваш профиль</h2>
-		<v-form v-if="Object.keys(userdata).length" ref="form" @submit.prevent="submitForm" lazy-validation
+		<v-form v-if="Object.keys(userdata).length" ref="formEl" @submit.prevent="submitForm" lazy-validation
 			class="pa-4 mt-6">
 			<v-text-field v-model.trim="formState.displayName" :rules="validations.name" label="Ваше имя"
 				placeholder="Введите ваше имя" class="" variant="underlined" counter="16" clearable required
@@ -15,7 +15,7 @@
 			<birthdayPicker v-model="formState.birthdayDate" class="birthday-picker mt-5" />
 
 			<div class="w-50 mt-5">
-				<v-card variant="outlined" max-width="200" class="mb-4" elevation="9">
+				<v-card variant="outlined" max-width="200" class="mb-5" elevation="9">
 					<v-img :lazy-src="defaultAvatar" :src="profileURL" alt="Ваш аватар" cover />
 				</v-card>
 				<div class="mb-4">Загрузите ваше фото</div>
@@ -49,7 +49,7 @@ const { updateUserdata } = useUserdataStore();
 const { showMessage } = useSnackbarStore();
 const userdata = inject('userdata');
 
-const form = ref();
+const formEl = ref();
 const formState = reactive({
 	displayName: '',
 	gender: '',
@@ -78,7 +78,7 @@ const genderItems = [
 	{ name: 'Не указывать', value: 'unknown' },
 ];
 const submitForm = async () => {
-	const { valid } = await form.value.validate();
+	const { valid } = await formEl.value.validate();
 	if (valid) {
 		try {
 			const { avatar, ...data } = formState;
@@ -90,7 +90,7 @@ const submitForm = async () => {
 			showMessage('succesfully_updated');
 		} catch (e) {
 			console.error(e);
-			showMessage(messages[e], 'red-darken-3', 2000);
+			showMessage(messages[e] || e, 'red-darken-3', 2000);
 		}
 
 	}

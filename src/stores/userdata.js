@@ -89,7 +89,7 @@ export const useUserdataStore = defineStore('userdata', () => {
 						...data,
 						info: {
 							...rest,
-							birthday_date: birthday_date.toDate()
+							birthday_date: birthday_date ? birthday_date.toDate() : null
 						}
 					});
 				}

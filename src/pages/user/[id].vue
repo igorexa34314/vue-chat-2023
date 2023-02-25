@@ -49,10 +49,12 @@ import { useRoute, useRouter } from 'vue-router';
 import { useAuth } from '@/composables/auth';
 import { useChat } from '@/composables/chat';
 import { useMeta } from 'vue-meta';
+import { useSnackbarStore } from '@/stores/snackbar';
 
 const defaultAvatar = new URL('@/assets/img/default_user_avatar.jpg', import.meta.url).href;
 
 const { getUid } = useAuth();
+const { showMessage } = useSnackbarStore();
 const { joinPrivateChat } = useChat();
 const route = useRoute();
 const { push } = useRouter();
@@ -61,6 +63,7 @@ const userdataStore = useUserdataStore();
 const userdata = await userdataStore.getUserdataById(route.params.id);
 const uid = await getUid();
 
+//Dynamic page title
 useMeta(computed(() => {
 	if (Object.keys(userdata).length) {
 		return { title: `${userdata.info.displayName}` }
@@ -73,7 +76,7 @@ const goToChat = async () => {
 		const chatId = await joinPrivateChat(route.params.id);
 		push({ name: 'chat-id', params: { id: chatId } });
 	} catch (e) {
-		console.error(e);
+		showMessage(messages[e] || e, 'red-darken-3', 2000);
 	}
 };
 const addToFriend = async () => {

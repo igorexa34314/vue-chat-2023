@@ -114,6 +114,7 @@ export const useMessagesStore = defineStore('messages', () => {
 			}
 		} catch (e) {
 			console.error(e);
+			throw e.code || e;
 		}
 	};
 	return {

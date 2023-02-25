@@ -4,7 +4,7 @@
 			<v-card-title class="text-center">Регистрация</v-card-title>
 		</v-card-item>
 		<v-card-text class="mt-3">
-			<v-form ref="form" lazy-validation @submit.prevent="submitForm">
+			<v-form ref="formEl" lazy-validation @submit.prevent="submitForm">
 
 				<v-text-field v-model.trim="formState.displayName" :rules="validations.name" label="Ваше имя"
 					placeholder="Введите ваше имя" class="" variant="underlined" counter="16" clearable required />
@@ -27,7 +27,7 @@
 		</v-card-text>
 		<v-card-actions class="flex-column justify-center">
 			<div class="providers d-flex">
-				<v-btn type="button" @click="loginWithGoogle" variant="plain" stacked density="compact" size="small"> <v-img
+				<v-btn type="button" @click="signWithGoogle" variant="plain" stacked density="compact" size="small"> <v-img
 						:src="googleImg" width="36px" alt="Войти через Google" /></v-btn>
 			</div>
 			<div class="mt-4 text-center">Уже зарегистрированы? <router-link to="/login">Войти</router-link></div>
@@ -49,8 +49,7 @@ const { push } = useRouter();
 const { registerWithEmail, signInWithGoogle } = useAuth();
 const { showMessage } = useSnackbarStore();
 
-const form = ref();
-
+const formEl = ref();
 const formState = reactive({
 	displayName: '',
 	password: '',
@@ -59,7 +58,7 @@ const formState = reactive({
 });
 
 const submitForm = async () => {
-	const { valid } = await form.value.validate();
+	const { valid } = await formEl.value.validate();
 
 	if (valid) {
 		try {
@@ -70,16 +69,16 @@ const submitForm = async () => {
 			});
 			push('/profile');
 		} catch (e) {
-			showMessage(messages[e], 'red-darken-3', 2000);
+			showMessage(messages[e] || e, 'red-darken-3', 2000);
 		}
 	}
 };
-const loginWithGoogle = async () => {
+const signWithGoogle = async () => {
 	try {
 		await signInWithGoogle();
 		push('/profile');
 	} catch (e) {
-		showMessage(messages[e], 'red-darken-3', 2000);
+		showMessage(messages[e] || e, 'red-darken-3', 2000);
 	}
 };
 </script>

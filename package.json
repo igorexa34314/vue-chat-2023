@@ -10,6 +10,7 @@
 	},
 	"dependencies": {
 		"@mdi/font": "^7.1.96",
+		"@vueuse/core": "^9.13.0",
 		"firebase": "^9.17.1",
 		"pinia": "^2.0.29",
 		"vite-plugin-vuetify": "^1.0.1",

@@ -13,13 +13,13 @@
 				hide-details />
 		</Transition>
 
-		<v-btn variant="text" icon="mdi-magnify" @click="enableSearch"/>
+		<v-btn variant="text" icon="mdi-magnify" @click="enableSearch" />
 
-		<v-btn variant="text" icon="mdi-filter" disabled/>
+		<v-btn variant="text" icon="mdi-filter" disabled />
 
 		<v-menu>
 			<template v-slot:activator="{ props }">
-				<v-btn v-bind="props" variant="text" icon="mdi-dots-vertical"/>
+				<v-btn v-bind="props" variant="text" icon="mdi-dots-vertical" />
 			</template>
 			<v-list density="compact">
 				<v-list-item density="compact" to="/profile">
@@ -44,10 +44,13 @@ import { reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuth } from '@/composables/auth';
 import { useUserdataStore } from '@/stores/userdata';
+import { useSnackbarStore } from '@/stores/snackbar';
+
 
 const { push } = useRouter();
 const { logout } = useAuth();
 const { clearData } = useUserdataStore();
+const { showMessage } = useSnackbarStore();
 
 const emit = defineEmits(['drawer']);
 
@@ -62,7 +65,11 @@ const enableSearch = () => {
 	setTimeout(() => search.value.focus(), 0);
 };
 const exit = async () => {
-	await logout();
+	try {
+		await logout();
+	} catch (e) {
+		showMessage(messages[e] || e, 'red-darken-3', 2000);
+	}
 	clearData();
 	push('/login');
 }

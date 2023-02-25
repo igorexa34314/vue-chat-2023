@@ -21,6 +21,7 @@ export const useAuth = () => {
 			await userdata.createUser(user);
 		} catch (e) {
 			console.error(e);
+			throw e.code || e;
 		}
 	};
 	const registerWithEmail = async ({ email, password, displayName }) => {

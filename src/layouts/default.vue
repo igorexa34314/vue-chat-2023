@@ -21,6 +21,7 @@ const drawer = ref(true);
 
 const unsubscribe = await userdataStore.fetchAuthUserdata();
 
+// Unsubscribe from receiving userdata realtime firebase
 onUnmounted(() => {
 	if (unsubscribe) unsubscribe();
 });
