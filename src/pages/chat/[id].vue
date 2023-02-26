@@ -73,12 +73,29 @@ const { pause: pauseMessageWatcher, resume: resumeMessageWatcher } = watchPausab
 
 // Inf. scroll on top
 useInfiniteScroll(chatEl, async () => {
-	if (lastVisible.value) {
+	if (lastVisible.value.top) {
 		pauseMessageWatcher();
-		await messagesStore.loadMoreChatMessages(route.params.id);
+		if (messages.value.length > 20) {
+			messagesStore.deleteMessages(10, 'end');
+		}
+		await messagesStore.loadMoreChatMessages(route.params.id, 'desc');
 		resumeMessageWatcher();
 	}
 }, { distance: 10, direction: 'top', preserveScrollPosition: true, }
+);
+
+// Inf. scroll on bottom
+useInfiniteScroll(chatEl, async () => {
+	// if (lastVisible.value) {
+	// 	pauseMessageWatcher();
+	// 	if (messages.value.length > 20) {
+	// 		messagesStore.deleteMessages(10, 'start');
+	// 	}
+	// 	await messagesStore.loadMoreChatMessages(route.params.id, 'asc');
+	// 	resumeMessageWatcher();
+	// }
+	console.log('sfsfsf')
+}, { distance: 10, direction: 'bottom', preserveScrollPosition: false, }
 );
 
 // Reset messages when switching chat

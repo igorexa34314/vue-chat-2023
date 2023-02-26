@@ -9,8 +9,5 @@ export const useDateFormat = () => {
 		return [...Array(12).keys()].map(m => format(new Date(Date.UTC(2022, m % 12))));
 	};
 
-	return {
-		monthsForLocale,
-		messagesDateFormat
-	};
+	return { monthsForLocale, messagesDateFormat };
 };

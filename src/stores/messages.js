@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { ref, reactive } from 'vue';
 import { useAuth } from '@/composables/auth';
 import { useUserdataStore } from '@/stores/userdata';
 import { getFirestore, collection, doc, setDoc, orderBy, query, Timestamp, onSnapshot, limit, startAt, getDoc, getDocs, startAfter } from 'firebase/firestore';
@@ -14,15 +14,26 @@ export const useMessagesStore = defineStore('messages', () => {
 	const chatCol = collection(db, 'chat');
 
 	const messages = ref([]);
-	const lastVisible = ref(null);
+	const lastVisible = reactive({
+		top: null,
+		bottom: null
+	});
 	const clearMessages = () => {
 		messages.value = [];
 	};
-	const addMessage = msg => {
-		messages.value.push(msg);
+	const addMessage = (msg, direction = 'end') => {
+		if (direction === 'end') {
+			messages.value.push(msg);
+		} else {
+			messages.value.unshift(msg);
+		}
 	};
-	const addMessageToStart = msg => {
-		messages.value.unshift(msg);
+	const deleteMessages = (count = 10, direction = 'end') => {
+		if (direction === 'end') {
+			messages.value.splice(messages.value.length - count, count);
+		} else {
+			messages.value.splice(0, count);
+		}
 	};
 
 	const createMessage = async ({ chatId, type, content }) => {
@@ -79,7 +90,7 @@ export const useMessagesStore = defineStore('messages', () => {
 				(await Promise.all(promises)).forEach(m => {
 					addMessage(m);
 				});
-				if (messagesRef.size >= 10) lastVisible.value = messagesRef.docs[messagesRef.docs.length - 1];
+				if (messagesRef.size >= 10) lastVisible.top = messagesRef.docs[messagesRef.docs.length - 1];
 			});
 			return unsubscribe;
 		} catch (e) {
@@ -87,11 +98,11 @@ export const useMessagesStore = defineStore('messages', () => {
 			throw e.code || e;
 		}
 	};
-	const loadMoreChatMessages = async (chatId, perPage = 10) => {
+	const loadMoreChatMessages = async (chatId, perPage = 10, sortBy = 'desc') => {
 		try {
-			if (lastVisible.value) {
+			if (lastVisible.top) {
 				const messagesCol = collection(doc(chatCol, chatId), 'messages');
-				const q = query(messagesCol, orderBy('created_at', 'desc'), startAfter(lastVisible.value), limit(perPage));
+				const q = query(messagesCol, orderBy('created_at', sortBy), startAfter(lastVisible.top), limit(perPage));
 				const messagesRef = await getDocs(q);
 				const initialMessages = [];
 				const promises = [];
@@ -101,15 +112,23 @@ export const useMessagesStore = defineStore('messages', () => {
 					}
 				});
 				initialMessages.forEach(m => {
-					promises.unshift(getMessageSenderInfo(m));
+					if (sortBy === 'desc') {
+						promises.unshift(getMessageSenderInfo(m));
+					} else if (sortBy === 'asc') {
+						promises.push(getMessageSenderInfo(m));
+					}
 				});
 				(await Promise.all(promises)).forEach(m => {
-					addMessageToStart(m);
+					if (sortBy === 'desc') {
+						addMessage(m, 'start');
+					} else if (sortBy === 'asc') {
+						addMessage(m, 'end');
+					}
 				});
 				if (messagesRef.size < perPage) {
-					lastVisible.value = null;
+					lastVisible[sortBy === 'desc' ? 'top' : 'bottom'] = null;
 				} else {
-					lastVisible.value = messagesRef.docs[messagesRef.docs.length - 1];
+					lastVisible[sortBy === 'desc' ? 'top' : 'bottom'] = messagesRef.docs[messagesRef.docs.length - 1];
 				}
 			}
 		} catch (e) {
@@ -121,6 +140,7 @@ export const useMessagesStore = defineStore('messages', () => {
 		messages,
 		lastVisible,
 		clearMessages,
+		deleteMessages,
 		createMessage,
 		fetchChatMessages,
 		loadMoreChatMessages

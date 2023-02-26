@@ -6,11 +6,11 @@
 		<v-list density="compact">
 			<v-list-item v-for="item in attachMenuItems" :key="item.inputId" style="cursor: pointer; padding: 0;"
 				class="add-attachment">
-				<label :for="item.inputId" style="cursor: pointer; padding: 4px 16px;">
+				<label :for="item.inputId" style="cursor: pointer; display: block; padding: 4px 16px;">
 					<v-icon :icon="item.icon" class="mr-4"></v-icon>
 					<span>{{ item.title }}</span>
 					<input :id="item.inputId" type="file" :accept="item.accept" style="display:none;"
-						@change="$emit('attachFile', $event)">
+						@change="$emit(item.inputId, $event)">
 				</label>
 			</v-list-item>
 		</v-list>
