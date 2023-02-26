@@ -75,10 +75,7 @@ const { pause: pauseMessageWatcher, resume: resumeMessageWatcher } = watchPausab
 useInfiniteScroll(chatEl, async () => {
 	if (lastVisible.value.top) {
 		pauseMessageWatcher();
-		if (messages.value.length > 20) {
-			messagesStore.deleteMessages(10, 'end');
-		}
-		await messagesStore.loadMoreChatMessages(route.params.id, 'desc');
+		await messagesStore.loadMoreChatMessages(route.params.id, 'top');
 		resumeMessageWatcher();
 	}
 }, { distance: 10, direction: 'top', preserveScrollPosition: true, }
@@ -86,15 +83,11 @@ useInfiniteScroll(chatEl, async () => {
 
 // Inf. scroll on bottom
 useInfiniteScroll(chatEl, async () => {
-	// if (lastVisible.value) {
-	// 	pauseMessageWatcher();
-	// 	if (messages.value.length > 20) {
-	// 		messagesStore.deleteMessages(10, 'start');
-	// 	}
-	// 	await messagesStore.loadMoreChatMessages(route.params.id, 'asc');
-	// 	resumeMessageWatcher();
-	// }
-	console.log('sfsfsf')
+	if (lastVisible.value.bottom) {
+		pauseMessageWatcher();
+		await messagesStore.loadMoreChatMessages(route.params.id, 'bottom');
+		resumeMessageWatcher();
+	}
 }, { distance: 10, direction: 'bottom', preserveScrollPosition: false, }
 );
 

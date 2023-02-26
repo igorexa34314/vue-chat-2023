@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { ref, reactive } from 'vue';
+import { ref, reactive, watch } from 'vue';
 import { useAuth } from '@/composables/auth';
 import { useUserdataStore } from '@/stores/userdata';
 import { getFirestore, collection, doc, setDoc, orderBy, query, Timestamp, onSnapshot, limit, startAt, getDoc, getDocs, startAfter } from 'firebase/firestore';
@@ -18,6 +18,13 @@ export const useMessagesStore = defineStore('messages', () => {
 		top: null,
 		bottom: null
 	});
+	watch(
+		lastVisible,
+		newVal => {
+			console.log(newVal);
+		},
+		{ deep: true }
+	);
 	const clearMessages = () => {
 		messages.value = [];
 	};
@@ -41,7 +48,10 @@ export const useMessagesStore = defineStore('messages', () => {
 			const messageRef = doc(collection(doc(chatCol, chatId), 'messages'));
 			if (content.image instanceof File) {
 				const { subtitle, image } = content;
-				const imageRef = storageRef(storage, `chat/${chatId}/messageData/${messageRef.id}/${uuidv4() + '.' + image.name.split('.')[image.name.split('.').length - 1]}`);
+				const imageRef = storageRef(
+					storage,
+					`chat/${chatId}/messageData/${messageRef.id}/${uuidv4() + '.' + image.name.split('.')[image.name.split('.').length - 1]}`
+				);
 				await uploadBytes(imageRef, image, {
 					name: image.name,
 					contentType: image.type
@@ -88,9 +98,11 @@ export const useMessagesStore = defineStore('messages', () => {
 					promises.push(getMessageSenderInfo(m));
 				});
 				(await Promise.all(promises)).forEach(m => {
-					addMessage(m);
+					addMessage(m, 'end');
 				});
-				if (messagesRef.size >= 10) lastVisible.top = messagesRef.docs[messagesRef.docs.length - 1];
+				if (messagesRef.size >= lmt) {
+					lastVisible.top = messagesRef.docs[messagesRef.docs.length - 1];
+				}
 			});
 			return unsubscribe;
 		} catch (e) {
@@ -98,37 +110,33 @@ export const useMessagesStore = defineStore('messages', () => {
 			throw e.code || e;
 		}
 	};
-	const loadMoreChatMessages = async (chatId, perPage = 10, sortBy = 'desc') => {
+	const loadMoreChatMessages = async (chatId, direction = 'top', perPage = 10) => {
 		try {
-			if (lastVisible.top) {
+			if (lastVisible[direction]) {
 				const messagesCol = collection(doc(chatCol, chatId), 'messages');
-				const q = query(messagesCol, orderBy('created_at', sortBy), startAfter(lastVisible.top), limit(perPage));
+				const q = query(messagesCol, orderBy('created_at', direction === 'top' ? 'desc' : 'asc'), startAfter(lastVisible[direction]), limit(perPage));
 				const messagesRef = await getDocs(q);
+				console.log(messagesRef.size);
 				const initialMessages = [];
 				const promises = [];
 				messagesRef.forEach(doc => {
-					if (doc.exists()) {
-						initialMessages.unshift({ ...doc.data(), created_at: doc.data().created_at.toDate() });
-					}
+					initialMessages.push({ ...doc.data(), created_at: doc.data().created_at.toDate() });
 				});
 				initialMessages.forEach(m => {
-					if (sortBy === 'desc') {
-						promises.unshift(getMessageSenderInfo(m));
-					} else if (sortBy === 'asc') {
-						promises.push(getMessageSenderInfo(m));
-					}
+					promises.push(getMessageSenderInfo(m));
 				});
 				(await Promise.all(promises)).forEach(m => {
-					if (sortBy === 'desc') {
-						addMessage(m, 'start');
-					} else if (sortBy === 'asc') {
-						addMessage(m, 'end');
-					}
+					addMessage(m, direction === 'top' ? 'start' : 'end');
 				});
-				if (messagesRef.size < perPage) {
-					lastVisible[sortBy === 'desc' ? 'top' : 'bottom'] = null;
+				if (messagesRef.size < perPage || messagesRef.empty) {
+					lastVisible[direction] = null;
 				} else {
-					lastVisible[sortBy === 'desc' ? 'top' : 'bottom'] = messagesRef.docs[messagesRef.docs.length - 1];
+					lastVisible[direction] = messagesRef.docs[direction === 'top' ? messagesRef.docs.length - 1 : 0];
+				}
+				if (messages.value.length > 30) {
+					deleteMessages(perPage, direction === 'top' ? 'end' : 'start');
+					const msgBeforeDel = await getDoc(doc(messagesCol, messages.value[direction === 'top' ? messages.value.length - 1 : 0].id));
+					lastVisible[direction === 'top' ? 'bottom' : 'top'] = msgBeforeDel;
 				}
 			}
 		} catch (e) {
