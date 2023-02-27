@@ -6,10 +6,10 @@
 			<div v-if="loading"><page-loader /></div>
 			<div v-else-if="messages && messages.length" class="chat__content px-12" ref="chatEl">
 				<div class="messages-field mt-4">
-					<TransitionGroup name="messages-list">
-						<MessageItem v-for="m in messages" :key="m.id" :self="uid === m.sender.id" :type="m.type"
-							:content="m.content" :sender="m.sender" :created_at="m.created_at" />
-					</TransitionGroup>
+					<!-- <TransitionGroup name="messages-list"> -->
+					<MessageItem v-for="m in messages" :key="m.id" :self="uid === m.sender.id" :type="m.type"
+						:content="m.content" :sender="m.sender" :created_at="m.created_at" />
+					<!-- </TransitionGroup> -->
 				</div>
 				<!-- <div v-if="!messages || !messages.length" class="text-h5 pa-4">Сообщений в чате пока нет</div> -->
 			</div>
@@ -26,7 +26,7 @@ import { useSnackbarStore } from '@/stores/snackbar';
 import { useMessagesStore } from '@/stores/messages';
 import { useCurrentUser } from 'vuefire';
 import { useChat } from '@/composables/chat';
-import { ref, computed, onUnmounted, watch, watchEffect, inject } from 'vue';
+import { ref, computed, onUnmounted, watchEffect, inject } from 'vue';
 import { useMeta } from 'vue-meta';
 import { useRoute } from 'vue-router';
 import { useInfiniteScroll, watchPausable } from '@vueuse/core';
@@ -64,9 +64,6 @@ const scrollBottom = () => {
 	if (chatEl.value && chatEl.value.scrollHeight > chatEl.value.clientHeight && chatEl.value.scrollHeight)
 		chatEl.value.scrollTop = chatEl.value.scrollHeight;
 };
-watchEffect(() => {
-	scrollBottom();
-}, { flush: 'post' });
 const { pause: pauseMessageWatcher, resume: resumeMessageWatcher } = watchPausable(messages, () => {
 	scrollBottom();
 }, { deep: true, flush: 'post' });

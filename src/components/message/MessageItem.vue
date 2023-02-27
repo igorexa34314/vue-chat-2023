@@ -1,5 +1,5 @@
 <template>
-	<div :class="{ self }" class="message d-flex">
+	<div :class="{ self }" class="message d-flex" v-if="!isLoading">
 		<v-avatar size="30px" :image="sender.photoURL" :class="self ? 'ml-2' : 'mr-2'" class="sender__avatar"
 			@click="$router.push({ name: 'user-id', params: { id: sender.id } })" />
 		<v-card min-width="100px" max-width="650px" density="compact" class="message__card mb-4"
@@ -32,9 +32,10 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { useDateFormat } from '@/utils/dateFormat';
+import { useImage } from '@vueuse/core';
 
-const openInOverlay = ref(false);
 const { messagesDateFormat } = useDateFormat();
+
 const props = defineProps({
 	self: {
 		type: Boolean,
@@ -57,6 +58,10 @@ const props = defineProps({
 		type: [Date, String],
 	}
 });
+if (props.type === 'media') {
+	const { isLoading } = useImage({ src: props.content.imageURL });
+} else { const isLoading = ref(true); }
+const openInOverlay = ref(false);
 
 const messagesDate = computed(() => messagesDateFormat(props.created_at));
 </script>

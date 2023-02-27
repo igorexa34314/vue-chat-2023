@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { ref, reactive, watch } from 'vue';
+import { ref, reactive } from 'vue';
 import { useAuth } from '@/composables/auth';
 import { useUserdataStore } from '@/stores/userdata';
 import { getFirestore, collection, doc, setDoc, orderBy, query, Timestamp, onSnapshot, limit, startAt, getDoc, getDocs, startAfter } from 'firebase/firestore';
@@ -18,13 +18,6 @@ export const useMessagesStore = defineStore('messages', () => {
 		top: null,
 		bottom: null
 	});
-	watch(
-		lastVisible,
-		newVal => {
-			console.log(newVal);
-		},
-		{ deep: true }
-	);
 	const clearMessages = () => {
 		messages.value = [];
 	};
@@ -116,7 +109,15 @@ export const useMessagesStore = defineStore('messages', () => {
 				const messagesCol = collection(doc(chatCol, chatId), 'messages');
 				const q = query(messagesCol, orderBy('created_at', direction === 'top' ? 'desc' : 'asc'), startAfter(lastVisible[direction]), limit(perPage));
 				const messagesRef = await getDocs(q);
-				console.log(messagesRef.size);
+				if (messagesRef.empty) {
+					lastVisible[direction] = null;
+					return;
+				}
+				if (messages.value.length > 40) {
+					deleteMessages(perPage, direction === 'top' ? 'end' : 'start');
+					const msgBeforeDel = await getDoc(doc(messagesCol, messages.value[direction === 'top' ? messages.value.length - 1 : 0].id));
+					lastVisible[direction === 'top' ? 'bottom' : 'top'] = msgBeforeDel;
+				}
 				const initialMessages = [];
 				const promises = [];
 				messagesRef.forEach(doc => {
@@ -128,16 +129,7 @@ export const useMessagesStore = defineStore('messages', () => {
 				(await Promise.all(promises)).forEach(m => {
 					addMessage(m, direction === 'top' ? 'start' : 'end');
 				});
-				if (messagesRef.size < perPage || messagesRef.empty) {
-					lastVisible[direction] = null;
-				} else {
-					lastVisible[direction] = messagesRef.docs[direction === 'top' ? messagesRef.docs.length - 1 : 0];
-				}
-				if (messages.value.length > 30) {
-					deleteMessages(perPage, direction === 'top' ? 'end' : 'start');
-					const msgBeforeDel = await getDoc(doc(messagesCol, messages.value[direction === 'top' ? messages.value.length - 1 : 0].id));
-					lastVisible[direction === 'top' ? 'bottom' : 'top'] = msgBeforeDel;
-				}
+				lastVisible[direction] = messagesRef.size >= perPage ? messagesRef.docs[messagesRef.docs.length - 1] : null;
 			}
 		} catch (e) {
 			console.error(e);

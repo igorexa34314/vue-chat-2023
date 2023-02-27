@@ -3,14 +3,14 @@
     <template v-slot:title="{ content }">{{ content ? `${content} | ${AppName}` : AppName }}</template>
   </metainfo>
   <GlobalSnackbar />
-  <suspense>
+  <Suspense>
     <template #default>
       <RouterView />
     </template>
     <template #fallback>
       <page-loader />
     </template>
-  </suspense>
+  </Suspense>
 </template>
 
 <script setup>
