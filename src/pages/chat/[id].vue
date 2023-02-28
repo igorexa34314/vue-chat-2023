@@ -117,6 +117,7 @@ onUnmounted(() => {
 
 const createMessage = async (content, type = 'text') => {
 	try {
+		console.log(content)
 		await messagesStore.createMessage({
 			chatId: route.params.id,
 			type,

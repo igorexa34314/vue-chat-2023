@@ -43,14 +43,22 @@ const createTextMessage = () => {
 		messageState.text = '';
 	}
 };
-const createAttachment = ({ subtitle, image }) => {
-	emit('submitForm', {
-		subtitle,
-		image: {
-			data: file.value,
-			...image,
-		},
-	}, 'media');
+const createAttachment = (type, content) => {
+	if (type === 'image') {
+		const { subtitle, image } = content;
+		emit('submitForm', {
+			subtitle,
+			image: {
+				data: file.value,
+				...image,
+			},
+		}, 'media');
+	} else if (type === 'file') {
+		emit('submitForm', {
+			subtitle: content.subtitle,
+			file: file.value,
+		}, 'file');
+	}
 };
 const attachMedia = e => {
 	const files = e.target.files || e.dataTransfer.files;

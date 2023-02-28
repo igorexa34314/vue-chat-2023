@@ -67,7 +67,6 @@ const fillProfileForm = () => {
 	}
 };
 
-fillProfileForm();
 watchEffect(() => {
 	fillProfileForm();
 });

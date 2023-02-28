@@ -55,7 +55,7 @@ const formState = reactive({
 	subtitle: ''
 });
 const submitHandler = () => {
-	emit('submit', formState);
+	emit('submit', props.content.type, formState);
 	emit('update:modelValue', false);
 };
 const closeDialog = () => {
@@ -75,7 +75,7 @@ const getImageParams = () => {
 const formatFileSize = computed(() => {
 	if (props.content.data && props.content.data.size) {
 		return props.content.data.size < 1024 ? props.content.data.size + ' bytes' :
-			props.content.size < 1048576 ? (props.content.data.size / 1024).toPrecision(4) + ' KB' :
+			props.content.data.size < 1048576 ? (props.content.data.size / 1024).toPrecision(4) + ' KB' :
 				(props.content.data.size / 1048576).toPrecision(4) + ' MB';
 	}
 });
