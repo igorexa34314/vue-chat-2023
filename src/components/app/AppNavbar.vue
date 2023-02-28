@@ -13,7 +13,7 @@
 				hide-details />
 		</Transition>
 
-		<v-btn variant="text" icon="mdi-magnify" @click="enableSearch" />
+		<v-btn variant="text" icon="mdi-magnify" @click="enableSearch" disabled />
 
 		<v-btn variant="text" icon="mdi-filter" disabled />
 

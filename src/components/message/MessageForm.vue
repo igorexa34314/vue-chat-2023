@@ -9,27 +9,28 @@
 			</v-text-field>
 			<v-btn icon="mdi-send" label="Отправить" class="ml-3" @click="createTextMessage"></v-btn>
 		</div>
-		<AttachDialog v-model="dialog" @submit="createAttachment" @close="closeDialog" />
+		<AttachDialog v-model="attachDialogState.show" :content="attachDialogState.previewContent" @submit="createAttachment"
+			@close="closeDialog" />
 	</div>
 </template>
 
 <script setup>
 import AttachMenu from '@/components/message/AttachMenu.vue';
 import AttachDialog from '@/components/message/AttachDialog.vue';
-import { ref, reactive, provide } from 'vue';
+import { useSnackbarStore } from '@/stores/snackbar';
+import { ref, reactive } from 'vue';
 
+const { showMessage } = useSnackbarStore();
 const emit = defineEmits(['submitForm']);
 
-const dialog = ref(false);
-const previewContent = reactive({
-	type: '',
-	name: '',
-	size: '',
-	imageSrc: '',
+const attachDialogState = reactive({
+	show: false,
+	previewContent: {
+		type: '',
+		data: null,
+	}
 });
-provide('previewContent', previewContent);
 const file = ref();
-const fileType = ref('media');
 const messageState = reactive({
 	text: '',
 });
@@ -42,24 +43,39 @@ const createTextMessage = () => {
 		messageState.text = '';
 	}
 };
-const createAttachment = content => {
+const createAttachment = ({ subtitle, image }) => {
 	emit('submitForm', {
-		...content,
-		image: file.value || null,
+		subtitle,
+		image: {
+			data: file.value,
+			...image,
+		},
 	}, 'media');
 };
 const attachMedia = e => {
 	const files = e.target.files || e.dataTransfer.files;
 	if (!files.length)
 		return;
-	file.value = files[0];
-	const reader = new FileReader();
-	reader.onload = () => previewContent.value = reader.result;
-	reader.onerror = e => console.error(e);
-	reader.readAsDataURL(file.value);
-	e.target.value = '';
-	fileType.value = 'media';
-	dialog.value = true;
+	if (files.length && files[0].type.startsWith('image/')) {
+		attachDialogState.previewContent.type = 'image';
+		file.value = files[0];
+		if (file.value.size > 4194304) {
+			showMessage('Допустимый размер файла - до 4 Мбайт', 'red-darken-3', 2500);
+			return;
+		}
+		const reader = new FileReader();
+		reader.onload = () => {
+			attachDialogState.previewContent.data = {
+				fullname: file.value.name, size: file.value.size,
+				ext: file.value.name.split('.')[file.value.name.split('.').length - 1],
+				src: reader.result
+			}
+		}
+		reader.onerror = e => console.error(e);
+		reader.readAsDataURL(file.value);
+		e.target.value = '';
+		attachDialogState.show = true;
+	};
 };
 const attachFile = e => {
 	const files = e.target.files || e.dataTransfer.files;
@@ -67,14 +83,17 @@ const attachFile = e => {
 		return;
 	file.value = files[0];
 	e.target.value = '';
-	previewContent.type = 'file';
-	previewContent.name = file.value.name;
-	previewContent.size = file.value.size;
-	dialog.value = true;
+	attachDialogState.previewContent.type = 'file';
+	attachDialogState.previewContent.data = {
+		name: file.value.name, size: file.value.size,
+		ext: file.value.name.split('.')[file.value.name.split('.').length - 1],
+	};
+	attachDialogState.show = true;
 };
 const closeDialog = () => {
 	file.value = null;
-	previewContent.value = null;
+	attachDialogState.previewContent.data = null;
+	attachDialogState.previewContent.type = '';
 };
 </script>
 

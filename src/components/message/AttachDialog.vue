@@ -1,32 +1,30 @@
 <template>
 	<v-dialog width="auto" persistent v-model="dialog" class="attach-dialog">
-		<v-card width="600px" variant="flat" elevation="3">
+		<v-card width="600px" variant="flat" elevation="3" v-if="content.data && Object.keys(content.data).length">
 			<v-card-title class="d-flex align-center mt-2">
 				<v-btn icon="mdi-close" variant="text" @click="closeDialog" />
-				<h3 class="text-center flex-grow-1">{{ contentType === 'media' ? 'Отправить фото' : 'Отправить файл' }}</h3>
+				<h3 class="text-center flex-grow-1">{{ content.type === 'image' ? 'Отправить фото' : 'Отправить файл' }}</h3>
 			</v-card-title>
 			<v-card-text>
 				<v-form @submit.prevent="submitHandler">
-					<v-card v-if="contentType === 'media'" class="image-wrapper" max-width="400px" max-height="400px">
-						<v-img :src="previewContent" alt="My image" cover />
+					<v-card v-if="content.type === 'image'" class="image-wrapper" max-width="400px" max-height="400px">
+						<v-img ref="img" :src="content.data.src" alt="My image" cover @load="getImageParams" />
 					</v-card>
-					<div v-else-if="previewContent.name && previewContent.size" class="d-flex align-center">
+					<div v-else-if="content.type === 'file'" class="d-flex align-center">
 						<div class="file-icon">
 							<v-icon icon="mdi-file" size="100px" />
 							<span class="file-icon-ext font-weight-black text-brown-darken-4">
-								{{ previewContent.name.split('.')[previewContent.name.split('.').length - 1] }}</span>
+								{{ content.data.ext }}</span>
 						</div>
 						<div class="ml-2 text-subtitle-1 font-weight-medium">
-							<p class="text-subtitle-1">{{ previewContent.name }}</p>
-							<p class="mt-1 text-body-2">{{ previewContent.size < 1024 ? previewContent.size + ' bytes' :
-								previewContent.size < 1048576 ? (previewContent.size / 1024).toPrecision(4) + ' KB' :
-									(previewContent.size / 1048576).toPrecision(4) + ' MB' }}</p>
+							<p class="text-subtitle-1">{{ content.data.name }}</p>
+							<p class="mt-1 text-body-2">{{ formatFileSize }}</p>
 						</div>
 					</div>
 					<div class="d-flex align-center mt-6 mb-3 px-4">
 						<v-text-field v-model="formState.subtitle" variant="plain" placeholder="Добавить подпись" class="mr-4"
 							hide-details autofocus style="transform: translateY(-11px);" />
-						<v-btn type="submit" color="purple-lighten-1" size="large" rounded>Отправить</v-btn>
+						<v-btn type="submit" color="light-blue-darken-4" size="large" rounded>Отправить</v-btn>
 					</div>
 				</v-form>
 			</v-card-text>
@@ -35,16 +33,26 @@
 </template>
 
 <script setup>
-import { reactive, computed, inject } from "vue";
+import { ref, reactive, computed } from "vue";
 
-const defaultAvatar = new URL('@/assets/img/default_user_avatar.jpg', import.meta.url).href;
-
-const previewContent = inject('previewContent');
-const props = defineProps(['modelValue', 'contentType']);
+const props = defineProps({
+	modelValue: {
+		type: Boolean,
+		default: false,
+	},
+	content: {
+		type: Object,
+		required: true,
+	}
+});
 const emit = defineEmits(['update:modelValue', 'submit', 'close']);
 const dialog = computed({
 	get: () => props.modelValue,
 	set: value => emit('update:modelValue', value),
+});
+const img = ref();
+const formState = reactive({
+	subtitle: ''
 });
 const submitHandler = () => {
 	emit('submit', formState);
@@ -54,8 +62,22 @@ const closeDialog = () => {
 	emit('close');
 	emit('update:modelValue', false);
 };
-const formState = reactive({
-	subtitle: ''
+const getImageParams = () => {
+	if (img.value.image.complete && img.value.image.naturalHeight !== 0) {
+		formState.image = {
+			sizes: {
+				w: img.value.image.naturalWidth,
+				h: img.value.image.naturalHeight
+			}
+		};
+	}
+};
+const formatFileSize = computed(() => {
+	if (props.content.data && props.content.data.size) {
+		return props.content.data.size < 1024 ? props.content.data.size + ' bytes' :
+			props.content.size < 1048576 ? (props.content.data.size / 1024).toPrecision(4) + ' KB' :
+				(props.content.data.size / 1048576).toPrecision(4) + ' MB';
+	}
 });
 </script>
 

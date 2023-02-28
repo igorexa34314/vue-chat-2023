@@ -41,7 +41,7 @@ import validations from '@/utils/validations';
 import messages from '@/utils/messages';
 import { useMeta } from 'vue-meta';
 
-useMeta({ title: 'Профиль' });
+useMeta({ title: 'Мой профиль' });
 
 const defaultAvatar = new URL('@/assets/img/default_user_avatar.jpg', import.meta.url).href;
 
