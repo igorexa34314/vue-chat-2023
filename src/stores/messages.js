@@ -4,7 +4,7 @@ import { useAuth } from '@/composables/auth';
 import { useUserdataStore } from '@/stores/userdata';
 import { getFirestore, collection, doc, setDoc, orderBy, query, Timestamp, onSnapshot, limit, startAt, getDoc, getDocs, startAfter } from 'firebase/firestore';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, getBlob } from 'firebase/storage';
-import { async, uuidv4 } from '@firebase/util';
+import { uuidv4 } from '@firebase/util';
 
 export const useMessagesStore = defineStore('messages', () => {
 	const { getUid } = useAuth();
@@ -30,7 +30,7 @@ export const useMessagesStore = defineStore('messages', () => {
 	};
 	const deleteMessages = (count = 10, direction = 'end') => {
 		if (direction === 'end') {
-			messages.value.splice(messages.value.length - count, count);
+			messages.value.splice(-count, count);
 		} else {
 			messages.value.splice(0, count);
 		}

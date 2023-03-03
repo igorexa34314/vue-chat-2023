@@ -63,28 +63,4 @@ const userChatsInfo = computedAsync(async () => await fetchChatsInfo());
 const loading = ref(true);
 </script>
 
-<style lang="scss" scoped>
-.v-divider {
-	--v-border-opacity: 0.6 !important;
-}
-/* width */
-::-webkit-scrollbar {
-	width: 0.55rem;
-}
-
-/* Track */
-::-webkit-scrollbar-track {
-	border-radius: 0.5rem;
-}
-
-/* Handle */
-::-webkit-scrollbar-thumb {
-	// visibility: v-bind('scrollVisibility');
-	background-color: rgba($color: #ffffff, $alpha: .2);
-	border-radius: 0.5rem;
-	transition: all 0.35s ease-in 0s;
-	&:hover {
-		background-color: rgba($color: #ffffff, $alpha: .4);
-	}
-}
-</style>
+<style lang="scss" scoped></style>

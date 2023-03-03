@@ -6,10 +6,10 @@
 			<div v-if="loading"><page-loader /></div>
 			<div v-else-if="messages && messages.length" class="chat__content px-12" ref="chatEl">
 				<div class="messages-field mt-4">
-					<!-- <TransitionGroup name="messages-list"> -->
-					<MessageItem v-for="m in messages" :key="m.id" :self="uid === m.sender.id" :type="m.type"
-						:content="m.content" :sender="m.sender" :created_at="m.created_at" />
-					<!-- </TransitionGroup> -->
+					<TransitionGroup :name="enTransition ? 'messages-list' : ''">
+						<MessageItem v-for="m in messages" :key="m.id" :self="uid === m.sender.id" :type="m.type"
+							:content="m.content" :sender="m.sender" :created_at="m.created_at" />
+					</TransitionGroup>
 				</div>
 				<!-- <div v-if="!messages || !messages.length" class="text-h5 pa-4">Сообщений в чате пока нет</div> -->
 			</div>
@@ -20,8 +20,8 @@
 
 <script setup>
 import pageLoader from '@/components/UI/pageLoader.vue';
-import MessageItem from '@/components/message/MessageItem.vue';
-import MessageForm from '@/components/message/MessageForm.vue';
+import MessageItem from '@/components/chat/MessageItem.vue';
+import MessageForm from '@/components/chat/MessageForm.vue';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { useMessagesStore } from '@/stores/messages';
 import { useCurrentUser } from 'vuefire';
@@ -115,9 +115,11 @@ onUnmounted(() => {
 	if (unsubscribe) unsubscribe();
 });
 
+const enTransition = ref(false);
+
 const createMessage = async (content, type = 'text') => {
+	enTransition.value = true;
 	try {
-		console.log(content)
 		await messagesStore.createMessage({
 			chatId: route.params.id,
 			type,
@@ -126,6 +128,8 @@ const createMessage = async (content, type = 'text') => {
 	} catch (e) {
 		showMessage(messages[e] || e, 'red-darken-3', 2000);
 	}
+	enTransition.value = false;
+
 };
 </script>
 

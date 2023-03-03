@@ -15,8 +15,8 @@
 </template>
 
 <script setup>
-import AttachMenu from '@/components/message/AttachMenu.vue';
-import AttachDialog from '@/components/message/AttachDialog.vue';
+import AttachMenu from '@/components/chat/AttachMenu.vue';
+import AttachDialog from '@/components/chat/AttachDialog.vue';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { ref, reactive } from 'vue';
 
