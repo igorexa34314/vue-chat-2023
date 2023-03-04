@@ -3,10 +3,12 @@ import { ref } from 'vue';
 import { getFirestore, getDoc, setDoc, onSnapshot, doc, updateDoc, arrayUnion, Timestamp, collection } from 'firebase/firestore';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useAuth } from '@/composables/auth';
+import { useChat } from '@/composables/chat';
 import { uuidv4 } from '@firebase/util';
 
 export const useUserdataStore = defineStore('userdata', () => {
 	const auth = useAuth();
+	const { createSelfChat } = useChat();
 	const storage = getStorage();
 	const db = getFirestore();
 	const usersCol = collection(db, 'userdata');
@@ -19,21 +21,17 @@ export const useUserdataStore = defineStore('userdata', () => {
 	const setUserdata = data => {
 		userdata.value = data;
 	};
-	const getUserRef = async uid => {
-		if (uid) {
-			return doc(usersCol, uid);
-		}
-		return doc(usersCol, await auth.getUid());
-	};
+	const getUserRef = uid => (uid ? doc(usersCol, uid) : null);
+
 	const createUser = async ({ uid, displayName, phoneNumber, photoURL, metadata }) => {
 		try {
-			const userRef = await getUserRef(uid);
+			const userRef = getUserRef(uid);
 			const user = await getDoc(userRef);
 			if (user.exists()) {
 				await updateUserdata({ displayName, avatar: photoURL, phoneNumber });
 			} else {
 				await setDoc(
-					await getUserRef(uid),
+					getUserRef(uid),
 					{
 						info: {
 							uid,
@@ -48,6 +46,7 @@ export const useUserdataStore = defineStore('userdata', () => {
 					},
 					{ merge: true }
 				);
+				await createSelfChat(uid);
 			}
 			setUserdata({ uid, displayName, phoneNumber, photoURL, metadata });
 		} catch (e) {
@@ -56,7 +55,7 @@ export const useUserdataStore = defineStore('userdata', () => {
 	};
 	const updateUserdata = async ({ displayName, gender, avatar, phoneNumber, birthdayDate }) => {
 		try {
-			await updateDoc(await getUserRef(), {
+			await updateDoc(getUserRef(await auth.getUid()), {
 				'info.displayName': displayName || null,
 				'info.phoneNumber': phoneNumber || null,
 				'info.birthday_date': birthdayDate || null,
@@ -69,7 +68,7 @@ export const useUserdataStore = defineStore('userdata', () => {
 					contentType: avatar.type
 				});
 				const avatarURL = await getDownloadURL(avatarRef);
-				await updateDoc(await getUserRef(), {
+				await updateDoc(getUserRef(await auth.getUid()), {
 					'info.photoURL': avatarURL || null
 				});
 			}
@@ -80,7 +79,7 @@ export const useUserdataStore = defineStore('userdata', () => {
 	};
 	const fetchAuthUserdata = async () => {
 		try {
-			const userRef = await getUserRef();
+			const userRef = getUserRef(await auth.getUid());
 			const unsubscribe = onSnapshot(userRef, udata => {
 				if (udata && udata.exists()) {
 					const { info, ...data } = udata.data();
@@ -102,7 +101,7 @@ export const useUserdataStore = defineStore('userdata', () => {
 	};
 	const getUserdataById = async uid => {
 		try {
-			const udata = await getDoc(await getUserRef(uid));
+			const udata = await getDoc(getUserRef(uid));
 			if (udata && udata.exists()) {
 				return udata.data();
 			}
@@ -113,7 +112,7 @@ export const useUserdataStore = defineStore('userdata', () => {
 	};
 	const addToFriend = async () => {
 		try {
-			await updateDoc(await getUserRef(), {
+			await updateDoc(getUserRef(await auth.getUid()), {
 				friendsUid: arrayUnion(uid)
 			});
 		} catch (e) {

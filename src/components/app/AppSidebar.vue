@@ -14,7 +14,7 @@
 		<v-list v-if="userChatsInfo && userChatsInfo.length && !loading" density="comfortable" class="mt-3">
 			<v-list-item v-for="chat in userChatsInfo" :key="chat.id"
 				:title="chat.type === 'private' ? chat.opponent.displayName : chat.name" class="py-3 mb-3"
-				:prepend-avatar="chat.type === 'private' ? chat.opponent.photoURL : defaultAvatar"
+				:prepend-avatar="chat.type === 'private' ? chat.opponent.photoURL : chat.type === 'self' ? savedMessages : defaultAvatar"
 				:to="{ name: 'chat-id', params: { id: chat.id } }" />
 		</v-list>
 		<div v-else-if="loading">
@@ -32,7 +32,13 @@ import { ref, computed, inject } from 'vue';
 import { computedAsync } from '@vueuse/core';
 import { useChat } from '@/composables/chat';
 
+const { getChatInfoById } = useChat();
+const userdata = inject('userdata');
+const userChats = inject('userChats');
+const loading = ref(true);
+
 const defaultAvatar = new URL('@/assets/img/default_user_avatar.jpg', import.meta.url).href;
+const savedMessages = new URL('@/assets/img/saved-messages.png', import.meta.url).href;
 const emit = defineEmits(['update:modelValue']);
 
 const props = defineProps({
@@ -55,12 +61,7 @@ const fetchChatsInfo = async () => {
 	}
 	loading.value = false;
 };
-
-const { getChatInfoById } = useChat();
-const userdata = inject('userdata');
-const userChats = inject('userChats');
 const userChatsInfo = computedAsync(async () => await fetchChatsInfo());
-const loading = ref(true);
 </script>
 
 <style lang="scss" scoped></style>

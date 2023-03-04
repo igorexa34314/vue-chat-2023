@@ -4,7 +4,8 @@ import { getFirestore, collection, doc, setDoc, updateDoc, arrayUnion, query, wh
 
 export const useChat = () => {
 	const { getUid } = useAuth();
-	const { getUserRef, getUserdataById } = useUserdataStore();
+	const userdataStore = useUserdataStore();
+	// const { getUserRef, getUserdataById } = useUserdataStore();
 	const db = getFirestore();
 	const chatCol = collection(db, 'chat');
 
@@ -17,15 +18,33 @@ export const useChat = () => {
 		});
 		return chatId;
 	};
+	const createSelfChat = async uid => {
+		try {
+			const newChatRef = doc(chatCol);
+			await setDoc(newChatRef, { id: newChatRef.id, name: 'Saved messages', type: 'self', members: [uid], created_at: Timestamp.fromDate(new Date()) });
+			await updateDoc(userdataStore.getUserRef(uid), {
+				chats: arrayUnion(newChatRef.id)
+			});
+			return newChatRef.id;
+		} catch (e) {
+			console.error(e);
+		}
+	};
 	const createPrivateChat = async (...users) => {
 		try {
 			const newChatRef = doc(chatCol);
 			await setDoc(newChatRef, { id: newChatRef.id, name: 'Private chat', type: 'private', members: users, created_at: Timestamp.fromDate(new Date()) });
-			users.forEach(async el => {
-				await updateDoc(await getUserRef(el), {
-					chats: arrayUnion(newChatRef.id)
-				});
+			const promises = [];
+			users.forEach(el => {
+				promises.push(
+					(() => {
+						updateDoc(userdataStore.getUserRef(el), {
+							chats: arrayUnion(newChatRef.id)
+						});
+					})()
+				);
 			});
+			await Promise.all(promises);
 			return newChatRef.id;
 		} catch (e) {
 			console.error(e);
@@ -47,14 +66,14 @@ export const useChat = () => {
 			if (chat.exists()) {
 				const { members, ...data } = chat.data();
 				if (chat.data().type === 'private') {
-					const opponentInfo = (await Promise.all(members.filter(mId => mId !== uid).map(getUserdataById))).map(m => m.info);
+					const opponentInfo = (await Promise.all(members.filter(mId => mId !== uid).map(userdataStore.getUserdataById))).map(m => m.info);
 					return {
 						...data,
 						opponent: opponentInfo.length === 1 ? opponentInfo[0] : opponentInfo,
 						created_at: chat.data().created_at.toDate()
 					};
 				} else {
-					const membersInfo = (await Promise.all(chat.data().members.map(getUserdataById))).map(m => m.info);
+					const membersInfo = (await Promise.all(chat.data().members.map(userdataStore.getUserdataById))).map(m => m.info);
 					return {
 						...data,
 						members: membersInfo,
@@ -68,6 +87,7 @@ export const useChat = () => {
 		}
 	};
 	return {
+		createSelfChat,
 		joinPrivateChat,
 		getChatInfoById
 	};

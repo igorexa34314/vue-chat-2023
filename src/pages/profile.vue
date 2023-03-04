@@ -1,106 +1,59 @@
 <template>
 	<section class="mt-5 pa-5">
-		<h2 class="ml-4 mt-5">Ваш профиль</h2>
-		<v-form v-if="Object.keys(userdata).length" ref="formEl" @submit.prevent="submitForm" lazy-validation
-			class="pa-4 mt-6">
-			<v-text-field v-model.trim="formState.displayName" :rules="validations.name" label="Ваше имя"
-				placeholder="Введите ваше имя" class="" variant="underlined" counter="16" clearable required
-				style="max-width: 600px" />
+		<h2 class="ml-4 mt-2">Ваш профиль</h2>
 
-			<v-radio-group v-model="formState.gender" inline label="Ваш пол" class="mt-6">
-				<v-radio v-for="(gender, index) in genderItems" :key="gender.value" :label="gender.name" :value="gender.value"
-					:color="index === 0 ? 'blue-darken-3' : 'red-darken-3'" class="mr-2" />
-			</v-radio-group>
+		<v-tabs v-model="pickedProfileTab" class="mt-5 ml-3" density="comfortable">
+			<v-tab v-for="tab in profileTabs" :key="tab.value" :value="tab.value">
+				{{ tab.title }}
+			</v-tab>
+		</v-tabs>
 
-			<birthdayPicker v-model="formState.birthdayDate" class="birthday-picker mt-5" />
-
-			<div class="w-50 mt-5">
-				<v-card variant="outlined" max-width="200" class="mb-5" elevation="9">
-					<v-img :lazy-src="defaultAvatar" :src="profileURL" alt="Ваш аватар" cover />
-				</v-card>
-				<div class="mb-4">Загрузите ваше фото</div>
-				<v-file-input v-model="formState.avatar" label="Аватар" :rules="validations.file" variant="solo"
-					placeholder="Загрузите аватар" accept="image/* " density="comfortable" single-line />
-			</div>
-
-			<v-btn type="submit" color="success" class="btn mt-5">
-				Применить
-			</v-btn>
-		</v-form>
-		<div v-else><page-loader /></div>
+		<v-window v-model="pickedProfileTab">
+			<v-window-item :value="profileTabs[0].value">
+				<v-container fluid>
+					<InfoForm v-if="Object.keys(userdata).length" :userdata="userdata" @submit="submitForm" />
+					<div v-else><page-loader /></div>
+				</v-container>
+			</v-window-item>
+		</v-window>
 	</section>
 </template>
 
 <script setup>
-import birthdayPicker from '@/components/UI/birthdayPicker.vue';
+import InfoForm from '@/components/profile/InfoForm.vue';
 import pageLoader from '@/components/UI/pageLoader.vue';
 import { useUserdataStore } from '@/stores/userdata';
-import { ref, inject, watchEffect, reactive } from 'vue';
+import { ref, inject } from 'vue';
 import { useSnackbarStore } from '@/stores/snackbar';
-import validations from '@/utils/validations';
 import messages from '@/utils/messages';
 import { useMeta } from 'vue-meta';
 
 useMeta({ title: 'Мой профиль' });
 
-const defaultAvatar = new URL('@/assets/img/default_user_avatar.jpg', import.meta.url).href;
-
 const { updateUserdata } = useUserdataStore();
 const { showMessage } = useSnackbarStore();
 const userdata = inject('userdata');
 
-const formEl = ref();
-const formState = reactive({
-	displayName: '',
-	gender: '',
-	birthdayDate: new Date(),
-	avatar: []
-});
-let profileURL = '';
-
-const fillProfileForm = () => {
-	if (userdata.value.info && Object.keys(userdata.value.info).length) {
-		formState.displayName = userdata.value.info.displayName;
-		formState.gender = userdata.value.info.gender || 'unknown';
-		formState.birthdayDate = userdata.value.info.birthday_date || new Date();
-		profileURL = userdata.value.info.photoURL;
-	}
-};
-
-watchEffect(() => {
-	fillProfileForm();
-});
-
-const genderItems = [
-	{ name: 'Мужской', value: 'male' },
-	{ name: 'Женский', value: 'female' },
-	{ name: 'Не указывать', value: 'unknown' },
+const profileTabs = [
+	{ title: 'Информация', value: 'info' },
+	{ title: 'Безопасность', value: 'security' },
+	{ title: 'Уведомлениия', value: 'notifications' },
 ];
-const submitForm = async () => {
-	const { valid } = await formEl.value.validate();
-	if (valid) {
-		try {
-			const { avatar, ...data } = formState;
-			await updateUserdata({
-				...data,
-				avatar: formState.avatar.length ? formState.avatar[0] : null
-			});
-			formState.avatar = [];
-			showMessage('succesfully_updated');
-		} catch (e) {
-			console.error(e);
-			showMessage(messages[e] || e, 'red-darken-3', 2000);
-		}
 
+const pickedProfileTab = ref(profileTabs[0].value);
+
+const submitForm = async (formData) => {
+	try {
+		await updateUserdata(formData);
+		showMessage('succesfully_updated');
+	} catch (e) {
+		console.error(e);
+		showMessage(messages[e] || e, 'red-darken-3', 2000);
 	}
 };
 </script>
 
-<style lang="scss" scoped>
-.birthday-picker {
-	max-width: 550px;
-}
-</style>
+<style lang="scss" scoped></style>
 
 <route lang="yaml">
 meta:
