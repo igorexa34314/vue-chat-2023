@@ -2,7 +2,8 @@
 	<v-container class="container" fluid>
 		<div v-if="userChats && userChats.length && !userChats.some(el => el === $route.params.id)" class="text-h5 pa-5">
 			Такого чата не существует либо вы не состоите в нем</div>
-		<div v-else-if="userChats && userChats.length" style="height: 100%; position: relative;">
+		<div v-else-if="userChats && userChats.length" style="height: 100%; position: relative;" @dragenter="addAttachment"
+			@dragleave="removeAttachment">
 			<div v-if="loading"><page-loader /></div>
 			<div v-else-if="messages && messages.length" class="chat__content px-12" ref="chatEl">
 				<div class="messages-field mt-4">
@@ -15,6 +16,14 @@
 			</div>
 			<MessageForm class="message-form py-4 px-6" @submitForm="createMessage" />
 		</div>
+		<v-dialog v-model="attachDialog" width="auto" ref="dropZone">
+			<v-card minHeight="80vh" minWidth="80vh" class="bg-blue-accent-1 d-flex flex-column align-center justify-center"
+				style="position: reactive; left: 25%">
+				<div class="attach-frame text-h4 ma-6 font-weight-bold">
+					Прикрепите файлы
+				</div>
+			</v-card>
+		</v-dialog>
 	</v-container>
 </template>
 
@@ -30,6 +39,7 @@ import { ref, computed, onUnmounted, watchEffect, inject } from 'vue';
 import { useMeta } from 'vue-meta';
 import { useRoute } from 'vue-router';
 import { useInfiniteScroll, watchPausable } from '@vueuse/core';
+import { useDropZone } from '@vueuse/core';
 
 
 const route = useRoute();
@@ -45,6 +55,21 @@ const lastVisible = computed(() => messagesStore.lastVisible);
 let unsubscribe;
 
 const uid = useCurrentUser().value.uid;
+
+const attachDialog = ref(false);
+const dropZone = ref();
+
+const { isOverDropZone } = useDropZone(dropZone, (files) => {
+	console.log('droppped', files)
+});
+const addAttachment = () => {
+	console.log('Drag enter');
+	attachDialog.value = true;
+};
+const removeAttachment = () => {
+	console.log('Drag leave');
+	attachDialog.value = false;
+};
 
 // Hide scroll when it's inactive
 // let time;
@@ -181,6 +206,14 @@ const createMessage = async (content, type = 'text') => {
 	&:hover {
 		background-color: rgba($color: #ffffff, $alpha: .4);
 	}
+}
+.attach-frame {
+	width: 90%;
+	flex: 1;
+	border: 3px dashed #1A237E;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }
 </style>
 

@@ -18,21 +18,21 @@
 import AttachMenu from '@/components/chat/AttachMenu.vue';
 import AttachDialog from '@/components/chat/AttachDialog.vue';
 import { useSnackbarStore } from '@/stores/snackbar';
-import { ref, reactive } from 'vue';
+import { reactive } from 'vue';
 
 const { showMessage } = useSnackbarStore();
 const emit = defineEmits(['submitForm']);
 
+const messageState = reactive({
+	text: '',
+	attachedFiles: [],
+});
 const attachDialogState = reactive({
 	show: false,
 	previewContent: {
 		type: '',
-		data: null,
+		data: [],
 	}
-});
-const file = ref();
-const messageState = reactive({
-	text: '',
 });
 
 const createTextMessage = () => {
@@ -60,28 +60,44 @@ const createAttachment = (type, content) => {
 		}, 'file');
 	}
 };
-const attachMedia = e => {
+const readFilesAsURL = (file) => {
+	return new Promise((res, rej) => {
+		const reader = new FileReader();
+		reader.onload = () => res({ file, res: reader.result });
+		reader.onerror = () => rej(reader);
+		reader.readAsDataURL(file);
+	});
+};
+const attachMedia = async (e) => {
 	const files = e.target.files || e.dataTransfer.files;
 	if (!files.length)
 		return;
-	if (files.length && files[0].type.startsWith('image/')) {
+	if (files.length > 10) {
+		showMessage('Нельзя отправлять более 10 файлов в одном сообщении', 'red-darken-3', 2500);
+		return;
+	}
+	if (files.length && [...files].every(f => f.type.startsWith('image/'))) {
 		attachDialogState.previewContent.type = 'image';
-		file.value = files[0];
-		if (file.value.size > 4194304) {
-			showMessage('Допустимый размер файла - до 4 Мбайт', 'red-darken-3', 2500);
-			return;
-		}
-		const reader = new FileReader();
-		reader.onload = () => {
-			attachDialogState.previewContent.data = {
-				fullname: file.value.name, size: file.value.size,
-				ext: file.value.name.split('.')[file.value.name.split('.').length - 1],
-				src: reader.result
+		messageState.attachedFiles = files;
+		const promises = [];
+		for (const f of messageState.attachedFiles) {
+			if (f.size > 3145728) {
+				showMessage('Допустимый размер файлов - до 3 Мбайт', 'red-darken-3', 2500);
+				return;
 			}
+			promises.push(readFilesAsURL(f));
 		}
-		reader.onerror = e => console.error(e);
-		reader.readAsDataURL(file.value);
-		e.target.value = '';
+		try {
+			(await Promise.all(promises)).forEach(el => {
+				attachDialogState.previewContent.data.push({
+					fullname: el.file.name, size: el.file.size,
+					ext: el.file.name.split('.')[el.file.name.split('.').length - 1],
+					src: el.res
+				});
+			})
+		} catch (e) {
+			console.error(e);
+		}
 		attachDialogState.show = true;
 	};
 };
@@ -99,8 +115,8 @@ const attachFile = e => {
 	attachDialogState.show = true;
 };
 const closeDialog = () => {
-	file.value = null;
-	attachDialogState.previewContent.data = null;
+	attachDialogState.files = [];
+	attachDialogState.previewContent.data = [];
 	attachDialogState.previewContent.type = '';
 };
 </script>

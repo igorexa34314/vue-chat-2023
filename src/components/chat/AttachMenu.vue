@@ -10,7 +10,7 @@
 					<v-icon :icon="item.icon" class="mr-4"></v-icon>
 					<span>{{ item.title }}</span>
 					<input :id="item.inputId" type="file" :accept="item.accept" style="display:none;"
-						@change="$emit(item.inputId, $event)">
+						@change="$emit(item.inputId, $event)" multiple>
 				</label>
 			</v-list-item>
 		</v-list>
