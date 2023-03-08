@@ -2,10 +2,30 @@ import { defineStore } from 'pinia';
 import { ref, reactive } from 'vue';
 import { useAuth } from '@/composables/auth';
 import { useUserdataStore } from '@/stores/userdata';
-import { getFirestore, collection, doc, setDoc, orderBy, query, Timestamp, onSnapshot, limit, startAt, getDoc, getDocs, startAfter } from 'firebase/firestore';
+import { getFirestore, collection, doc, setDoc, orderBy, query, Timestamp, onSnapshot, limit, getDoc, getDocs, startAfter } from 'firebase/firestore';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, getBlob } from 'firebase/storage';
 import { uuidv4 } from '@firebase/util';
 
+type id = string;
+type direction = 'start' | 'end';
+type MessageType = 'text' | 'media' | 'file';
+type SenderId = id;
+
+export interface Message {
+	id: string;
+	created_at: Date;
+	type: MessageType;
+	content: TextMessageContent;
+	sender: Sender | SenderId;
+}
+export interface Sender {
+	id: id;
+	displayName: string;
+	photoURL: string;
+}
+export interface TextMessageContent {
+	text: string;
+}
 export const useMessagesStore = defineStore('messages', () => {
 	const { getUid } = useAuth();
 	const { getUserdataById } = useUserdataStore();
@@ -13,7 +33,7 @@ export const useMessagesStore = defineStore('messages', () => {
 	const storage = getStorage();
 	const chatCol = collection(db, 'chat');
 
-	const messages = ref([]);
+	const messages = ref<Array<Message>>([]);
 	const lastVisible = reactive({
 		top: null,
 		bottom: null
@@ -21,37 +41,49 @@ export const useMessagesStore = defineStore('messages', () => {
 	const clearMessages = () => {
 		messages.value = [];
 	};
-	const addMessage = (msg, direction = 'end') => {
-		if (direction === 'end') {
+	const addMessage = (msg: Message, direct?: direction) => {
+		if (direct === 'end' || !direct) {
 			messages.value.push(msg);
 		} else {
 			messages.value.unshift(msg);
 		}
 	};
-	const deleteMessages = (count = 10, direction = 'end') => {
-		if (direction === 'end') {
+	const deleteMessages = (count = 10, direct?: direction) => {
+		if (direct === 'end' || !direct) {
 			messages.value.splice(-count, count);
 		} else {
 			messages.value.splice(0, count);
 		}
 	};
-	const uploadMedia = async (chatId, messageId, { subtitle, image }) => {
-		if (image.data instanceof File) {
-			const { data: file, ...data } = image;
-			const imageRef = storageRef(storage, `chat/${chatId}/messageData/${messageId}/${uuidv4() + '.' + file.name.split('.')[file.name.split('.').length - 1]}`);
-			await uploadBytes(imageRef, file, {
-				name: file.name,
-				contentType: file.type
-			});
+	const uploadMedia = async (chatId, messageId: Message['id'], { subtitle, files }) => {
+		if (files.every(f => f.data instanceof File)) {
+			const promises = [];
+			for (const file of files) {
+				promises.push(
+					(async () => {
+						const { data: fileData, id, ...data } = file;
+						const imageRef = storageRef(
+							storage,
+							`chat/${chatId}/messageData/${messageId}/${id + '.' + fileData.name.split('.')[fileData.name.split('.').length - 1]}`
+						);
+						await uploadBytes(imageRef, fileData, {
+							name: fileData.name,
+							contentType: fileData.type
+						});
+						return {
+							id,
+							fullname: fileData.name,
+							type: fileData.type,
+							fullpath: imageRef.fullPath,
+							downloadURL: await getDownloadURL(imageRef),
+							...data
+						};
+					})()
+				);
+			}
 			return {
 				subtitle,
-				image: {
-					fullname: file.name,
-					type: file.type,
-					fullpath: imageRef.fullPath,
-					downloadURL: await getDownloadURL(imageRef),
-					...data
-				}
+				images: await Promise.all(promises)
 			};
 		}
 	};

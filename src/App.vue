@@ -13,7 +13,7 @@
   </Suspense>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import GlobalSnackbar from '@/components/app/GlobalSnackbar.vue';
 import pageLoader from '@/components/UI/pageLoader.vue';
 import { onErrorCaptured } from 'vue';

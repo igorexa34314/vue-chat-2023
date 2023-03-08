@@ -17,7 +17,7 @@
 	</v-menu>
 </template>
 
-<script setup>
+<script setup lang="ts">
 const attachMenuItems = [
 	{ title: 'Фото или видео', icon: 'mdi-image', inputId: 'attach-media', accept: 'image/*, video/*' },
 	{ title: 'Файл', icon: 'mdi-file-document-outline', inputId: 'attach-file', accept: '.txt,.pdf,.doc,.docx' },

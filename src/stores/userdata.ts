@@ -6,6 +6,22 @@ import { useAuth } from '@/composables/auth';
 import { useChat } from '@/composables/chat';
 import { uuidv4 } from '@firebase/util';
 
+export type Gender = 'unknown' | 'male' | 'female';
+export interface UserData {
+	chats: Array<string>;
+	friends: Array<string>;
+	info: object;
+}
+
+export interface UserInfo {
+	id: string;
+	displayName: string;
+	photoURL: string;
+	created_at: Date;
+	birthdayDate?: Date | string;
+	gender: Gender;
+}
+
 export const useUserdataStore = defineStore('userdata', () => {
 	const auth = useAuth();
 	const { createSelfChat } = useChat();
@@ -13,10 +29,10 @@ export const useUserdataStore = defineStore('userdata', () => {
 	const db = getFirestore();
 	const usersCol = collection(db, 'userdata');
 
-	const userdata = ref({});
+	const userdata = ref<UserData>(null);
 
 	const clearData = () => {
-		userdata.value = {};
+		userdata.value = null;
 	};
 	const setUserdata = data => {
 		userdata.value = data;

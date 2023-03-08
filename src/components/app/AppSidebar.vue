@@ -26,10 +26,10 @@
 	</v-navigation-drawer>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import pageLoader from '@/components/UI/pageLoader.vue';
-import { ref, computed, inject } from 'vue';
-import { computedAsync } from '@vueuse/core';
+import { ref, inject } from 'vue';
+import { computedAsync, useVModel } from '@vueuse/core';
 import { useChat } from '@/composables/chat';
 
 const { getChatInfoById } = useChat();
@@ -39,7 +39,11 @@ const loading = ref(true);
 
 const defaultAvatar = new URL('@/assets/img/default_user_avatar.jpg', import.meta.url).href;
 const savedMessages = new URL('@/assets/img/saved-messages.png', import.meta.url).href;
-const emit = defineEmits(['update:modelValue']);
+
+type Drawer = boolean;
+const emit = defineEmits<{
+	(e: 'update:modelValue', value: Drawer): void,
+}>();
 
 const props = defineProps({
 	modelValue: {
@@ -47,10 +51,7 @@ const props = defineProps({
 		default: true,
 	},
 });
-const drawer = computed({
-	get: () => props.modelValue,
-	set: value => emit('update:modelValue', value),
-});
+const drawer = useVModel(props, 'modelValue', emit);
 
 const fetchChatsInfo = async () => {
 	if (userChats.value && userChats.value.length) {

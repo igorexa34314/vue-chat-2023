@@ -19,9 +19,10 @@
 	</div>
 </template>
 
-<script setup>
-import { ref, computed } from 'vue';
+<script setup lang="ts">
+import { ref } from 'vue';
 import validations from '@/utils/validations';
+import { useVModel } from '@vueuse/core';
 
 const emit = defineEmits(['update:modelValue']);
 
@@ -38,10 +39,8 @@ const props = defineProps({
 });
 const showPassword = ref(false);
 const showRepeatedPassword = ref(false);
-const password = computed({
-	get: () => props.modelValue,
-	set: value => emit('update:modelValue', value)
-});
+
+const password = useVModel(props, 'modelValue', emit)
 const repeaterRules = [v => !!v || 'Повторите пароль', v => (v && v === password.value) || 'Пароли должны совпадать'];
 </script>
 

@@ -8,6 +8,9 @@
 export default { name: 'page-loader' }
 </script>
 
+<script setup lang="ts">
+</script>
+
 <style lang="scss" scoped>
 $loader-primary: #0288D1;
 $loader-secondary: #FDD835;

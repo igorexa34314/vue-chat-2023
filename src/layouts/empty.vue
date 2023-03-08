@@ -6,7 +6,7 @@
 	</v-layout>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { useRoute } from 'vue-router';
 import { useSnackbarStore } from '@/stores/snackbar';
 import messages from '@/utils/messages';

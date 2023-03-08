@@ -27,7 +27,7 @@
 	</v-card>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import passField from '@/components/UI/passField.vue';
 import { reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';

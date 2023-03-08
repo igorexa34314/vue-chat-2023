@@ -1,7 +1,7 @@
 <template>
 	<v-app-bar color="blue-grey-darken-4" :elevation="7" prominent>
 
-		<v-app-bar-nav-icon variant="text" @click.stop="$emit('drawer')"></v-app-bar-nav-icon>
+		<v-app-bar-nav-icon variant="text" @click.stop="emit('drawer')"></v-app-bar-nav-icon>
 
 		<v-toolbar-title>Мой чат</v-toolbar-title>
 
@@ -39,7 +39,7 @@
 	</v-app-bar>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuth } from '@/composables/auth';
@@ -52,7 +52,9 @@ const { logout } = useAuth();
 const { clearData } = useUserdataStore();
 const { showMessage } = useSnackbarStore();
 
-const emit = defineEmits(['drawer']);
+const emit = defineEmits<{
+	(e: 'drawer'): void,
+}>();
 
 const search = ref();
 const searchState = reactive({

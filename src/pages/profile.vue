@@ -19,7 +19,7 @@
 	</section>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import InfoForm from '@/components/profile/InfoForm.vue';
 import pageLoader from '@/components/UI/pageLoader.vue';
 import { useUserdataStore } from '@/stores/userdata';

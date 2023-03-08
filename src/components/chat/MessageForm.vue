@@ -14,11 +14,12 @@
 	</div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import AttachMenu from '@/components/chat/AttachMenu.vue';
 import AttachDialog from '@/components/chat/AttachDialog.vue';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { reactive } from 'vue';
+import { uuidv4 } from '@firebase/util';
 
 const { showMessage } = useSnackbarStore();
 const emit = defineEmits(['submitForm']);
@@ -31,7 +32,7 @@ const attachDialogState = reactive({
 	show: false,
 	previewContent: {
 		type: '',
-		data: [],
+		files: [],
 	}
 });
 
@@ -45,28 +46,13 @@ const createTextMessage = () => {
 };
 const createAttachment = (type, content) => {
 	if (type === 'image') {
-		const { subtitle, image } = content;
-		emit('submitForm', {
-			subtitle,
-			image: {
-				data: file.value,
-				...image,
-			},
-		}, 'media');
+		emit('submitForm', content, 'media');
 	} else if (type === 'file') {
 		emit('submitForm', {
 			subtitle: content.subtitle,
 			file: file.value,
 		}, 'file');
 	}
-};
-const readFilesAsURL = (file) => {
-	return new Promise((res, rej) => {
-		const reader = new FileReader();
-		reader.onload = () => res({ file, res: reader.result });
-		reader.onerror = () => rej(reader);
-		reader.readAsDataURL(file);
-	});
 };
 const attachMedia = async (e) => {
 	const files = e.target.files || e.dataTransfer.files;
@@ -78,28 +64,9 @@ const attachMedia = async (e) => {
 	}
 	if (files.length && [...files].every(f => f.type.startsWith('image/'))) {
 		attachDialogState.previewContent.type = 'image';
-		messageState.attachedFiles = files;
-		const promises = [];
-		for (const f of messageState.attachedFiles) {
-			if (f.size > 3145728) {
-				showMessage('Допустимый размер файлов - до 3 Мбайт', 'red-darken-3', 2500);
-				return;
-			}
-			promises.push(readFilesAsURL(f));
-		}
-		try {
-			(await Promise.all(promises)).forEach(el => {
-				attachDialogState.previewContent.data.push({
-					fullname: el.file.name, size: el.file.size,
-					ext: el.file.name.split('.')[el.file.name.split('.').length - 1],
-					src: el.res
-				});
-			})
-		} catch (e) {
-			console.error(e);
-		}
-		attachDialogState.show = true;
-	};
+		attachDialogState.previewContent.files = [...files].map(f => ({ id: uuidv4(), data: f }));
+	}
+	attachDialogState.show = true;
 };
 const attachFile = e => {
 	const files = e.target.files || e.dataTransfer.files;
@@ -115,8 +82,8 @@ const attachFile = e => {
 	attachDialogState.show = true;
 };
 const closeDialog = () => {
-	attachDialogState.files = [];
-	attachDialogState.previewContent.data = [];
+	messageState.attachedFiles = [];
+	attachDialogState.previewContent.files = [];
 	attachDialogState.previewContent.type = '';
 };
 </script>

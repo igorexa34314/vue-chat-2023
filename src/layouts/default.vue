@@ -10,7 +10,7 @@
 	</v-layout>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import AppNavbar from '@/components/app/AppNavbar.vue';
 import AppSidebar from '@/components/app/AppSidebar.vue';
 import { ref, computed, provide, onUnmounted } from 'vue';
@@ -22,9 +22,7 @@ const drawer = ref(true);
 const unsubscribe = await userdataStore.fetchAuthUserdata();
 
 // Unsubscribe from receiving userdata realtime firebase
-onUnmounted(() => {
-	if (unsubscribe) unsubscribe();
-});
+onUnmounted(() => unsubscribe?.());
 
 const userdata = computed(() => userdataStore.userdata);
 const userChats = computed(() => userdata.value.chats);

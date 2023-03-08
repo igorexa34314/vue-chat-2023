@@ -18,7 +18,7 @@
 	</div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onUnmounted } from 'vue';
 import { formatFileSize as formatSize } from '@/utils/sizeFormat';
 import { ref as storageRef, getBlob } from 'firebase/storage';

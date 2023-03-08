@@ -4,7 +4,7 @@
 	</v-container>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import RegisterForm from '@/components/RegisterForm.vue';
 import { useMeta } from 'vue-meta'
 

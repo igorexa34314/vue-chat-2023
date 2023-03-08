@@ -26,7 +26,7 @@
 	</v-form>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import birthdayPicker from '@/components/UI/birthdayPicker.vue';
 import { ref, watchEffect, reactive } from 'vue';
 import validations from '@/utils/validations';

@@ -12,7 +12,7 @@
 				<p class="message__text" :class="type !== 'text' && content.subtitle ? 'mb-4' : ''">
 					{{ type === 'text' ? content.text : type === 'media' ? content.subtitle : '' }}</p>
 
-				<MediaMessage v-if="type === 'media'" :image="content.image" ::alt="content.subtitle" class="my-2" />
+				<MediaMessage v-if="type === 'media'" :images="content.images" :alt="content.subtitle" class="my-2" />
 
 				<FileMessage v-else-if="type === 'file'" :file="content.file" class="pr-3" />
 
@@ -23,10 +23,10 @@
 	</div>
 </template>
 
-<script setup>
-import MediaMessage from '@/components/chat/messages/MediaMessage.vue';
-import FileMessage from '@/components/chat/messages/FileMessage.vue';
-import {  computed } from 'vue';
+<script setup lang="ts">
+import MediaMessage from '@/components/chat/messages/media/MediaMessage.vue';
+import FileMessage from '@/components/chat/messages/file/FileMessage.vue';
+import { computed } from 'vue';
 import { useDateFormat } from '@/utils/dateFormat';
 
 const { messagesDateFormat } = useDateFormat();

@@ -41,7 +41,7 @@
 	</div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import pageLoader from '@/components/UI/pageLoader.vue';
 import { computed } from 'vue';
 import { useUserdataStore } from '@/stores/userdata';

@@ -4,7 +4,7 @@
 	</v-container>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import LoginForm from '@/components/LoginForm.vue';
 import { useMeta } from 'vue-meta';
 

@@ -27,7 +27,7 @@
 	</v-container>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import pageLoader from '@/components/UI/pageLoader.vue';
 import MessageItem from '@/components/chat/MessageItem.vue';
 import MessageForm from '@/components/chat/MessageForm.vue';
