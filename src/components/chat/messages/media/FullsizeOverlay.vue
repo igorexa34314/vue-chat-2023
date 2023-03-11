@@ -23,18 +23,19 @@
 <script setup lang="ts">
 import { useVModel } from '@vueuse/core';
 
-const props = defineProps({
-	modelValue: {
-		type: String,
-		default: false
-	},
-	content: {
-		type: Object,
-		required: true,
-	},
-	alt: String,
+type Overlay = boolean;
+
+interface Props {
+	modelValue?: Overlay;
+	content: object;
+	alt?: string;
+}
+const props = withDefaults(defineProps<Props>(), {
+	modelValue: false,
 });
-const emit = defineEmits(['update:modelValue']);
+const emit = defineEmits<{
+	(e: 'update:modelValue', val: Overlay): void
+}>();
 
 const showOverlay = useVModel(props, 'modelValue', emit);
 </script>

@@ -20,6 +20,7 @@ import AttachDialog from '@/components/chat/AttachDialog.vue';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { reactive } from 'vue';
 import { uuidv4 } from '@firebase/util';
+import { Message } from '@/types/message/Message';
 
 const { showMessage } = useSnackbarStore();
 const emit = defineEmits(['submitForm']);

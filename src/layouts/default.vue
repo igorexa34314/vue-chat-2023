@@ -14,7 +14,8 @@
 import AppNavbar from '@/components/app/AppNavbar.vue';
 import AppSidebar from '@/components/app/AppSidebar.vue';
 import { ref, computed, provide, onUnmounted } from 'vue';
-import { useUserdataStore } from '@/stores/userdata';
+import { UserData, useUserdataStore } from '@/stores/userdata';
+import { userDataKey, userChatsKey } from '@/injection-keys';
 
 const userdataStore = useUserdataStore();
 const drawer = ref(true);
@@ -24,10 +25,11 @@ const unsubscribe = await userdataStore.fetchAuthUserdata();
 // Unsubscribe from receiving userdata realtime firebase
 onUnmounted(() => unsubscribe?.());
 
-const userdata = computed(() => userdataStore.userdata);
-const userChats = computed(() => userdata.value.chats);
-provide('userdata', userdata);
-provide('userChats', userChats);
+const userdata = computed(() => userdataStore.userdata as UserData);
+const userChats = computed<UserData['chats']>(() => userdata.value?.chats);
+
+provide(userDataKey, userdata);
+provide(userChatsKey, userChats);
 </script>
 
 <style lang="scss" scoped></style>

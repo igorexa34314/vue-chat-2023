@@ -10,15 +10,10 @@ import ImageFrame from '@/components/chat/messages/media/ImageFrame.vue';
 import FullsizeOverlay from '@/components/chat/messages/media/FullsizeOverlay.vue';
 import { reactive } from 'vue';
 
-const props = defineProps({
-	images: {
-		type: Array,
-		required: true,
-	},
-	alt: {
-		type: String,
-	}
-});
+const props = defineProps<{
+	images: any[]
+	alt?: string;
+}>();
 
 const overlayState = reactive({
 	show: false,

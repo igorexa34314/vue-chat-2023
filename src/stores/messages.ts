@@ -1,31 +1,22 @@
 import { defineStore } from 'pinia';
 import { ref, reactive } from 'vue';
 import { useAuth } from '@/composables/auth';
+import { FirebaseError } from 'firebase/app';
 import { useUserdataStore } from '@/stores/userdata';
 import { getFirestore, collection, doc, setDoc, orderBy, query, Timestamp, onSnapshot, limit, getDoc, getDocs, startAfter } from 'firebase/firestore';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, getBlob } from 'firebase/storage';
 import { uuidv4 } from '@firebase/util';
+import type { UserInfo } from '@/stores/userdata';
+import type { DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
+import type { ChatInfo } from '@/composables/chat';
+import type { Message } from '@/types/message/Message';
 
-type id = string;
 type direction = 'start' | 'end';
-type MessageType = 'text' | 'media' | 'file';
-type SenderId = id;
+export interface LastVisibleFirebaseMessageRef {
+	top: QueryDocumentSnapshot<DocumentData> | null;
+	bottom: QueryDocumentSnapshot<DocumentData> | null;
+}
 
-export interface Message {
-	id: string;
-	created_at: Date;
-	type: MessageType;
-	content: TextMessageContent;
-	sender: Sender | SenderId;
-}
-export interface Sender {
-	id: id;
-	displayName: string;
-	photoURL: string;
-}
-export interface TextMessageContent {
-	text: string;
-}
 export const useMessagesStore = defineStore('messages', () => {
 	const { getUid } = useAuth();
 	const { getUserdataById } = useUserdataStore();
@@ -34,7 +25,7 @@ export const useMessagesStore = defineStore('messages', () => {
 	const chatCol = collection(db, 'chat');
 
 	const messages = ref<Array<Message>>([]);
-	const lastVisible = reactive({
+	const lastVisible: LastVisibleFirebaseMessageRef = reactive({
 		top: null,
 		bottom: null
 	});
@@ -55,7 +46,7 @@ export const useMessagesStore = defineStore('messages', () => {
 			messages.value.splice(0, count);
 		}
 	};
-	const uploadMedia = async (chatId, messageId: Message['id'], { subtitle, files }) => {
+	const uploadMedia = async (chatId: ChatInfo['id'], messageId: Message['id'], { subtitle, files }) => {
 		if (files.every(f => f.data instanceof File)) {
 			const promises = [];
 			for (const file of files) {
@@ -67,7 +58,6 @@ export const useMessagesStore = defineStore('messages', () => {
 							`chat/${chatId}/messageData/${messageId}/${id + '.' + fileData.name.split('.')[fileData.name.split('.').length - 1]}`
 						);
 						await uploadBytes(imageRef, fileData, {
-							name: fileData.name,
 							contentType: fileData.type
 						});
 						return {
@@ -87,11 +77,10 @@ export const useMessagesStore = defineStore('messages', () => {
 			};
 		}
 	};
-	const uploadFile = async (chatId, messageId, { subtitle, file }) => {
+	const uploadFile = async (chatId: ChatInfo['id'], messageId: Message['id'], { subtitle, file }) => {
 		if (file instanceof File) {
 			const fileRef = storageRef(storage, `chat/${chatId}/messageData/${messageId}/${uuidv4() + '.' + file.name.split('.')[file.name.split('.').length - 1]}`);
 			await uploadBytes(fileRef, file, {
-				name: file.name,
 				contentType: file.type
 			});
 			return {
@@ -106,7 +95,7 @@ export const useMessagesStore = defineStore('messages', () => {
 			};
 		}
 	};
-	const createMessage = async ({ chatId, type, content }) => {
+	const createMessage = async (chatId: ChatInfo['id'], type: Message['type'], content: Message['content']) => {
 		try {
 			const messageRef = doc(collection(doc(chatCol, chatId), 'messages'));
 			if (type === 'media') {
@@ -121,19 +110,19 @@ export const useMessagesStore = defineStore('messages', () => {
 				created_at: Timestamp.fromDate(new Date()),
 				sender_id: await getUid()
 			});
-		} catch (e) {
+		} catch (e: unknown) {
 			console.error(e);
-			throw e.code || e;
+			throw e instanceof FirebaseError ? e.code : e;
 		}
 	};
 	const getMessageSenderInfo = async message => {
 		try {
 			const { sender_id, ...m } = message;
-			const { displayName, photoURL } = (await getUserdataById(sender_id)).info;
+			const { displayName, photoURL } = (await getUserdataById(sender_id))?.info as UserInfo;
 			return { ...m, sender: { id: sender_id, displayName, photoURL } };
-		} catch (e) {
+		} catch (e: unknown) {
 			console.error(e);
-			throw e.code || e;
+			throw e instanceof FirebaseError ? e.code : e;
 		}
 	};
 	const getFullMessageInfo = async message => {
@@ -159,18 +148,18 @@ export const useMessagesStore = defineStore('messages', () => {
 				},
 				{ ...m }
 			);
-		} catch (e) {
+		} catch (e: unknown) {
 			console.error(e);
-			throw e.code || e;
+			throw e instanceof FirebaseError ? e.code : e;
 		}
 	};
-	const fetchChatMessages = async (chatId, lmt = 10) => {
+	const fetchChatMessages = async (chatId: ChatInfo['id'], lmt = 10) => {
 		try {
 			const messagesCol = collection(doc(chatCol, chatId), 'messages');
 			const q = query(messagesCol, orderBy('created_at', 'desc'), limit(lmt));
 			const unsubscribe = onSnapshot(q, async messagesRef => {
 				const initialMessages = [];
-				const promises = [];
+				const promises = [] as Array<Promise<Message>>;
 
 				messagesRef.docChanges().forEach(change => {
 					if (change.type === 'added') {
@@ -188,12 +177,12 @@ export const useMessagesStore = defineStore('messages', () => {
 				}
 			});
 			return unsubscribe;
-		} catch (e) {
+		} catch (e: unknown) {
 			console.error(e);
-			throw e.code || e;
+			throw e instanceof FirebaseError ? e.code : e;
 		}
 	};
-	const loadMoreChatMessages = async (chatId, direction = 'top', perPage = 10) => {
+	const loadMoreChatMessages = async (chatId: ChatInfo['id'], direction = 'top', perPage = 10) => {
 		try {
 			if (lastVisible[direction]) {
 				const messagesCol = collection(doc(chatCol, chatId), 'messages');
@@ -209,7 +198,7 @@ export const useMessagesStore = defineStore('messages', () => {
 					lastVisible[direction === 'top' ? 'bottom' : 'top'] = msgBeforeDel;
 				}
 				const initialMessages = [];
-				const promises = [];
+				const promises = [] as Array<Promise<Message>>;
 				messagesRef.forEach(doc => {
 					initialMessages.push({ ...doc.data(), created_at: doc.data().created_at.toDate() });
 				});
@@ -221,9 +210,9 @@ export const useMessagesStore = defineStore('messages', () => {
 				});
 				lastVisible[direction] = messagesRef.size >= perPage ? messagesRef.docs[messagesRef.docs.length - 1] : null;
 			}
-		} catch (e) {
+		} catch (e: unknown) {
 			console.error(e);
-			throw e.code || e;
+			throw e instanceof FirebaseError ? e.code : e;
 		}
 	};
 	return {

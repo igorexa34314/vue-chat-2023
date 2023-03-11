@@ -14,13 +14,10 @@ import { onUnmounted, watchEffect, toRef } from 'vue';
 import { ref as storageRef, getBlob } from 'firebase/storage';
 import { useFirebaseStorage } from 'vuefire';
 
-const props = defineProps({
-	image: {
-		type: Object,
-		required: true,
-	},
-	alt: String,
-});
+const props = defineProps<{
+	image: object;
+	alt?: string;
+}>();
 const emit = defineEmits<{
 	(e: 'open', image: object): void,
 }>();

@@ -17,7 +17,9 @@ const props = defineProps({
 		default: new Date(),
 	}
 });
-const emit = defineEmits(['update:modelValue']);
+const emit = defineEmits<{
+	(e: 'update:modelValue', date: Date): void
+}>();
 
 const datePickerState = ref([
 	{ type: 'month', title: 'Месяц', value: props.modelValue.getMonth() + 1, items: monthsForLocale('ru-RU', 'long').map((title, i) => ({ title, value: ++i })) },

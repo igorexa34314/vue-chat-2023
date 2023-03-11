@@ -1,47 +1,62 @@
 <template>
 	<div>
-		<v-text-field v-model="password" :type="showPassword ? 'text' : 'password'" :rules="rules || validations.password"
-			:label="label || 'Пароль'" :placeholder="placeholder || 'Введите пароль'" :variant="variant || 'underlined'"
-			required>
+		<v-text-field v-model="password" :type="passFieldState.showPass ? 'text' : 'password'" :rules="rules" :label="label"
+			:placeholder="placeholder" :variant="variant" required>
 			<template v-slot:append-inner>
-				<v-icon :icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'" @mousedown="showPassword = true"
-					@mouseup="showPassword = false" class="mr-2" style="cursor: pointer" />
+				<v-icon :icon="passFieldState.showPass ? 'mdi-eye' : 'mdi-eye-off'" @mousedown="passFieldState.showPass = true"
+					@mouseup="passFieldState.showPass = false" class="mr-2" style="cursor: pointer" />
 			</template>
 		</v-text-field>
-		<v-text-field v-if="repeater" :type="showRepeatedPassword ? 'text' : 'password'" :rules="repeaterRules"
-			:label="repeaterLabel || 'Пароль еще раз'" :placeholder="repeaterPlaceholder || 'Повторите пароль'"
-			:variant="variant || 'underlined'" :class="repeaterClass + ` mt-4`" required>
+		<v-text-field v-if="repeater" :type="passFieldState.showRepeater ? 'text' : 'password'" :rules="repeaterRules"
+			:label="repeaterLabel" :placeholder="repeaterPlaceholder" :variant="variant || 'underlined'"
+			:class="repeaterClass + ` mt-4`" required>
 			<template v-slot:append-inner>
-				<v-icon :icon="showRepeatedPassword ? 'mdi-eye' : 'mdi-eye-off'" @mousedown="showRepeatedPassword = true"
-					@mouseup="showRepeatedPassword = false" class="mr-2" style="cursor: pointer" />
+				<v-icon :icon="passFieldState.showRepeater ? 'mdi-eye' : 'mdi-eye-off'"
+					@mousedown="passFieldState.showRepeater = true" @mouseup="passFieldState.showRepeater = false" class="mr-2"
+					style="cursor: pointer" />
 			</template>
 		</v-text-field>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { reactive } from 'vue';
 import validations from '@/utils/validations';
 import { useVModel } from '@vueuse/core';
+import type { Password } from '@/utils/validations';
 
-const emit = defineEmits(['update:modelValue']);
-
-const props = defineProps({
-	modelValue: [String],
-	repeater: { type: Boolean, default: false },
-	label: [String],
-	repeaterLabel: [String],
-	placeholder: [String],
-	repeaterPlaceholder: [String],
-	rules: { type: [Array, String] },
-	variant: [String],
-	repeaterClass: [String]
+type Variant = "filled" | "outlined" | "plain" | "underlined" | "solo";
+interface PassFieldProps {
+	modelValue?: Password;
+	repeater?: boolean;
+	label?: string;
+	repeaterLabel?: string;
+	placeholder?: string;
+	repeaterPlaceholder?: string;
+	rules?: ((v: Password) => string) | (((v: Password) => string)[]);
+	variant?: Variant;
+	repeaterClass?: string;
+}
+const props = withDefaults(defineProps<PassFieldProps>(), {
+	repeater: false,
+	placeholder: 'Введите пароль',
+	label: 'Пароль',
+	rules: validations.password,
+	variant: 'underlined',
+	repeaterLabel: 'Пароль еще раз',
+	repeaterPlaceholder: 'Повторите пароль',
 });
-const showPassword = ref(false);
-const showRepeatedPassword = ref(false);
+const emit = defineEmits<{
+	(e: 'update:modelValue', pass: Password): void
+}>();
+
+const passFieldState = reactive({
+	showPass: false,
+	showRepeater: false,
+});
 
 const password = useVModel(props, 'modelValue', emit)
-const repeaterRules = [v => !!v || 'Повторите пароль', v => (v && v === password.value) || 'Пароли должны совпадать'];
+const repeaterRules = [(v: Password) => !!v || 'Повторите пароль', (v: Password) => (v && v === password.value) || 'Пароли должны совпадать'];
 </script>
 
 <script>

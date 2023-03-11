@@ -42,6 +42,7 @@ import { useAuth } from '@/composables/auth';
 import { useRouter } from 'vue-router';
 import { useSnackbarStore } from '@/stores/snackbar';
 import validations from '@/utils/validations';
+import messages from '@/utils/messages.json';
 
 const googleImg = new URL('@/assets/img/google.png', import.meta.url).href;
 

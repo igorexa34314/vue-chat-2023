@@ -28,32 +28,23 @@ import MediaMessage from '@/components/chat/messages/media/MediaMessage.vue';
 import FileMessage from '@/components/chat/messages/file/FileMessage.vue';
 import { computed } from 'vue';
 import { useDateFormat } from '@/utils/dateFormat';
+import { UserInfo } from '@/stores/userdata';
 
 const { messagesDateFormat } = useDateFormat();
 
-const props = defineProps({
-	self: {
-		type: Boolean,
-		default: false,
-	},
-	type: {
-		type: String,
-		default: 'text',
-	},
-	sender: {
-		type: Object,
-		required: true,
-	},
-	content: {
-		type: Object,
-		required: true,
-	},
-	created_at: {
-		required: true,
-		type: [Date, String],
-	}
+interface Props {
+	self?: boolean;
+	type?: string;
+	sender: UserInfo;
+	content: object;
+	created_at: Date | string;
+}
+
+const props = withDefaults(defineProps<Props>(), {
+	self: false,
+	type: 'text',
 });
-const messagesDate = computed(() => messagesDateFormat(props.created_at));
+const messagesDate = computed(() => messagesDateFormat(new Date(props.created_at)));
 </script>
 
 <style lang="scss" scoped>

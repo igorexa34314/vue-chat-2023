@@ -33,7 +33,7 @@ import { reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuth } from '@/composables/auth';
 import { useSnackbarStore } from '@/stores/snackbar';
-import messages from '@/utils/messages';
+import messages from '@/utils/messages.json';
 import validations from '@/utils/validations';
 
 const googleImg = new URL('@/assets/img/google.png', import.meta.url).href;

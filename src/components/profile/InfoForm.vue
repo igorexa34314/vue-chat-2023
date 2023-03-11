@@ -9,11 +9,11 @@
 				:color="index === 0 ? 'blue-darken-3' : 'red-darken-3'" class="mr-2" />
 		</v-radio-group>
 
-		<birthdayPicker v-model="formState.birthdayDate" class="birthday-picker mt-5" />
+		<birthdayPicker v-model="formState.birthday_date" class="birthday-picker mt-5" />
 
 		<div class="w-50 mt-5">
 			<v-card variant="outlined" max-width="250" class="mb-5" elevation="9">
-				<v-img :lazy-src="defaultAvatar" :src="profileURL" alt="Ваш аватар" cover />
+				<v-img :lazy-src="defaultAvatar" :src="formState.photoURL || defaultAvatar" alt="Ваш аватар" cover />
 			</v-card>
 			<div class="mb-4">Загрузите ваше фото</div>
 			<v-file-input v-model="formState.avatar" label="Аватар" :rules="validations.file" variant="solo"
@@ -30,23 +30,30 @@
 import birthdayPicker from '@/components/UI/birthdayPicker.vue';
 import { ref, watchEffect, reactive } from 'vue';
 import validations from '@/utils/validations';
+import type { UserInfo } from '@/stores/userdata';
 
-const props = defineProps({
-	userdata: {
-		type: Object,
-		required: true,
-	}
-});
-const emit = defineEmits(['submit']);
+export interface ProfileForm extends Partial<UserInfo> {
+	avatar: File[];
+}
+
+const defaultAvatar = new URL('@/assets/img/default_user_avatar.jpg', import.meta.url).href;
+
+const props = defineProps<{
+	uinfo: UserInfo
+}>();
+
+const emit = defineEmits<{
+	(e: 'submit', data: ProfileForm): void
+}>();
 
 const formEl = ref();
-const formState = reactive({
+const formState: ProfileForm = reactive({
 	displayName: '',
-	gender: '',
-	birthdayDate: new Date(),
-	avatar: []
+	gender: 'unknown',
+	birthday_date: new Date(),
+	photoURL: '',
+	avatar: [],
 });
-let profileURL = '';
 
 const genderItems = [
 	{ name: 'Мужской', value: 'male' },
@@ -54,27 +61,20 @@ const genderItems = [
 	{ name: 'Не указывать', value: 'unknown' },
 ];
 
-const fillProfileForm = () => {
-	if (props.userdata.info && Object.keys(props.userdata.info).length) {
-		formState.displayName = props.userdata.info.displayName;
-		formState.gender = props.userdata.info.gender || 'unknown';
-		formState.birthdayDate = props.userdata.info.birthday_date || new Date();
-		profileURL = props.userdata.info.photoURL;
-	}
-};
-
+// fillProfileForm
 watchEffect(() => {
-	fillProfileForm();
+	if (Object.keys(props.uinfo).length) {
+		formState.displayName = props.uinfo.displayName as string;
+		formState.gender = props.uinfo.gender || 'unknown';
+		formState.birthday_date = props.uinfo.birthday_date as Date || new Date();
+		formState.photoURL = props.uinfo.photoURL as string;
+	}
 });
 
 const submitForm = async () => {
 	const { valid } = await formEl.value.validate();
 	if (valid) {
-		const { avatar, ...data } = formState;
-		emit('submit', {
-			...data,
-			avatar: formState.avatar.length ? formState.avatar[0] : null
-		});
+		emit('submit', formState);
 		formState.avatar = [];
 	}
 };

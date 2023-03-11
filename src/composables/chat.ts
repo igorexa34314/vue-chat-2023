@@ -1,24 +1,38 @@
 import { useAuth } from '@/composables/auth';
 import { useUserdataStore } from '@/stores/userdata';
+import { FirebaseError } from 'firebase/app';
 import { getFirestore, collection, doc, setDoc, updateDoc, arrayUnion, query, where, getDoc, getDocs, Timestamp } from 'firebase/firestore';
+import { UserInfo } from '@/stores/userdata';
+
+type ChatType = 'self' | 'private' | 'group';
+export interface ChatInfo {
+	id: string;
+	name: string;
+	avatar?: string;
+	type: ChatType;
+	created_at: Date;
+	members: Array<UserInfo['uid']>;
+}
+export interface ChatInfoWithMembersInfo extends Omit<ChatInfo, 'members'> {
+	members: UserInfo[];
+}
 
 export const useChat = () => {
 	const { getUid } = useAuth();
 	const userdataStore = useUserdataStore();
-	// const { getUserRef, getUserdataById } = useUserdataStore();
 	const db = getFirestore();
 	const chatCol = collection(db, 'chat');
 
-	const isPrivateChatExists = async (u1, u2) => {
+	const isPrivateChatExists = async (u1: UserInfo['uid'], u2: UserInfo['uid']): Promise<ChatInfo['id'] | undefined> => {
 		let chatId;
 		const q = query(chatCol, where('type', '==', 'private'), where('members', '==', [u1, u2]));
 		const querySnapshot = await getDocs(q);
 		querySnapshot.forEach(doc => {
-			return (chatId = doc.id);
+			chatId = doc.id;
 		});
 		return chatId;
 	};
-	const createSelfChat = async uid => {
+	const createSelfChat = async (uid: UserInfo['uid']): Promise<ChatInfo['id']> => {
 		try {
 			const newChatRef = doc(chatCol);
 			await setDoc(newChatRef, { id: newChatRef.id, name: 'Saved messages', type: 'self', members: [uid], created_at: Timestamp.fromDate(new Date()) });
@@ -26,19 +40,21 @@ export const useChat = () => {
 				chats: arrayUnion(newChatRef.id)
 			});
 			return newChatRef.id;
-		} catch (e) {
+		} catch (e: unknown) {
 			console.error(e);
+			throw e instanceof FirebaseError ? e.code : e;
 		}
 	};
-	const createPrivateChat = async (...users) => {
+	const createPrivateChat = async (...users: Array<UserInfo['uid']>): Promise<ChatInfo['id']> => {
 		try {
 			const newChatRef = doc(chatCol);
-			await setDoc(newChatRef, { id: newChatRef.id, name: 'Private chat', type: 'private', members: users, created_at: Timestamp.fromDate(new Date()) });
-			const promises = [];
+			const chatInfo = { id: newChatRef.id, name: 'Private chat', type: 'private', members: users, created_at: Timestamp.fromDate(new Date()) };
+			await setDoc(newChatRef, chatInfo);
+			const promises = [] as Array<Promise<void>>;
 			users.forEach(el => {
 				promises.push(
-					(() => {
-						updateDoc(userdataStore.getUserRef(el), {
+					(async () => {
+						await updateDoc(userdataStore.getUserRef(el), {
 							chats: arrayUnion(newChatRef.id)
 						});
 					})()
@@ -46,44 +62,35 @@ export const useChat = () => {
 			});
 			await Promise.all(promises);
 			return newChatRef.id;
-		} catch (e) {
+		} catch (e: unknown) {
 			console.error(e);
+			throw e instanceof FirebaseError ? e.code : e;
 		}
 	};
-	const joinPrivateChat = async companionId => {
+	const joinPrivateChat = async (companionId: UserInfo['uid']): Promise<ChatInfo['id']> => {
 		try {
-			const senderId = await getUid();
+			const senderId = (await getUid()) as UserInfo['uid'];
 			return (await isPrivateChatExists(senderId, companionId)) || (await createPrivateChat(senderId, companionId));
-		} catch (e) {
+		} catch (e: unknown) {
 			console.error(e);
-			throw e.code || e;
+			throw e instanceof FirebaseError ? e.code : e;
 		}
 	};
-	const getChatInfoById = async chatId => {
+	const getChatInfoById = async (chatId: ChatInfo['id']): Promise<ChatInfoWithMembersInfo | undefined> => {
 		try {
-			const uid = await getUid();
 			const chat = await getDoc(doc(chatCol, chatId));
 			if (chat.exists()) {
-				const { members, ...data } = chat.data();
-				if (chat.data().type === 'private') {
-					const opponentInfo = (await Promise.all(members.filter(mId => mId !== uid).map(userdataStore.getUserdataById))).map(m => m.info);
-					return {
-						...data,
-						opponent: opponentInfo.length === 1 ? opponentInfo[0] : opponentInfo,
-						created_at: chat.data().created_at.toDate()
-					};
-				} else {
-					const membersInfo = (await Promise.all(chat.data().members.map(userdataStore.getUserdataById))).map(m => m.info);
-					return {
-						...data,
-						members: membersInfo,
-						created_at: chat.data().created_at.toDate()
-					};
-				}
+				const { members, ...data } = chat.data() as ChatInfo;
+				const membersInfo = (await Promise.all(chat.data().members.map(userdataStore.getUserdataById))).map(m => m.info);
+				return {
+					...data,
+					members: membersInfo,
+					created_at: chat.data().created_at.toDate()
+				} as ChatInfoWithMembersInfo;
 			}
-		} catch (e) {
+		} catch (e: unknown) {
 			console.error(e);
-			throw e.code || e;
+			throw e instanceof FirebaseError ? e.code : e;
 		}
 	};
 	return {

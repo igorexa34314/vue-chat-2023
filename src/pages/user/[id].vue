@@ -5,14 +5,14 @@
 			<v-card-title>
 				<v-row align="center" justify="space-between">
 					<v-col cols="10" class="d-flex align-center">
-						<v-img :lazy-src="defaultAvatar" :src="userdata.info.photoURL" alt="Фото" max-width="100px"
-							class="mr-5" />
+						<v-img :lazy-src="defaultAvatar" :src="(userdata?.info?.photoURL)?.toString()" alt="Фото"
+							max-width="100px" class="mr-5" />
 						<div class="">
-							<h2 class="mb-2">{{ userdata.info.displayName }}</h2>
+							<h2 class="mb-2">{{ userdata?.info?.displayName }}</h2>
 							<div class="d-flex align-center mt-2">
 								<span class="text-subtitle-1 mr-2">Пол:</span>
 								<small><v-icon
-										:icon="userdata.info.gender === 'unknown' ? 'mdi-help' : userdata.info.gender === 'male' ? 'mdi-gender-male' : 'mdi-gender-female'"></v-icon>
+										:icon="userdata?.info?.gender === 'unknown' ? 'mdi-help' : userdata?.info?.gender === 'male' ? 'mdi-gender-male' : 'mdi-gender-female'"></v-icon>
 								</small>
 							</div>
 						</div>
@@ -60,20 +60,20 @@ const route = useRoute();
 const { push } = useRouter();
 const userdataStore = useUserdataStore();
 
-const userdata = await userdataStore.getUserdataById(route.params.id);
+const userdata = await userdataStore.getUserdataById(route.params.id as string);
 const uid = await getUid();
 
 //Dynamic page title
 useMeta(computed(() => {
-	if (Object.keys(userdata).length) {
-		return { title: `${userdata.info.displayName}` }
+	if (userdata && Object.keys(userdata).length) {
+		return { title: `${userdata?.info?.displayName}` }
 	}
 	return { title: 'Профиль' }
 }));
 
 const goToChat = async () => {
 	try {
-		const chatId = await joinPrivateChat(route.params.id);
+		const chatId = await joinPrivateChat(route.params.id as string);
 		push({ name: 'chat-id', params: { id: chatId } });
 	} catch (e) {
 		showMessage(messages[e] || e, 'red-darken-3', 2000);
@@ -81,7 +81,7 @@ const goToChat = async () => {
 };
 const addToFriend = async () => {
 	if (route.params.id) {
-		await userdataStore.addToFriend(route.params.id);
+		await userdataStore.addToFriend(route.params.id as string);
 	}
 }
 </script>

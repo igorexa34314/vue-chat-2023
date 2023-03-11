@@ -11,7 +11,7 @@
 		<v-window v-model="pickedProfileTab">
 			<v-window-item :value="profileTabs[0].value">
 				<v-container fluid>
-					<InfoForm v-if="Object.keys(userdata).length" :userdata="userdata" @submit="submitForm" />
+					<InfoForm v-if="userdata?.info" :uinfo="userdata.info" @submit="submitForm" />
 					<div v-else><page-loader /></div>
 				</v-container>
 			</v-window-item>
@@ -25,14 +25,16 @@ import pageLoader from '@/components/UI/pageLoader.vue';
 import { useUserdataStore } from '@/stores/userdata';
 import { ref, inject } from 'vue';
 import { useSnackbarStore } from '@/stores/snackbar';
-import messages from '@/utils/messages';
+import messages from '@/utils/messages.json';
 import { useMeta } from 'vue-meta';
+import type { ProfileForm } from '@/components/profile/InfoForm.vue';
+import { userDataKey } from '@/injection-keys';
 
 useMeta({ title: 'Мой профиль' });
 
-const { updateUserdata } = useUserdataStore();
+const { updateUserdata, updateUserAvatar } = useUserdataStore();
 const { showMessage } = useSnackbarStore();
-const userdata = inject('userdata');
+const userdata = inject(userDataKey);
 
 const profileTabs = [
 	{ title: 'Информация', value: 'info' },
@@ -42,11 +44,14 @@ const profileTabs = [
 
 const pickedProfileTab = ref(profileTabs[0].value);
 
-const submitForm = async (formData) => {
+const submitForm = async ({ avatar, ...formData }: ProfileForm) => {
 	try {
+		if (avatar.length) {
+			await updateUserAvatar(avatar[0]);
+		}
 		await updateUserdata(formData);
 		showMessage('succesfully_updated');
-	} catch (e) {
+	} catch (e: unknown) {
 		console.error(e);
 		showMessage(messages[e] || e, 'red-darken-3', 2000);
 	}

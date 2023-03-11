@@ -19,17 +19,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onUnmounted } from 'vue';
+import { ref, computed } from 'vue';
 import { formatFileSize as formatSize } from '@/utils/sizeFormat';
 import { ref as storageRef, getBlob } from 'firebase/storage';
 import { useFirebaseStorage } from 'vuefire';
 
-const props = defineProps({
-	file: {
-		type: Object,
-		required: true,
-	}
-});
+const props = defineProps<{
+	file: object;
+}>();
 
 const linkElem = ref();
 const showLink = ref(false);

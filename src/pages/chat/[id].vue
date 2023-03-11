@@ -5,7 +5,7 @@
 		<div v-else-if="userChats && userChats.length" style="height: 100%; position: relative;" @dragenter="addAttachment"
 			@dragleave="removeAttachment">
 			<div v-if="loading"><page-loader /></div>
-			<div v-else-if="messages && messages.length" class="chat__content px-12" ref="chatEl">
+			<div v-else-if="messages && messages.length" ref="chatEl" class="chat__content px-12">
 				<div class="messages-field mt-4">
 					<TransitionGroup :name="enTransition ? 'messages-list' : ''">
 						<MessageItem v-for="m in messages" :key="m.id" :self="uid === m.sender.id" :type="m.type"
@@ -40,24 +40,29 @@ import { useMeta } from 'vue-meta';
 import { useRoute } from 'vue-router';
 import { useInfiniteScroll, watchPausable } from '@vueuse/core';
 import { useDropZone } from '@vueuse/core';
-
+import { userChatsKey } from '@/injection-keys';
+import type { Unsubscribe } from '@firebase/database';
+import type { LastVisibleFirebaseMessageRef } from '@/stores/messages';
+import type { ChatInfoWithMembersInfo } from '@/composables/chat';
+import type { Message } from '@/types/message/Message';
 
 const route = useRoute();
 const { getChatInfoById } = useChat();
 const { showMessage } = useSnackbarStore();
-const chatInfo = ref({});
+const chatInfo = ref<ChatInfoWithMembersInfo>();
 const messagesStore = useMessagesStore();
-const userChats = inject('userChats');
-const chatEl = ref(null);
+const userChats = inject(userChatsKey);
+const chatEl = ref<HTMLDivElement>();
 const loading = ref(true);
 const messages = computed(() => messagesStore.messages);
-const lastVisible = computed(() => messagesStore.lastVisible);
-let unsubscribe;
+const lastVisible = computed<LastVisibleFirebaseMessageRef>(() => messagesStore.lastVisible);
+let unsubscribe: Unsubscribe;
 
-const uid = useCurrentUser().value.uid;
+const uid = useCurrentUser().value?.uid;
+let chatId = route.params.id as string;
 
 const attachDialog = ref(false);
-const dropZone = ref();
+const dropZone = ref<HTMLElement>();
 
 const { isOverDropZone } = useDropZone(dropZone, (files) => {
 	console.log('droppped', files)
@@ -85,19 +90,16 @@ const removeAttachment = () => {
 // };
 
 // Watchers to scroll bottom
-const scrollBottom = () => {
+const { pause: pauseMessageWatcher, resume: resumeMessageWatcher } = watchPausable(messages, () => {
 	if (chatEl.value && chatEl.value.scrollHeight > chatEl.value.clientHeight && chatEl.value.scrollHeight)
 		chatEl.value.scrollTop = chatEl.value.scrollHeight;
-};
-const { pause: pauseMessageWatcher, resume: resumeMessageWatcher } = watchPausable(messages, () => {
-	scrollBottom();
 }, { deep: true, flush: 'post' });
 
 // Inf. scroll on top
 useInfiniteScroll(chatEl, async () => {
 	if (lastVisible.value.top) {
 		pauseMessageWatcher();
-		await messagesStore.loadMoreChatMessages(route.params.id, 'top');
+		await messagesStore.loadMoreChatMessages(chatId, 'top');
 		resumeMessageWatcher();
 	}
 }, { distance: 10, direction: 'top', preserveScrollPosition: true, }
@@ -107,7 +109,7 @@ useInfiniteScroll(chatEl, async () => {
 useInfiniteScroll(chatEl, async () => {
 	if (lastVisible.value.bottom) {
 		pauseMessageWatcher();
-		await messagesStore.loadMoreChatMessages(route.params.id, 'bottom');
+		await messagesStore.loadMoreChatMessages(chatId, 'bottom');
 		resumeMessageWatcher();
 	}
 }, { distance: 10, direction: 'bottom', preserveScrollPosition: false, }
@@ -116,22 +118,23 @@ useInfiniteScroll(chatEl, async () => {
 // Reset messages when switching chat
 watchEffect(async () => {
 	messagesStore.clearMessages();
+	chatId = route.params.id as string;
 	if (unsubscribe) {
 		unsubscribe();
 	}
-	if (route.params && route.params.id) {
+	if (chatId) {
 		loading.value = true;
-		chatInfo.value = await getChatInfoById(route.params.id);
-		unsubscribe = await messagesStore.fetchChatMessages(route.params.id);
+		chatInfo.value = await getChatInfoById(chatId);
+		unsubscribe = await messagesStore.fetchChatMessages(chatId);
 		loading.value = false;
 	}
 });
 
 //Dynamic page title
 useMeta(computed(() => {
-	if (Object.keys(chatInfo.value).length)
-		return { title: chatInfo.value.type === 'private' ? chatInfo.value.opponent.displayName : chatInfo.value.name };
-	return { title: 'Чат' };
+	if (chatInfo.value && Object.keys(chatInfo.value).length)
+		return { title: chatInfo.value.type === 'private' ? chatInfo.value.members.displayName : chatInfo.value.name };
+	else return { title: 'Чат' };
 }));
 
 // Unsubscribe from receiving messages realtime firebase
@@ -142,19 +145,14 @@ onUnmounted(() => {
 
 const enTransition = ref(false);
 
-const createMessage = async (content, type = 'text') => {
+const createMessage = async (content: Message['content'], type?: Message['type']) => {
 	enTransition.value = true;
 	try {
-		await messagesStore.createMessage({
-			chatId: route.params.id,
-			type,
-			content,
-		});
+		await messagesStore.createMessage(chatId, type || 'text', content);
 	} catch (e) {
 		showMessage(messages[e] || e, 'red-darken-3', 2000);
 	}
 	enTransition.value = false;
-
 };
 </script>
 

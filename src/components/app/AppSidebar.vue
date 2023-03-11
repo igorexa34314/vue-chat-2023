@@ -3,7 +3,7 @@
 		<!-- <div v-if="!userdata || !Object.keys(userdata.info).length || !userChatsInfo || !userChatsInfo.length">
 			<page-loader />
 		</div> -->
-		<v-card v-if="userdata.info && Object.keys(userdata.info).length" class="py-1 bg-blue-grey-darken-4"
+		<v-card v-if="userdata?.info && Object.keys(userdata.info).length" class="py-1 bg-blue-grey-darken-4"
 			density="compact" variant="text" to="/profile">
 			<template v-slot:prepend>
 				<v-avatar :image="userdata.info.photoURL || defaultAvatar" />
@@ -11,11 +11,9 @@
 			<template v-slot:title>{{ userdata.info.displayName || 'Unknown' }}</template>
 		</v-card>
 		<v-divider thickness="2" class="mt-2" />
-		<v-list v-if="userChatsInfo && userChatsInfo.length && !loading" density="comfortable" class="mt-3">
-			<v-list-item v-for="chat in userChatsInfo" :key="chat.id"
-				:title="chat.type === 'private' ? chat.opponent.displayName : chat.name" class="py-3 mb-3"
-				:prepend-avatar="chat.type === 'private' ? chat.opponent.photoURL : chat.type === 'self' ? savedMessages : defaultAvatar"
-				:to="{ name: 'chat-id', params: { id: chat.id } }" />
+		<v-list v-if="getUserChatsInfo?.length && !loading" density="comfortable" class="mt-3">
+			<v-list-item v-for="chat of getUserChatsInfo" :key="chat.id" :title="setChatName(chat)"
+				:prepend-avatar="setChatAvatar(chat)" :to="{ name: 'chat-id', params: { id: chat.id } }" class="py-3 mb-3" />
 		</v-list>
 		<div v-else-if="loading">
 			<page-loader />
@@ -28,13 +26,14 @@
 
 <script setup lang="ts">
 import pageLoader from '@/components/UI/pageLoader.vue';
-import { ref, inject } from 'vue';
+import { ref, inject, computed } from 'vue';
 import { computedAsync, useVModel } from '@vueuse/core';
-import { useChat } from '@/composables/chat';
+import { ChatInfoWithMembersInfo, useChat } from '@/composables/chat';
+import { userDataKey, userChatsKey } from '@/injection-keys';
 
 const { getChatInfoById } = useChat();
-const userdata = inject('userdata');
-const userChats = inject('userChats');
+const userdata = inject(userDataKey);
+const userChats = inject(userChatsKey);
 const loading = ref(true);
 
 const defaultAvatar = new URL('@/assets/img/default_user_avatar.jpg', import.meta.url).href;
@@ -53,16 +52,31 @@ const props = defineProps({
 });
 const drawer = useVModel(props, 'modelValue', emit);
 
-const fetchChatsInfo = async () => {
-	if (userChats.value && userChats.value.length) {
-		loading.value = true;
-		const info = await Promise.all(userChats.value.map(getChatInfoById));
+// fetchChatsInfo
+const getUserChatsInfo = computedAsync(async () => {
+	try {
+		if (userChats?.value?.length) {
+			loading.value = true;
+			return (await Promise.all(userChats.value.map(getChatInfoById)) as ChatInfoWithMembersInfo[]);
+		}
+	} catch (e: unknown) {
+		console.error(e);
+	} finally {
 		loading.value = false;
-		return info;
 	}
-	loading.value = false;
-};
-const userChatsInfo = computedAsync(async () => await fetchChatsInfo());
+});
+const setChatName = computed(() => (chat: ChatInfoWithMembersInfo) => {
+	return chat.type === 'self' ? 'Saved messages' :
+		chat.type === 'private' ?
+			chat.members.find(m => m.uid !== userdata?.value.info?.uid)?.displayName as string :
+			chat.name
+})
+const setChatAvatar = computed(() => (chat: ChatInfoWithMembersInfo) => {
+	return chat.type === 'private' ?
+		chat.members.find(m => m.uid !== userdata?.value.info?.uid)?.photoURL as string :
+		chat.type === 'self' ? savedMessages :
+			defaultAvatar;
+});
 </script>
 
 <style lang="scss" scoped></style>
