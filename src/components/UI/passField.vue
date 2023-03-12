@@ -1,7 +1,7 @@
 <template>
 	<div>
-		<v-text-field v-model="password" :type="passFieldState.showPass ? 'text' : 'password'" :rules="rules" :label="label"
-			:placeholder="placeholder" :variant="variant" required>
+		<v-text-field v-model="password" :type="passFieldState.showPass ? 'text' : 'password'"
+			:rules="rules || validations.password" :label="label" :placeholder="placeholder" :variant="variant" required>
 			<template v-slot:append-inner>
 				<v-icon :icon="passFieldState.showPass ? 'mdi-eye' : 'mdi-eye-off'" @mousedown="passFieldState.showPass = true"
 					@mouseup="passFieldState.showPass = false" class="mr-2" style="cursor: pointer" />
@@ -33,7 +33,7 @@ interface PassFieldProps {
 	repeaterLabel?: string;
 	placeholder?: string;
 	repeaterPlaceholder?: string;
-	rules?: ((v: Password) => string) | (((v: Password) => string)[]);
+	rules?: ((v: Password) => boolean | string)[];
 	variant?: Variant;
 	repeaterClass?: string;
 }
@@ -41,7 +41,6 @@ const props = withDefaults(defineProps<PassFieldProps>(), {
 	repeater: false,
 	placeholder: 'Введите пароль',
 	label: 'Пароль',
-	rules: validations.password,
 	variant: 'underlined',
 	repeaterLabel: 'Пароль еще раз',
 	repeaterPlaceholder: 'Повторите пароль',

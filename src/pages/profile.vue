@@ -25,10 +25,10 @@ import pageLoader from '@/components/UI/pageLoader.vue';
 import { useUserdataStore } from '@/stores/userdata';
 import { ref, inject } from 'vue';
 import { useSnackbarStore } from '@/stores/snackbar';
-import messages from '@/utils/messages.json';
 import { useMeta } from 'vue-meta';
-import type { ProfileForm } from '@/components/profile/InfoForm.vue';
 import { userDataKey } from '@/injection-keys';
+import messages from '@/utils/messages.json';
+import type { ProfileForm } from '@/components/profile/InfoForm.vue';
 
 useMeta({ title: 'Мой профиль' });
 

@@ -19,8 +19,9 @@ import pageLoader from '@/components/UI/pageLoader.vue';
 import { onErrorCaptured } from 'vue';
 
 const AppName = import.meta.env.VITE_APP_NAME || 'My Chat';
+
 onErrorCaptured((err, instance, info) => {
-  console.error(err, info);
+  console.error(err, instance, info);
 });
 </script>
 

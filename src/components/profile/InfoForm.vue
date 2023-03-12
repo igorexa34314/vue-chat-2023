@@ -31,6 +31,7 @@ import birthdayPicker from '@/components/UI/birthdayPicker.vue';
 import { ref, watchEffect, reactive } from 'vue';
 import validations from '@/utils/validations';
 import type { UserInfo } from '@/stores/userdata';
+import type { VForm } from 'vuetify/components';
 
 export interface ProfileForm extends Partial<UserInfo> {
 	avatar: File[];
@@ -46,7 +47,7 @@ const emit = defineEmits<{
 	(e: 'submit', data: ProfileForm): void
 }>();
 
-const formEl = ref();
+const formEl = ref<VForm>();
 const formState: ProfileForm = reactive({
 	displayName: '',
 	gender: 'unknown',
@@ -72,7 +73,7 @@ watchEffect(() => {
 });
 
 const submitForm = async () => {
-	const { valid } = await formEl.value.validate();
+	const valid  = (await formEl.value?.validate())?.valid;
 	if (valid) {
 		emit('submit', formState);
 		formState.avatar = [];

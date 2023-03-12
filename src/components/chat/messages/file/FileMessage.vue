@@ -28,16 +28,16 @@ const props = defineProps<{
 	file: object;
 }>();
 
-const linkElem = ref();
+const linkElem = ref<HTMLLinkElement>();
 const showLink = ref(false);
-const downloadURL = ref('');
+const downloadURL = ref<string>('');
 
 const downloadFile = async () => {
 	showLink.value = true;
 	const storage = useFirebaseStorage();
 	const blobFile = await getBlob(storageRef(storage, props.file.fullpath));
 	downloadURL.value = URL.createObjectURL(blobFile);
-	linkElem.value.click();
+	linkElem.value?.click();
 	showLink.value = false;
 	URL.revokeObjectURL(downloadURL.value);
 }

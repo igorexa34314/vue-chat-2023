@@ -9,7 +9,7 @@
 				<div class="messages-field mt-4">
 					<TransitionGroup :name="enTransition ? 'messages-list' : ''">
 						<MessageItem v-for="m in messages" :key="m.id" :self="uid === m.sender.id" :type="m.type"
-							:content="m.content" :sender="m.sender" :created_at="m.created_at" />
+							:content="m.content" :sender="m.sender" :created_at="<Date>m.created_at" />
 					</TransitionGroup>
 				</div>
 				<!-- <div v-if="!messages || !messages.length" class="text-h5 pa-4">Сообщений в чате пока нет</div> -->
@@ -35,36 +35,38 @@ import { useSnackbarStore } from '@/stores/snackbar';
 import { useMessagesStore } from '@/stores/messages';
 import { useCurrentUser } from 'vuefire';
 import { useChat } from '@/composables/chat';
-import { ref, computed, onUnmounted, watchEffect, inject } from 'vue';
+import { ref, computed, watchEffect, inject } from 'vue';
 import { useMeta } from 'vue-meta';
 import { useRoute } from 'vue-router';
 import { useInfiniteScroll, watchPausable } from '@vueuse/core';
 import { useDropZone } from '@vueuse/core';
 import { userChatsKey } from '@/injection-keys';
 import type { Unsubscribe } from '@firebase/database';
-import type { LastVisibleFirebaseMessageRef } from '@/stores/messages';
-import type { ChatInfoWithMembersInfo } from '@/composables/chat';
+import type { LastVisibleFbRef } from '@/stores/messages';
+import type { ChatInfo } from '@/composables/chat';
 import type { Message } from '@/types/message/Message';
+import type { VDialog } from 'vuetify/components';
 
+const userChats = inject(userChatsKey);
 const route = useRoute();
 const { getChatInfoById } = useChat();
 const { showMessage } = useSnackbarStore();
-const chatInfo = ref<ChatInfoWithMembersInfo>();
 const messagesStore = useMessagesStore();
-const userChats = inject(userChatsKey);
+
+const chatInfo = ref<ChatInfo>();
 const chatEl = ref<HTMLDivElement>();
 const loading = ref(true);
-const messages = computed(() => messagesStore.messages);
-const lastVisible = computed<LastVisibleFirebaseMessageRef>(() => messagesStore.lastVisible);
+const messages = computed<Message[]>(() => messagesStore.messages);
+const lastVisible = computed<LastVisibleFbRef>(() => messagesStore.lastVisible);
 let unsubscribe: Unsubscribe;
 
 const uid = useCurrentUser().value?.uid;
 let chatId = route.params.id as string;
 
 const attachDialog = ref(false);
-const dropZone = ref<HTMLElement>();
+const dropZone = ref<VDialog | HTMLElement>();
 
-const { isOverDropZone } = useDropZone(dropZone, (files) => {
+const { isOverDropZone } = useDropZone(dropZone.value as HTMLElement, (files) => {
 	console.log('droppped', files)
 });
 const addAttachment = () => {
@@ -116,18 +118,21 @@ useInfiniteScroll(chatEl, async () => {
 );
 
 // Reset messages when switching chat
-watchEffect(async () => {
+watchEffect(async (onCleanup) => {
 	messagesStore.clearMessages();
 	chatId = route.params.id as string;
-	if (unsubscribe) {
-		unsubscribe();
-	}
+	unsubscribe?.();
 	if (chatId) {
 		loading.value = true;
 		chatInfo.value = await getChatInfoById(chatId);
 		unsubscribe = await messagesStore.fetchChatMessages(chatId);
 		loading.value = false;
 	}
+	// Unsubscribe from receiving messages realtime firebase
+	onCleanup(() => {
+		messagesStore.clearMessages();
+		unsubscribe?.();
+	});
 });
 
 //Dynamic page title
@@ -136,19 +141,12 @@ useMeta(computed(() => {
 		return { title: chatInfo.value.type === 'private' ? chatInfo.value.members.displayName : chatInfo.value.name };
 	else return { title: 'Чат' };
 }));
-
-// Unsubscribe from receiving messages realtime firebase
-onUnmounted(() => {
-	messagesStore.clearMessages();
-	if (unsubscribe) unsubscribe();
-});
-
 const enTransition = ref(false);
 
-const createMessage = async (content: Message['content'], type?: Message['type']) => {
+const createMessage = async (content: Message['content'], type: Message['type'] = 'text') => {
 	enTransition.value = true;
 	try {
-		await messagesStore.createMessage(chatId, type || 'text', content);
+		await messagesStore.createMessage(chatId, type, content);
 	} catch (e) {
 		showMessage(messages[e] || e, 'red-darken-3', 2000);
 	}

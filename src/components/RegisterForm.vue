@@ -43,6 +43,7 @@ import { useRouter } from 'vue-router';
 import { useSnackbarStore } from '@/stores/snackbar';
 import validations from '@/utils/validations';
 import messages from '@/utils/messages.json';
+import type { VForm } from 'vuetify/components';
 
 const googleImg = new URL('@/assets/img/google.png', import.meta.url).href;
 
@@ -50,7 +51,7 @@ const { push } = useRouter();
 const { registerWithEmail, signInWithGoogle } = useAuth();
 const { showMessage } = useSnackbarStore();
 
-const formEl = ref();
+const formEl = ref<VForm>();
 const formState = reactive({
 	displayName: '',
 	password: '',
@@ -59,7 +60,7 @@ const formState = reactive({
 });
 
 const submitForm = async () => {
-	const { valid } = await formEl.value.validate();
+	const valid = (await formEl.value?.validate())?.valid;
 
 	if (valid) {
 		try {

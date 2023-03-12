@@ -7,7 +7,7 @@
 					<AttachMenu @attach-media="attachMedia" @attach-file="attachFile" />
 				</template>
 			</v-text-field>
-			<v-btn icon="mdi-send" label="Отправить" class="ml-3" @click="createTextMessage"></v-btn>
+			<v-btn icon="mdi-send" label="Отправить" class="ml-3" @click="createTextMessage" />
 		</div>
 		<AttachDialog v-model="attachDialogState.show" :content="attachDialogState.previewContent" @submit="createAttachment"
 			@close="closeDialog" />
@@ -20,19 +20,32 @@ import AttachDialog from '@/components/chat/AttachDialog.vue';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { reactive } from 'vue';
 import { uuidv4 } from '@firebase/util';
-import { Message } from '@/types/message/Message';
+import type { Message, MessageType, TextMessage } from '@/types/message/Message';
+import type { AttachedContent } from '@/components/chat/AttachDialog.vue';
+import type { MediaMessage } from '@/types/message/MediaMessage';
+import type { FileMessage } from '@/types/message/FileMessage';
+
+interface AttachedDialog {
+	show: boolean;
+	previewContent: AttachedContent;
+}
+
+interface messageForm extends TextMessage {
+	attachedFiles?: MediaMessage[] | FileMessage[]
+}
 
 const { showMessage } = useSnackbarStore();
-const emit = defineEmits(['submitForm']);
-
-const messageState = reactive({
+const emit = defineEmits<{
+	(e: 'submitForm', msgData: Message['content'], msgType: MessageType): void
+}>();
+const messageState: messageForm = reactive({
 	text: '',
 	attachedFiles: [],
 });
-const attachDialogState = reactive({
+const attachDialogState: AttachedDialog = reactive({
 	show: false,
 	previewContent: {
-		type: '',
+		type: 'file',
 		files: [],
 	}
 });
@@ -41,51 +54,48 @@ const createTextMessage = () => {
 	if (messageState.text) {
 		emit('submitForm', {
 			text: messageState.text
-		}, 'text');
+		} as TextMessage, 'text');
 		messageState.text = '';
 	}
 };
-const createAttachment = (type, content) => {
-	if (type === 'image') {
-		emit('submitForm', content, 'media');
-	} else if (type === 'file') {
-		emit('submitForm', {
-			subtitle: content.subtitle,
-			file: file.value,
-		}, 'file');
-	}
+const createAttachment = (type: AttachedContent['type'], content: Message['content']) => {
+	emit('submitForm', content, type === 'image' || type === 'video' ? 'media' : type);
 };
-const attachMedia = async (e) => {
-	const files = e.target.files || e.dataTransfer.files;
-	if (!files.length)
+const attachMedia = async (e: Event) => {
+	const fileList = (<HTMLInputElement>e.target).files;
+	if (!fileList?.length)
 		return;
-	if (files.length > 10) {
+	if (fileList.length > 10) {
 		showMessage('Нельзя отправлять более 10 файлов в одном сообщении', 'red-darken-3', 2500);
 		return;
 	}
-	if (files.length && [...files].every(f => f.type.startsWith('image/'))) {
+	const files: File[] = [];
+	for (let i = 0; i < files.length; i++) {
+		files.push(fileList.item(i) as File);
+	}
+	if (files.length && files.every(f => f.type.startsWith('image/'))) {
 		attachDialogState.previewContent.type = 'image';
-		attachDialogState.previewContent.files = [...files].map(f => ({ id: uuidv4(), data: f }));
+		attachDialogState.previewContent.files = files.map(f => ({ id: uuidv4(), data: f }));
 	}
 	attachDialogState.show = true;
 };
-const attachFile = e => {
-	const files = e.target.files || e.dataTransfer.files;
-	if (!files.length)
-		return;
-	file.value = files[0];
-	e.target.value = '';
-	attachDialogState.previewContent.type = 'file';
-	attachDialogState.previewContent.data = {
-		name: file.value.name, size: file.value.size,
-		ext: file.value.name.split('.')[file.value.name.split('.').length - 1],
-	};
-	attachDialogState.show = true;
+const attachFile = (e: Event) => {
+	// const files = e.target.files || e.dataTransfer.files;
+	// if (!files.length)
+	// 	return;
+	// file.value = files[0];
+	// e.target.value = '';
+	// attachDialogState.previewContent.type = 'file';
+	// attachDialogState.previewContent.data = {
+	// 	name: file.value.name, size: file.value.size,
+	// 	ext: file.value.name.split('.')[file.value.name.split('.').length - 1],
+	// };
+	// attachDialogState.show = true;
 };
 const closeDialog = () => {
 	messageState.attachedFiles = [];
 	attachDialogState.previewContent.files = [];
-	attachDialogState.previewContent.type = '';
+	attachDialogState.previewContent.type = 'file';
 };
 </script>
 

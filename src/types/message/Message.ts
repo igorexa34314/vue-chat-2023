@@ -1,28 +1,26 @@
 import type { UserInfo } from '@/stores/userdata';
 import type { MediaMessage } from '@/types/message/MediaMessage';
-import { FileMessage } from '@/types/message/FileMessage';
+import type { FileMessage } from '@/types/message/FileMessage';
+import type { Timestamp } from 'firebase/firestore';
 
-type message_id = string;
-type MessageType = 'text' | 'media' | 'file';
-type SenderId = UserInfo['uid'];
-export type subtitle = string;
-export type message_text = string;
-
-export interface Message {
-	id: message_id;
-	created_at: Date;
-	type: MessageType;
-	content: TextMessage | MediaMessage | FileMessage;
-	sender: SenderId;
-}
-export interface MessageWithSenderInfo extends Omit<Message, 'sender'> {
+export interface Message<T extends MessageType =  MessageType> {
+	id: string;
+	type: T;
+	content: T extends  'text' ? TextMessage : T extends  'media' ?  MediaMessage : T extends  'file' ? FileMessage:   TextMessage | MediaMessage | FileMessage;
 	sender: SenderInfo;
-}
+	created_at: Date | Timestamp;
+};
+
+export type SenderId = UserInfo['uid'];
+export type subtitle = string;
+export type MessageType = 'text' | 'media' | 'file';
+export type MsgWithSenderId = { sender_id: SenderId } & Omit<Message, 'sender'>;
+
 export interface SenderInfo {
 	id: SenderId;
 	displayName: UserInfo['displayName'];
 	photoURL: UserInfo['photoURL'];
 }
 export interface TextMessage {
-	text: message_text;
+	text: string;
 }

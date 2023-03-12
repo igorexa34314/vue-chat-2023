@@ -5,16 +5,13 @@ import { getFirestore, collection, doc, setDoc, updateDoc, arrayUnion, query, wh
 import { UserInfo } from '@/stores/userdata';
 
 type ChatType = 'self' | 'private' | 'group';
-export interface ChatInfo {
+export interface ChatInfo<MembersType = UserInfo['uid']> {
 	id: string;
 	name: string;
 	avatar?: string;
 	type: ChatType;
 	created_at: Date;
-	members: Array<UserInfo['uid']>;
-}
-export interface ChatInfoWithMembersInfo extends Omit<ChatInfo, 'members'> {
-	members: UserInfo[];
+	members: MembersType[];
 }
 
 export const useChat = () => {
@@ -76,7 +73,7 @@ export const useChat = () => {
 			throw e instanceof FirebaseError ? e.code : e;
 		}
 	};
-	const getChatInfoById = async (chatId: ChatInfo['id']): Promise<ChatInfoWithMembersInfo | undefined> => {
+	const getChatInfoById = async (chatId: ChatInfo['id']): Promise<ChatInfo<UserInfo> | undefined> => {
 		try {
 			const chat = await getDoc(doc(chatCol, chatId));
 			if (chat.exists()) {
@@ -86,7 +83,7 @@ export const useChat = () => {
 					...data,
 					members: membersInfo,
 					created_at: chat.data().created_at.toDate()
-				} as ChatInfoWithMembersInfo;
+				} as ChatInfo<UserInfo>;
 			}
 		} catch (e: unknown) {
 			console.error(e);

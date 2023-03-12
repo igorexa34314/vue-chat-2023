@@ -40,38 +40,65 @@
 <script setup lang="ts">
 import { formatFileSize } from '@/utils/sizeFormat';
 import { ref, reactive, computed, watchEffect } from "vue";
-import { useVModel } from '@vueuse/core'
+import { useVModel } from '@vueuse/core';
+import { useSnackbarStore } from '@/stores/snackbar';
+import type { VImg } from 'vuetify/components';
+import type { Message } from '@/types/message/Message';
+import type { subtitle } from '@/types/message/Message';
 
-const props = defineProps({
-	modelValue: {
-		type: Boolean,
-		default: false,
-	},
-	content: {
-		type: Object,
-		required: true,
-	}
+export interface AttachedContent {
+	type: 'image' | 'video' | 'file';
+	files: {
+		id: string;
+		data: File;
+		preview?: string | ArrayBuffer;
+	}[];
+}
+type Dialog = boolean;
+
+interface SubmitAttachmentForm {
+	subtitle: subtitle;
+	files: {
+		id: string;
+		fullname: File['name'];
+		ext: File['name'];
+		src: AttachedContent['files'][number]['preview'];
+	}[];
+}
+
+interface AttachDialogProps {
+	modelValue?: Dialog;
+	content: AttachedContent;
+}
+const props = withDefaults(defineProps<AttachDialogProps>(), {
+	modelValue: false
 });
-const emit = defineEmits(['update:modelValue', 'submit', 'close']);
 
+const emit = defineEmits<{
+	(e: 'update:modelValue', val: Dialog): void
+	(e: 'submit', type: AttachedContent['type'], content: Message['content']): void
+	(e: 'close'): void
+}>();
+
+const { showMessage } = useSnackbarStore();
 const dialog = useVModel(props, 'modelValue', emit)
-const imgsEl = ref();
+const imgsEl = ref<VImg[]>();
 const isImgsReady = computed(() => imgsEl.value?.every(img => img.state === 'loaded'));
-const formState = reactive({
+const formState: SubmitAttachmentForm = reactive({
 	subtitle: '',
 	files: [],
 });
-const readFilesAsURL = (file) => {
+const readFilesAsURL = (file: AttachedContent['files'][number]): Promise<AttachedContent['files'][number]> => {
 	return new Promise((res, rej) => {
 		const reader = new FileReader();
-		reader.onload = () => res({ file, res: reader.result });
+		reader.onload = () => res({ ...file, preview: reader.result } as AttachedContent['files'][number]);
 		reader.onerror = () => rej(reader);
 		reader.readAsDataURL(file.data);
 	});
 };
 watchEffect(async () => {
 	if (props.content.files.length) {
-		const promises = [];
+		const promises: (Promise<AttachedContent['files'][number]>)[] = [];
 		for (const f of props.content.files) {
 			if (f.data.size > 3145728) {
 				showMessage('Допустимый размер файлов - до 3 Мбайт', 'red-darken-3', 2500);
@@ -81,12 +108,12 @@ watchEffect(async () => {
 			promises.push(readFilesAsURL(f));
 		}
 		try {
-			(await Promise.all(promises)).forEach(el => {
+			(await Promise.all(promises)).forEach(file => {
 				formState.files.push({
-					id: el.file.id,
-					fullname: el.file.data.name,
-					ext: el.file.data.name.split('.')[el.file.data.name.split('.').length - 1],
-					src: el.res
+					id: file.id,
+					fullname: file.data.name,
+					ext: file.data.name.split('.')[file.data.name.split('.').length - 1],
+					src: file.preview
 				});
 			})
 		} catch (e) {

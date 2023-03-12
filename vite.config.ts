@@ -7,8 +7,6 @@ import vueI18n from '@intlify/vite-plugin-vue-i18n';
 import Layouts from 'vite-plugin-vue-layouts';
 import Pages from 'vite-plugin-pages';
 
-import path from 'path';
-
 // https://vitejs.dev/config/
 export default defineConfig({
 	server: {

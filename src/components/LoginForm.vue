@@ -35,6 +35,7 @@ import { useAuth } from '@/composables/auth';
 import { useSnackbarStore } from '@/stores/snackbar';
 import messages from '@/utils/messages.json';
 import validations from '@/utils/validations';
+import type { VForm } from 'vuetify/components';
 
 const googleImg = new URL('@/assets/img/google.png', import.meta.url).href;
 
@@ -42,14 +43,14 @@ const { push } = useRouter();
 const { loginWithEmail, signInWithGoogle } = useAuth();
 const { showMessage } = useSnackbarStore();
 
-const formEl = ref();
+const formEl = ref<VForm>();
 const formState = reactive({
 	email: '',
 	password: ''
 });
 
 const submitForm = async () => {
-	const { valid } = await formEl.value.validate();
+	const valid = (await formEl.value?.validate())?.valid;
 
 	if (valid) {
 		try {

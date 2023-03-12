@@ -50,6 +50,7 @@ import { useAuth } from '@/composables/auth';
 import { useChat } from '@/composables/chat';
 import { useMeta } from 'vue-meta';
 import { useSnackbarStore } from '@/stores/snackbar';
+import messages from '@/utils/messages.json';
 
 const defaultAvatar = new URL('@/assets/img/default_user_avatar.jpg', import.meta.url).href;
 

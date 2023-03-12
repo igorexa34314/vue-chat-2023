@@ -45,6 +45,7 @@ import { useRouter } from 'vue-router';
 import { useAuth } from '@/composables/auth';
 import { useUserdataStore } from '@/stores/userdata';
 import { useSnackbarStore } from '@/stores/snackbar';
+import { VTextField } from 'vuetify/components';
 
 
 const { push } = useRouter();
@@ -56,7 +57,7 @@ const emit = defineEmits<{
 	(e: 'drawer'): void,
 }>();
 
-const search = ref();
+const search = ref<VTextField>();
 const searchState = reactive({
 	enabled: false,
 	text: '',
@@ -64,7 +65,8 @@ const searchState = reactive({
 
 const enableSearch = () => {
 	searchState.enabled = true;
-	setTimeout(() => search.value.focus(), 0);
+	// @ts-ignore
+	setTimeout(() => search.value?.focus(), 0);
 };
 const exit = async () => {
 	try {

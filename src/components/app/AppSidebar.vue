@@ -28,8 +28,10 @@
 import pageLoader from '@/components/UI/pageLoader.vue';
 import { ref, inject, computed } from 'vue';
 import { computedAsync, useVModel } from '@vueuse/core';
-import { ChatInfoWithMembersInfo, useChat } from '@/composables/chat';
+import { useChat } from '@/composables/chat';
 import { userDataKey, userChatsKey } from '@/injection-keys';
+import type { ChatInfo } from '@/composables/chat';
+import type { UserInfo } from '@/stores/userdata';
 
 const { getChatInfoById } = useChat();
 const userdata = inject(userDataKey);
@@ -57,7 +59,7 @@ const getUserChatsInfo = computedAsync(async () => {
 	try {
 		if (userChats?.value?.length) {
 			loading.value = true;
-			return (await Promise.all(userChats.value.map(getChatInfoById)) as ChatInfoWithMembersInfo[]);
+			return (await Promise.all(userChats.value.map(getChatInfoById)) as ChatInfo<UserInfo>[]);
 		}
 	} catch (e: unknown) {
 		console.error(e);
@@ -65,13 +67,13 @@ const getUserChatsInfo = computedAsync(async () => {
 		loading.value = false;
 	}
 });
-const setChatName = computed(() => (chat: ChatInfoWithMembersInfo) => {
+const setChatName = computed(() => (chat: ChatInfo<UserInfo>) => {
 	return chat.type === 'self' ? 'Saved messages' :
 		chat.type === 'private' ?
-			chat.members.find(m => m.uid !== userdata?.value.info?.uid)?.displayName as string :
+			(chat.members).find(m => m.uid !== userdata?.value.info?.uid)?.displayName as string :
 			chat.name
 })
-const setChatAvatar = computed(() => (chat: ChatInfoWithMembersInfo) => {
+const setChatAvatar = computed(() => (chat: ChatInfo<UserInfo>) => {
 	return chat.type === 'private' ?
 		chat.members.find(m => m.uid !== userdata?.value.info?.uid)?.photoURL as string :
 		chat.type === 'self' ? savedMessages :

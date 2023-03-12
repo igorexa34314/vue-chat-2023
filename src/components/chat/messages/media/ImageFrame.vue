@@ -26,9 +26,13 @@ const image = toRef(props, 'image');
 
 watchEffect(async () => {
 	if (image.value) {
-		const storage = useFirebaseStorage();
-		const blobFile = await getBlob(storageRef(storage, image.value.fullpath));
-		image.value.previewURL = URL.createObjectURL(blobFile);
+		try {
+			const storage = useFirebaseStorage();
+			const blobFile = await getBlob(storageRef(storage, image.value.fullpath));
+			image.value.previewURL = URL.createObjectURL(blobFile);
+		} catch (e: unknown) {
+			console.error(e);
+		}
 	}
 });
 

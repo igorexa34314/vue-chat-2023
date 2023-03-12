@@ -13,9 +13,10 @@ import messages from '@/utils/messages.json';
 
 const route = useRoute();
 const { showMessage } = useSnackbarStore();
+const msg = route.query.message as string;
 
-if (messages[route.query.message]) {
-	showMessage(messages[route.query.message]);
+if (messages[msg]) {
+	showMessage(messages[msg]);
 }
 </script>
 

@@ -25,12 +25,12 @@ import { useVModel } from '@vueuse/core';
 
 type Overlay = boolean;
 
-interface Props {
+interface OverlayProps {
 	modelValue?: Overlay;
 	content: object;
 	alt?: string;
 }
-const props = withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<OverlayProps>(), {
 	modelValue: false,
 });
 const emit = defineEmits<{

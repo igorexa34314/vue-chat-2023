@@ -5,14 +5,14 @@ import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'fire
 import { useAuth } from '@/composables/auth';
 import { useChat } from '@/composables/chat';
 import { uuidv4 } from '@firebase/util';
-import type { User as FirebaseUser, UserInfo as FirebaseUserInfo, UserMetadata } from 'firebase/auth';
 import { FirebaseError } from '@firebase/util';
+import type { User as FirebaseUser, UserInfo as FirebaseUserInfo, UserMetadata } from 'firebase/auth';
 
 export type Gender = 'unknown' | 'male' | 'female';
 export interface UserData {
-	chats: Array<string> | undefined;
-	friends: Array<string> | undefined;
 	info: UserInfo | null | undefined;
+	chats?: string[];
+	friends?: string[];
 }
 
 type Writeable<T> = { -readonly [P in keyof T]: T[P] };

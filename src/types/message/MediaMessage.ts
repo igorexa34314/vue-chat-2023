@@ -5,15 +5,14 @@ export interface MediaMessage {
 	images: MessageImage[];
 }
 export interface MessageImage {
-	downloadURL: string;
+	id: string;
+	type: string;
 	fullname: string;
 	fullpath: string;
-	id: string;
-	previewURL?: Blob;
-	sizes: ImageSizes;
-	type: string;
-}
-export interface ImageSizes {
-	w: number;
-	h: number;
+	sizes: {
+		w: number;
+		h: number;
+	};
+	preview?: Blob;
+	downloadURL: string;
 }

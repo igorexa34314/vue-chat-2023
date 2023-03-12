@@ -10,7 +10,6 @@ interface UserCredentials {
 	password: string;
 	displayName?: string;
 }
-
 export const useAuth = () => {
 	const userdata = useUserdataStore();
 	const auth = getAuth();
