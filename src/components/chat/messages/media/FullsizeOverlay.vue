@@ -1,6 +1,6 @@
 <template>
 	<v-overlay v-if="content" v-model="showOverlay" content-class="image-overlay" class="fullsize-image__dialog"
-		transition="scale-transition">
+		transition="scale-transition" @click:outside="$emit('close')">
 		<v-card class="fullsize-image__wrapper" variant="text" max-width="80vw" max-height="90vh" style="overflow: hidden;">
 			<v-img :src="content.previewURL" :alt="alt || content.fullname" :width="content.sizes.w"
 				:height="content.sizes.h">

@@ -73,14 +73,19 @@ export const useUserdataStore = defineStore('userdata', () => {
 			throw e instanceof FirebaseError ? e.code : e;
 		}
 	};
-	const updateUserdata = async ({ displayName, gender, photoURL, phoneNumber, birthday_date }: Partial<UserInfo>) => {
+	const updateUserdata = async (newData: Partial<UserInfo>) => {
 		try {
+			// const updateInfoField = (key) => (newData[key] ? { [`info.${key}`]: newData[key] } : undefined);
+			const infoField = Object.keys(newData).map(key => ({ [`info.${key}`]: newData[key] }));
+			console.log(infoField);
+			debugger;
 			await updateDoc(getUserRef(await auth.getUid()), {
-				'info.displayName': displayName || userdata.value?.info?.displayName || null,
-				'info.phoneNumber': phoneNumber || userdata.value?.info?.phoneNumber || null,
-				'info.birthday_date': birthday_date || userdata.value?.info?.birthday_date || null,
-				'info.gender': gender || 'unknown',
-				'info.photoURL': photoURL || userdata.value?.info?.photoURL || null
+				// updateInfoField('displayName');
+				// 'info.displayName': displayName || null,
+				// 'info.phoneNumber': phoneNumber || null,
+				// 'info.birthday_date': birthday_date || null,
+				// 'info.gender': gender || 'unknown',
+				// 'info.photoURL': photoURL || null
 			});
 		} catch (e: unknown) {
 			console.error(e);
@@ -93,12 +98,13 @@ export const useUserdataStore = defineStore('userdata', () => {
 			const unsubscribe = onSnapshot(userRef, udata => {
 				if (udata && udata.exists()) {
 					const { info, ...data } = udata.data() as UserData;
-					const { birthday_date, ...rest } = info as UserInfo;
+					const { birthday_date, created_at, ...rest } = info as UserInfo;
 					setUserData({
 						...data,
 						info: {
-							...rest,
-							birthday_date: birthday_date instanceof Timestamp ? birthday_date.toDate() : birthday_date
+							created_at: (<Timestamp>created_at)?.toDate(),
+							birthday_date: (<Timestamp>birthday_date)?.toDate(),
+							...rest
 						}
 					});
 				}

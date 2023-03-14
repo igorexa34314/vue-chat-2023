@@ -9,8 +9,8 @@
 			</v-text-field>
 			<v-btn icon="mdi-send" label="Отправить" class="ml-3" @click="createTextMessage" />
 		</div>
-		<AttachDialog v-model="attachDialogState.show" :content="attachDialogState.previewContent" @submit="createAttachment"
-			@close="closeDialog" />
+		<AttachDialog v-model="attachDialogState.show" :contentType="attachDialogState.contentType"
+			:fileList="attachDialogState.fileList" @submit="createAttachment" @close="closeDialog" />
 	</div>
 </template>
 
@@ -21,12 +21,8 @@ import { useSnackbarStore } from '@/stores/snackbar';
 import { reactive } from 'vue';
 import { uuidv4 } from '@firebase/util';
 import type { Message, TextMessage, MediaMessage, FileMessage } from '@/types/db/MessagesTable';
-import type { AttachedContent } from '@/components/chat/AttachDialog.vue';
+import type { AttachDialogProps } from '@/components/chat/AttachDialog.vue';
 
-interface AttachedDialog {
-	show: boolean;
-	previewContent: AttachedContent;
-}
 
 interface messageForm extends TextMessage {
 	attachedFiles?: MediaMessage[] | FileMessage[]
@@ -40,12 +36,10 @@ const messageState: messageForm = reactive({
 	text: '',
 	attachedFiles: [],
 });
-const attachDialogState: AttachedDialog = reactive({
-	show: false,
-	previewContent: {
-		type: 'file',
-		files: [],
-	}
+const attachDialogState = reactive({
+	show: false as AttachDialogProps['modelValue'],
+	contentType: 'file' as AttachDialogProps['contentType'],
+	fileList: [] as AttachDialogProps['fileList'],
 });
 
 const createTextMessage = () => {
@@ -56,9 +50,24 @@ const createTextMessage = () => {
 		messageState.text = '';
 	}
 };
-const createAttachment = (type: AttachedContent['type'], content: Message['content']) => {
+const createAttachment = (type: AttachDialogProps['contentType'], content: Message['content']) => {
 	emit('submitForm', content, type === 'image' || type === 'video' ? 'media' : type);
 };
+
+const readFilesAsURL = (file: File) => {
+	return new Promise((res, rej) => {
+		const reader = new FileReader();
+		reader.onload = () => res({
+			id: uuidv4(),
+			fullname: file.name,
+			ext: file.name.split('.')[file.name.split('.').length - 1],
+			preview: reader.result
+		});
+		reader.onerror = () => rej(reader);
+		reader.readAsDataURL(file);
+	});
+};
+
 const attachMedia = async (e: Event) => {
 	const fileList = (<HTMLInputElement>e.target).files;
 	if (!fileList?.length)
@@ -68,12 +77,12 @@ const attachMedia = async (e: Event) => {
 		return;
 	}
 	const files: File[] = [];
-	for (let i = 0; i < files.length; i++) {
+	for (let i = 0; i < fileList.length; i++) {
 		files.push(fileList.item(i) as File);
 	}
 	if (files.length && files.every(f => f.type.startsWith('image/'))) {
-		attachDialogState.previewContent.type = 'image';
-		attachDialogState.previewContent.files = files.map(f => ({ id: uuidv4(), data: f }));
+		attachDialogState.contentType = 'image';
+		attachDialogState.fileList = files.map(f => ({ id: uuidv4(), file: f }));
 	}
 	attachDialogState.show = true;
 };
@@ -92,8 +101,7 @@ const attachFile = (e: Event) => {
 };
 const closeDialog = () => {
 	messageState.attachedFiles = [];
-	attachDialogState.previewContent.files = [];
-	attachDialogState.previewContent.type = 'file';
+	attachDialogState.fileList = [];
 };
 </script>
 

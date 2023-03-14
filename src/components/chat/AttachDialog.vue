@@ -3,26 +3,27 @@
 		<v-card width="600px" variant="flat" elevation="3">
 			<v-card-title class="d-flex align-center mt-2">
 				<v-btn icon="mdi-close" variant="text" @click="closeDialog" />
-				<h3 class="text-center flex-grow-1">{{ 'Отправить ' + content.files.length + ' ' + (content.type === 'image' ?
+				<h3 class="text-center flex-grow-1">{{ 'Отправить ' + formState.files.length + ' ' + (contentType === 'image' ?
 					'фото' :
-					content.files.length === 1 ? 'файл' : content.files.length > 4 ? 'файлов' : 'файла') }}</h3>
+					formState.files.length === 1 ? 'файл' : formState.files.length > 4 ? 'файлов' : 'файла') }}</h3>
 			</v-card-title>
 			<v-card-text>
 				<v-form @submit.prevent="submitHandler" :disabled="!isImgsReady">
-					<div v-if="content.type === 'image'" class="images-grid">
+					<div v-if="contentType === 'image'" class="images-grid">
 						<v-card v-for="img of formState.files" class="image-wrapper d-flex" :key="img.id">
 							<v-img ref="imgsEl" :src="img.src" :alt="img.fullname" :id="img.id" cover />
 						</v-card>
 					</div>
-					<div v-else-if="content.type === 'file'" v-for="f of content.files" :key="f.id" class="d-flex align-center">
+					<div v-else-if="contentType === 'file'" v-for="file of formState.files" :key="file.id"
+						class="d-flex align-center">
 						<div class="file-icon">
 							<v-icon icon="mdi-file" size="100px" />
 							<span class="file-icon-ext font-weight-black text-brown-darken-4">
-								{{ f.data.ext }}</span>
+								{{ getFileExt(file.fullname) }}</span>
 						</div>
 						<div class="ml-2 text-subtitle-1 font-weight-medium">
-							<p class="text-subtitle-1">{{ f.data.name }}</p>
-							<p class="mt-1 text-body-2">{{ formatFileSize(f.data.size) }}</p>
+							<p class="text-subtitle-1">{{ file.fullname }}</p>
+							<p class="mt-1 text-body-2">{{ formatFileSize(file.size) }}</p>
 						</div>
 					</div>
 					<div class="d-flex align-center mt-6 mb-3 px-4">
@@ -45,37 +46,30 @@ import { useSnackbarStore } from '@/stores/snackbar';
 import type { Message, FileMessage, MediaMessage } from '@/types/db/MessagesTable';
 import type { VImg } from 'vuetify/components';
 
-export interface AttachedContent {
-	type: 'image' | 'video' | 'file';
-	files: {
-		id: string;
-		data: File;
-		preview?: string | ArrayBuffer;
-	}[];
-}
-type Dialog = boolean;
+export type AttachedContent = (AttachDialogProps['fileList'][number] & { preview: string })[];
 
+export interface AttachDialogProps {
+	modelValue?: boolean;
+	contentType: 'image' | 'video' | 'file';
+	fileList: { id: string; file: File }[]
+}
 interface SubmitAttachmentForm {
 	subtitle: MediaMessage['subtitle'] | FileMessage['subtitle'];
 	files: {
-		id: string;
+		id: AttachedContent[number]['id'];
 		fullname: File['name'];
-		ext: File['name'];
-		src: AttachedContent['files'][number]['preview'];
+		size: File['size'];
+		src: AttachedContent[number]['preview'];
 	}[];
 }
 
-interface AttachDialogProps {
-	modelValue?: Dialog;
-	content: AttachedContent;
-}
 const props = withDefaults(defineProps<AttachDialogProps>(), {
 	modelValue: false
 });
 
 const emit = defineEmits<{
-	(e: 'update:modelValue', val: Dialog): void
-	(e: 'submit', type: AttachedContent['type'], content: Message['content']): void
+	(e: 'update:modelValue', val: boolean): void
+	(e: 'submit', type: AttachDialogProps['contentType'], content: Message['content']): void
 	(e: 'close'): void
 }>();
 
@@ -87,32 +81,32 @@ const formState: SubmitAttachmentForm = reactive({
 	subtitle: '',
 	files: [],
 });
-const readFilesAsURL = (file: AttachedContent['files'][number]): Promise<AttachedContent['files'][number]> => {
+const readFilesAsURL = (file: AttachDialogProps['fileList'][number]): Promise<AttachedContent['files'][number]> => {
 	return new Promise((res, rej) => {
 		const reader = new FileReader();
 		reader.onload = () => res({ ...file, preview: reader.result } as AttachedContent['files'][number]);
 		reader.onerror = () => rej(reader);
-		reader.readAsDataURL(file.data);
+		reader.readAsDataURL(file.file);
 	});
 };
 watchEffect(async () => {
-	if (props.content.files.length) {
-		const promises: (Promise<AttachedContent['files'][number]>)[] = [];
-		for (const f of props.content.files) {
-			if (f.data.size > 3145728) {
+	if (props.fileList.length) {
+		const promises: (Promise<AttachedContent[number]>)[] = [];
+		for (const item of props.fileList) {
+			if (item.file.size > 3145728) {
 				showMessage('Допустимый размер файлов - до 3 Мбайт', 'red-darken-3', 2500);
 				closeDialog();
 				return;
 			}
-			promises.push(readFilesAsURL(f));
+			promises.push(readFilesAsURL(item));
 		}
 		try {
-			(await Promise.all(promises)).forEach(file => {
+			(await Promise.all(promises)).forEach(item => {
 				formState.files.push({
-					id: file.id,
-					fullname: file.data.name,
-					ext: file.data.name.split('.')[file.data.name.split('.').length - 1],
-					src: file.preview
+					id: item.id,
+					fullname: item.file.name,
+					size: item.file.size,
+					src: item.preview
 				});
 			})
 		} catch (e) {
@@ -122,10 +116,10 @@ watchEffect(async () => {
 });
 
 const submitHandler = () => {
-	const { subtitle } = formState;
-	emit('submit', props.content.type, {
+	const { subtitle, files } = formState;
+	emit('submit', props.contentType, {
 		subtitle,
-		files: props.content.files.map(f => {
+		files: files.map(f => {
 			const { id, data } = f;
 			return { id, data, sizes: getImageParams(id) };
 		}),
@@ -133,18 +127,21 @@ const submitHandler = () => {
 	emit('update:modelValue', false);
 };
 const closeDialog = () => {
-	emit('close');
 	emit('update:modelValue', false);
+	formState.subtitle = '';
+	formState.files = [];
+	emit('close');
 };
-const getImageParams = (id) => {
-	const img = imgsEl.value.find(img => img.$attrs.id === id);
-	if (img.state === 'loaded' && img.naturalHeight !== 0) {
+const getImageParams = (id: AttachDialogProps['fileList'][number]['id']) => {
+	const img = imgsEl.value?.find(img => img.$attrs.id === id);
+	if (img?.state === 'loaded' && img.naturalHeight !== 0) {
 		return {
 			w: img.naturalWidth,
 			h: img.naturalHeight
 		}
 	}
 };
+const getFileExt = computed(() => (filename: string) => filename.split('.')[filename.split('.').length - 1],)
 </script>
 
 <style lang="scss" scoped>
