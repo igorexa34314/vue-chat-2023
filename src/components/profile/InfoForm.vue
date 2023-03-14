@@ -1,5 +1,6 @@
 <template>
-	<v-form ref="formEl" @submit.prevent="submitForm" lazy-validation class="pa-4 mt-2">
+	<v-form ref="formEl" @submit.prevent="submitForm" lazy-validation class="pa-4 mt-2"
+		style="position: relative; overflow: auto;">
 		<v-text-field v-model.trim="formState.displayName" :rules="validations.name" label="Ваше имя"
 			placeholder="Введите ваше имя" class="" variant="underlined" counter="16" clearable required
 			style="max-width: 600px" />
@@ -29,32 +30,25 @@
 <script setup lang="ts">
 import birthdayPicker from '@/components/UI/birthdayPicker.vue';
 import validations from '@/utils/validations';
-import { ref, watchEffect, reactive } from 'vue';
+import { ref, toRef, Ref } from 'vue';
 import type { UserInfo } from '@/types/db/UserdataTable';
 import type { VForm } from 'vuetify/components';
 
-export interface ProfileForm extends Partial<UserInfo> {
-	avatar: File[];
+export interface ProfileForm extends Omit<UserInfo, 'created_at' | 'uid'> {
+	avatar?: File[];
 }
 
 const defaultAvatar = new URL('@/assets/img/default_user_avatar.jpg', import.meta.url).href;
 
 const props = defineProps<{
-	uinfo: UserInfo
+	uinfo: ProfileForm
 }>();
 
 const emit = defineEmits<{
 	(e: 'submit', data: ProfileForm): void
 }>();
-
 const formEl = ref<VForm>();
-const formState: ProfileForm = reactive({
-	displayName: '',
-	gender: 'unknown',
-	birthday_date: new Date(),
-	photoURL: '',
-	avatar: [],
-});
+const formState = toRef(props, 'uinfo') as Ref<ProfileForm>;
 
 const genderItems = [
 	{ name: 'Мужской', value: 'male' },
@@ -62,21 +56,11 @@ const genderItems = [
 	{ name: 'Не указывать', value: 'unknown' },
 ];
 
-// fillProfileForm
-watchEffect(() => {
-	if (Object.keys(props.uinfo).length) {
-		formState.displayName = props.uinfo.displayName as string;
-		formState.gender = props.uinfo.gender || 'unknown';
-		formState.birthday_date = props.uinfo.birthday_date as Date || new Date();
-		formState.photoURL = props.uinfo.photoURL as string;
-	}
-});
-
 const submitForm = async () => {
 	const valid = (await formEl.value?.validate())?.valid;
 	if (valid) {
-		emit('submit', formState);
-		formState.avatar = [];
+		emit('submit', formState.value);
+		formState.value.avatar = [];
 	}
 };
 </script>

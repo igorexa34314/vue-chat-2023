@@ -1,5 +1,5 @@
 <template>
-	<div class="file-message__wrapper">
+	<div v-if="files.length" class="file-message__wrapper">
 		<div v-for="file of files" :key="file.id" class="d-flex align-center mb-2">
 			<v-hover v-slot="{ isHovering, props }">
 				<div class="file-icon" v-bind="props" style="cursor: pointer;">

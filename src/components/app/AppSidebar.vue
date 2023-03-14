@@ -26,38 +26,31 @@
 
 <script setup lang="ts">
 import pageLoader from '@/components/UI/pageLoader.vue';
-import { ref, inject, computed } from 'vue';
+import { ref, inject } from 'vue';
 import { computedAsync, useVModel } from '@vueuse/core';
 import { useChat } from '@/composables/chat';
-import { userDataKey, userChatsKey } from '@/injection-keys';
+import { userDataKey } from '@/injection-keys';
 import type { ChatInfo } from '@/composables/chat';
 
 const { getChatInfoById, setChatName, setChatAvatar } = useChat();
 const userdata = inject(userDataKey);
-const userChats = inject(userChatsKey);
 const loading = ref(true);
 
 const defaultAvatar = new URL('@/assets/img/default_user_avatar.jpg', import.meta.url).href;
 
-type Drawer = boolean;
+const props = withDefaults(defineProps<{ modelValue: boolean; }>(), { modelValue: false });
 const emit = defineEmits<{
-	(e: 'update:modelValue', value: Drawer): void,
+	(e: 'update:modelValue', value: boolean): void,
 }>();
-
-const props = defineProps({
-	modelValue: {
-		type: Boolean,
-		default: true,
-	},
-});
 const drawer = useVModel(props, 'modelValue', emit);
 
 // fetchChatsInfo
 const getUserChatsInfo = computedAsync(async () => {
 	try {
-		if (userChats?.value?.length) {
+		const userChats = userdata?.value?.chats;
+		if (userChats?.length) {
 			loading.value = true;
-			return (await Promise.all(userChats.value.map(getChatInfoById)) as ChatInfo[]);
+			return (await Promise.all(userChats.map(getChatInfoById)) as ChatInfo[]);
 		}
 	} catch (e: unknown) {
 		console.error(e);
