@@ -16,7 +16,7 @@ import AppSidebar from '@/components/app/AppSidebar.vue';
 import { ref, computed, provide, onUnmounted } from 'vue';
 import { useUserdataStore } from '@/stores/userdata';
 import { userDataKey, userChatsKey } from '@/injection-keys';
-import type { UserData } from '@/stores/userdata';
+import type { UserData } from '@/types/db/UserdataTable';
 
 const userdataStore = useUserdataStore();
 const drawer = ref(true);

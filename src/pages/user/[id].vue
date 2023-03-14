@@ -33,16 +33,13 @@
 						</v-tooltip>
 					</v-col>
 				</v-row>
-
 			</v-card-title>
-			<v-card-text></v-card-text>
-			<v-card-actions></v-card-actions>
 		</v-card>
 	</div>
 </template>
 
 <script setup lang="ts">
-import pageLoader from '@/components/UI/pageLoader.vue';
+import messages from '@/utils/messages.json';
 import { computed } from 'vue';
 import { useUserdataStore } from '@/stores/userdata';
 import { useRoute, useRouter } from 'vue-router';
@@ -50,7 +47,6 @@ import { useAuth } from '@/composables/auth';
 import { useChat } from '@/composables/chat';
 import { useMeta } from 'vue-meta';
 import { useSnackbarStore } from '@/stores/snackbar';
-import messages from '@/utils/messages.json';
 
 const defaultAvatar = new URL('@/assets/img/default_user_avatar.jpg', import.meta.url).href;
 

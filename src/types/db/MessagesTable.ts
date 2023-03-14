@@ -1,11 +1,9 @@
 import type { User } from 'firebase/auth';
 import type { Timestamp } from 'firebase/firestore';
 
-export type MessageType = 'text' | 'media' | 'file';
-
 export interface Message {
 	id: string;
-	type: MessageType;
+	type: 'text' | 'media' | 'file';
 	content: TextMessage | MediaMessage | FileMessage;
 	sender_id: User['uid'];
 	created_at: Date | Timestamp;
@@ -13,17 +11,6 @@ export interface Message {
 
 export interface TextMessage {
 	text: string;
-}
-
-export interface FileMessage {
-	subtitle: string;
-	files: {
-		id: string;
-		type: string;
-		fullname: string;
-		fullpath: string;
-		downloadURL: string;
-	}[];
 }
 
 export interface MediaMessage {
@@ -38,5 +25,17 @@ export interface MediaMessage {
 			w: number;
 			h: number;
 		};
+	}[];
+}
+
+export interface FileMessage {
+	subtitle: string;
+	files: {
+		id: string;
+		type: string;
+		fullname: string;
+		fullpath: string;
+		downloadURL: string;
+		size: number;
 	}[];
 }

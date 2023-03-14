@@ -29,12 +29,12 @@
 
 <script setup lang="ts">
 import passField from '@/components/UI/passField.vue';
+import messages from '@/utils/messages.json';
+import validations from '@/utils/validations';
 import { reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuth } from '@/composables/auth';
 import { useSnackbarStore } from '@/stores/snackbar';
-import messages from '@/utils/messages.json';
-import validations from '@/utils/validations';
 import type { VForm } from 'vuetify/components';
 
 const googleImg = new URL('@/assets/img/google.png', import.meta.url).href;

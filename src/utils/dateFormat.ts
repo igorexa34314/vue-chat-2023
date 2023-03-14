@@ -1,4 +1,4 @@
-import { DateTimeFormatOptions } from '@intlify/core-base';
+import type { DateTimeFormatOptions } from '@intlify/core-base';
 
 export const useDateFormat = () => {
 	const messagesDateFormat = (date = new Date()) => {

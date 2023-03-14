@@ -23,8 +23,8 @@
 import { reactive } from 'vue';
 import validations from '@/utils/validations';
 import { useVModel } from '@vueuse/core';
-import type { Password } from '@/utils/validations';
 
+type Password = string;
 type Variant = "filled" | "outlined" | "plain" | "underlined" | "solo";
 interface PassFieldProps {
 	modelValue?: Password;

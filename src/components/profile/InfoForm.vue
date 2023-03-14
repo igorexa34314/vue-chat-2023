@@ -9,7 +9,7 @@
 				:color="index === 0 ? 'blue-darken-3' : 'red-darken-3'" class="mr-2" />
 		</v-radio-group>
 
-		<birthdayPicker v-model="formState.birthday_date" class="birthday-picker mt-5" />
+		<birthdayPicker v-model="<Date>formState.birthday_date" class="birthday-picker mt-5" />
 
 		<div class="w-50 mt-5">
 			<v-card variant="outlined" max-width="250" class="mb-5" elevation="9">
@@ -28,9 +28,9 @@
 
 <script setup lang="ts">
 import birthdayPicker from '@/components/UI/birthdayPicker.vue';
-import { ref, watchEffect, reactive } from 'vue';
 import validations from '@/utils/validations';
-import type { UserInfo } from '@/stores/userdata';
+import { ref, watchEffect, reactive } from 'vue';
+import type { UserInfo } from '@/types/db/UserdataTable';
 import type { VForm } from 'vuetify/components';
 
 export interface ProfileForm extends Partial<UserInfo> {
@@ -73,13 +73,12 @@ watchEffect(() => {
 });
 
 const submitForm = async () => {
-	const valid  = (await formEl.value?.validate())?.valid;
+	const valid = (await formEl.value?.validate())?.valid;
 	if (valid) {
 		emit('submit', formState);
 		formState.avatar = [];
 	}
 };
-
 </script>
 
 <style lang="scss" scoped>

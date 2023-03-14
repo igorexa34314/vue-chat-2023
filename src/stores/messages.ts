@@ -6,13 +6,16 @@ import { useUserdataStore } from '@/stores/userdata';
 import { getFirestore, collection, doc, setDoc, orderBy, query, Timestamp, onSnapshot, limit, getDoc, getDocs, startAfter } from 'firebase/firestore';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { uuidv4 } from '@firebase/util';
-import type { UserInfo } from '@/stores/userdata';
+import type { UserInfo } from '@/types/db/UserdataTable';
 import type { DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
 import type { ChatInfo } from '@/composables/chat';
-import type { Message, MsgWithSenderId } from '@/types/message/Message';
-import type { MediaMessage, MessageImage } from '@/types/message/MediaMessage';
-import type { AttachedFile, FileMessage } from '@/types/message/FileMessage';
+import type { Message as DBMessage, TextMessage, MediaMessage, FileMessage } from '@/types/db/MessagesTable';
 
+export interface Message<T extends DBMessage['type'] = DBMessage['type']> extends Omit<DBMessage, 'sender_id'> {
+	type: T;
+	content: T extends 'text' ? TextMessage : T extends 'media' ? MediaMessage : T extends 'file' ? FileMessage : TextMessage | MediaMessage | FileMessage;
+	sender: { id: UserInfo['uid'] } & Pick<UserInfo, 'displayName' | 'photoURL'>;
+}
 export type direction = 'top' | 'bottom';
 export type LastVisibleFbRef = Record<direction, QueryDocumentSnapshot<DocumentData> | null>;
 
@@ -45,10 +48,10 @@ export const useMessagesStore = defineStore('messages', () => {
 			messages.value.splice(0, count);
 		}
 	};
-	const uploadMedia = async (chatId: ChatInfo['id'], messageId: Message<'media'>['id'], { subtitle, files }) => {
+	const uploadMedia = async <T extends MediaMessage>(chatId: ChatInfo['id'], messageId: Message['id'], { subtitle, files }) => {
 		try {
 			if (files.every(f => f.data instanceof File)) {
-				const promises = <Promise<MessageImage>[]>[];
+				const promises = <Promise<T['images'][number]>[]>[];
 				for (const file of files) {
 					promises.push(
 						(async () => {
@@ -67,24 +70,24 @@ export const useMessagesStore = defineStore('messages', () => {
 								fullpath: imageRef.fullPath,
 								downloadURL: await getDownloadURL(imageRef),
 								...data
-							} as MessageImage;
+							} as T['images'][number];
 						})()
 					);
 				}
 				return {
 					subtitle,
 					images: await Promise.all(promises)
-				} as MediaMessage;
+				} as Awaited<T>;
 			}
 		} catch (e: unknown) {
 			console.error(e);
 			throw e instanceof FirebaseError ? e.code : e;
 		}
 	};
-	const uploadFile = async (chatId: ChatInfo['id'], messageId: Message<'file'>['id'], { subtitle, files }) => {
+	const uploadFile = async <T extends FileMessage>(chatId: ChatInfo['id'], messageId: Message['id'], { subtitle, files }) => {
 		try {
 			if (files.every(f => f.data instanceof File)) {
-				const promises = <Promise<AttachedFile>[]>[];
+				const promises = <Promise<T['files'][number]>[]>[];
 				for (const file of files) {
 					promises.push(
 						(async () => {
@@ -102,15 +105,16 @@ export const useMessagesStore = defineStore('messages', () => {
 								fullname: fileData.name,
 								fullpath: fileRef.fullPath,
 								downloadURL: await getDownloadURL(fileRef),
+								size: fileData.size,
 								...data
-							} as AttachedFile;
+							} as T['files'][number];
 						})()
 					);
 				}
 				return {
 					subtitle,
 					files: await Promise.all(promises)
-				} as FileMessage;
+				} as Awaited<T>;
 			}
 		} catch (e: unknown) {
 			console.error(e);
@@ -121,9 +125,9 @@ export const useMessagesStore = defineStore('messages', () => {
 		try {
 			const messageRef = doc(collection(doc(chatCol, chatId), 'messages'));
 			if (type === 'media') {
-				content = await uploadMedia(chatId, messageRef.id, <Message<'media'>['content']>content);
+				content = await uploadMedia(chatId, messageRef.id, content as MediaMessage);
 			} else if (type === 'file') {
-				content = await uploadFile(chatId, messageRef.id, content);
+				content = await uploadFile(chatId, messageRef.id, content as FileMessage);
 			}
 			await setDoc(messageRef, {
 				id: messageRef.id,
@@ -137,7 +141,7 @@ export const useMessagesStore = defineStore('messages', () => {
 			throw e instanceof FirebaseError ? e.code : e;
 		}
 	};
-	const getMessageSenderInfo = async (message: MsgWithSenderId) => {
+	const getMessageSenderInfo = async (message: DBMessage) => {
 		try {
 			const { sender_id, ...m } = message;
 			const { displayName, photoURL } = (await getUserdataById(sender_id as string))?.info as UserInfo;
@@ -152,11 +156,11 @@ export const useMessagesStore = defineStore('messages', () => {
 			const messagesCol = collection(doc(chatCol, chatId), 'messages');
 			const q = query(messagesCol, orderBy('created_at', 'desc'), limit(lmt));
 			const unsubscribe = onSnapshot(q, async messagesRef => {
-				const initialMessages = [] as MsgWithSenderId[];
+				const initialMessages = [] as DBMessage[];
 				const promises = [] as Promise<Message>[];
 
 				messagesRef.docChanges().forEach(change => {
-					const { created_at, ...msgData } = change.doc.data() as MsgWithSenderId;
+					const { created_at, ...msgData } = change.doc.data() as DBMessage;
 					if (change.type === 'added') {
 						initialMessages.unshift({ ...msgData, created_at: (<Timestamp>created_at).toDate() });
 					}
@@ -192,10 +196,10 @@ export const useMessagesStore = defineStore('messages', () => {
 					const msgBeforeDel = await getDoc(doc(messagesCol, messages.value[direction === 'top' ? messages.value.length - 1 : 0].id));
 					lastVisible[direction === 'top' ? 'bottom' : 'top'] = msgBeforeDel as LastVisibleFbRef[direction];
 				}
-				const initialMessages = [] as MsgWithSenderId[];
+				const initialMessages = [] as DBMessage[];
 				const promises = [] as Promise<Message>[];
 				messagesRef.forEach(doc => {
-					const { created_at, ...msgData } = doc.data() as MsgWithSenderId;
+					const { created_at, ...msgData } = doc.data() as DBMessage;
 					initialMessages.push({ ...msgData, created_at: (<Timestamp>created_at).toDate() });
 				});
 				initialMessages.forEach(m => {

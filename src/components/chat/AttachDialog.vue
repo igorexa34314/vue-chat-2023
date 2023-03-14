@@ -42,9 +42,8 @@ import { formatFileSize } from '@/utils/sizeFormat';
 import { ref, reactive, computed, watchEffect } from "vue";
 import { useVModel } from '@vueuse/core';
 import { useSnackbarStore } from '@/stores/snackbar';
+import type { Message, FileMessage, MediaMessage } from '@/types/db/MessagesTable';
 import type { VImg } from 'vuetify/components';
-import type { Message } from '@/types/message/Message';
-import type { subtitle } from '@/types/message/Message';
 
 export interface AttachedContent {
 	type: 'image' | 'video' | 'file';
@@ -57,7 +56,7 @@ export interface AttachedContent {
 type Dialog = boolean;
 
 interface SubmitAttachmentForm {
-	subtitle: subtitle;
+	subtitle: MediaMessage['subtitle'] | FileMessage['subtitle'];
 	files: {
 		id: string;
 		fullname: File['name'];

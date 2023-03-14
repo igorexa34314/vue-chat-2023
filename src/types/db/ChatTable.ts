@@ -1,10 +1,8 @@
-export type ChatType = 'self' | 'private' | 'group';
-
 export interface ChatInfo {
 	id: string;
 	name: string;
 	avatar?: string;
-	type: ChatType;
+	type: 'self' | 'private' | 'group';
 	created_at: Date;
 	members: string[];
 }

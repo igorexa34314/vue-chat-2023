@@ -6,24 +6,7 @@ import { useAuth } from '@/composables/auth';
 import { useChat } from '@/composables/chat';
 import { uuidv4 } from '@firebase/util';
 import { FirebaseError } from '@firebase/util';
-import type { User as FirebaseUser, UserInfo as FirebaseUserInfo, UserMetadata } from 'firebase/auth';
-
-export type Gender = 'unknown' | 'male' | 'female';
-export interface UserData {
-	info: UserInfo | null | undefined;
-	chats?: string[];
-	friends?: string[];
-}
-
-type Writeable<T> = { -readonly [P in keyof T]: T[P] };
-
-export interface UserInfo extends Writeable<Omit<FirebaseUserInfo, 'photoURL' | 'providerId'>> {
-	photoURL?: FirebaseUserInfo['photoURL'];
-	created_at: UserMetadata['creationTime'] | Date;
-	birthday_date?: Date;
-	gender?: Gender;
-	metadata?: any;
-}
+import type { UserData, UserInfo } from '@/types/db/UserdataTable';
 
 export const useUserdataStore = defineStore('userdata', () => {
 	const auth = useAuth();
@@ -45,7 +28,7 @@ export const useUserdataStore = defineStore('userdata', () => {
 	};
 	const getUserRef = (uid: UserInfo['uid'] | undefined) => doc(usersCol, uid);
 
-	const createUser = async ({ uid, email, displayName, phoneNumber, photoURL, metadata }: FirebaseUser) => {
+	const createUser = async ({ uid, email, displayName, phoneNumber, photoURL, metadata }: Omit<UserInfo, 'created_at'>) => {
 		try {
 			const userRef = getUserRef(uid);
 			const user = await getDoc(userRef);
@@ -126,7 +109,7 @@ export const useUserdataStore = defineStore('userdata', () => {
 			throw e instanceof FirebaseError ? e.code : e;
 		}
 	};
-	const getUserdataById = async (uid: FirebaseUser['uid']) => {
+	const getUserdataById = async (uid: UserInfo['uid']) => {
 		try {
 			const udata = await getDoc(getUserRef(uid));
 			if (udata && udata.exists()) {

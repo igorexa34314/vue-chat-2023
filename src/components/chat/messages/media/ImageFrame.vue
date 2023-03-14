@@ -5,24 +5,27 @@
 		<div v-if="!image.previewURL" class="d-flex align-center justify-center fill-height">
 			<v-progress-circular color="grey-lighten-4" indeterminate />
 		</div>
-		<v-img v-else :src="image.previewURL" :alt="alt | image.fullname" :width="image.sizes.w" />
+		<v-img v-else :src="image.previewURL" :alt="alt || image.fullname" :width="image.sizes.w" />
 	</v-card>
 </template>
 
 <script setup lang="ts">
-import { onUnmounted, watchEffect, toRef } from 'vue';
+import { onUnmounted, watchEffect, toRef, PropType, Ref } from 'vue';
 import { ref as storageRef, getBlob } from 'firebase/storage';
 import { useFirebaseStorage } from 'vuefire';
+import type { MediaMessage } from '@/types/db/MessagesTable';
 
-const props = defineProps<{
-	image: object;
-	alt?: string;
-}>();
+export type ImageWithPreviewURL = { previewURL?: string } & MediaMessage['images'][number];
+
+const props = defineProps({
+	image: Object as PropType<MediaMessage['images'][number]>,
+	alt: String,
+});
 const emit = defineEmits<{
-	(e: 'open', image: object): void,
+	(e: 'open', image: ImageWithPreviewURL): void,
 }>();
 
-const image = toRef(props, 'image');
+const image = toRef(props, 'image') as Ref<ImageWithPreviewURL>;
 
 watchEffect(async () => {
 	if (image.value) {

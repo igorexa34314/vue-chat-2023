@@ -31,15 +31,13 @@ import { computedAsync, useVModel } from '@vueuse/core';
 import { useChat } from '@/composables/chat';
 import { userDataKey, userChatsKey } from '@/injection-keys';
 import type { ChatInfo } from '@/composables/chat';
-import type { UserInfo } from '@/stores/userdata';
 
-const { getChatInfoById } = useChat();
+const { getChatInfoById, setChatName, setChatAvatar } = useChat();
 const userdata = inject(userDataKey);
 const userChats = inject(userChatsKey);
 const loading = ref(true);
 
 const defaultAvatar = new URL('@/assets/img/default_user_avatar.jpg', import.meta.url).href;
-const savedMessages = new URL('@/assets/img/saved-messages.png', import.meta.url).href;
 
 type Drawer = boolean;
 const emit = defineEmits<{
@@ -59,25 +57,13 @@ const getUserChatsInfo = computedAsync(async () => {
 	try {
 		if (userChats?.value?.length) {
 			loading.value = true;
-			return (await Promise.all(userChats.value.map(getChatInfoById)) as ChatInfo<UserInfo>[]);
+			return (await Promise.all(userChats.value.map(getChatInfoById)) as ChatInfo[]);
 		}
 	} catch (e: unknown) {
 		console.error(e);
 	} finally {
 		loading.value = false;
 	}
-});
-const setChatName = computed(() => (chat: ChatInfo<UserInfo>) => {
-	return chat.type === 'self' ? 'Saved messages' :
-		chat.type === 'private' ?
-			(chat.members).find(m => m.uid !== userdata?.value.info?.uid)?.displayName as string :
-			chat.name
-})
-const setChatAvatar = computed(() => (chat: ChatInfo<UserInfo>) => {
-	return chat.type === 'private' ?
-		chat.members.find(m => m.uid !== userdata?.value.info?.uid)?.photoURL as string :
-		chat.type === 'self' ? savedMessages :
-			defaultAvatar;
 });
 </script>
 

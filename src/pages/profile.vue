@@ -22,12 +22,12 @@
 <script setup lang="ts">
 import InfoForm from '@/components/profile/InfoForm.vue';
 import pageLoader from '@/components/UI/pageLoader.vue';
+import messages from '@/utils/messages.json';
 import { useUserdataStore } from '@/stores/userdata';
 import { ref, inject } from 'vue';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { useMeta } from 'vue-meta';
 import { userDataKey } from '@/injection-keys';
-import messages from '@/utils/messages.json';
 import type { ProfileForm } from '@/components/profile/InfoForm.vue';
 
 useMeta({ title: 'Мой профиль' });

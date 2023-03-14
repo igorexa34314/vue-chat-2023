@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory, createMemoryHistory } from 'vue-router';
 import { setupLayouts } from 'virtual:generated-layouts';
-import generatedRoutes from '~pages';
 import { getCurrentUser } from 'vuefire';
+import generatedRoutes from '~pages';
 
 const history = import.meta.env.SSR ? createMemoryHistory(import.meta.env.BASE_URL) : createWebHistory(import.meta.env.BASE_URL);
 

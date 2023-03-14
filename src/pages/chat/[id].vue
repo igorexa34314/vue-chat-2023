@@ -44,12 +44,12 @@ import { userChatsKey } from '@/injection-keys';
 import type { Unsubscribe } from '@firebase/database';
 import type { LastVisibleFbRef } from '@/stores/messages';
 import type { ChatInfo } from '@/composables/chat';
-import type { Message } from '@/types/message/Message';
+import type { Message } from '@/stores/messages';
 import type { VDialog } from 'vuetify/components';
 
 const userChats = inject(userChatsKey);
 const route = useRoute();
-const { getChatInfoById } = useChat();
+const { getChatInfoById, setChatName } = useChat();
 const { showMessage } = useSnackbarStore();
 const messagesStore = useMessagesStore();
 
@@ -138,7 +138,7 @@ watchEffect(async (onCleanup) => {
 //Dynamic page title
 useMeta(computed(() => {
 	if (chatInfo.value && Object.keys(chatInfo.value).length)
-		return { title: chatInfo.value.type === 'private' ? chatInfo.value.members.displayName : chatInfo.value.name };
+		return { title: setChatName.value(chatInfo.value) };
 	else return { title: 'Чат' };
 }));
 const enTransition = ref(false);

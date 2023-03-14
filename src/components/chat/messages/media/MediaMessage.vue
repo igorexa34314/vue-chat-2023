@@ -1,29 +1,37 @@
 <template>
 	<div class="images-frame">
-		<ImageFrame v-for="img of images" :image="img" :key="img.id" @open="openInOverlay" :alt="alt" />
-		<FullsizeOverlay v-model="overlayState.show" :content="overlayState.content" />
+		<ImageFrame v-for="img of images" :image="img" :key="img.id" @open="openInOverlay(img)" :alt="alt" />
+		<FullsizeOverlay v-model="overlayState.show" :content="overlayState.content" @close="overlayClosed" />
 	</div>
 </template>
 
 <script setup lang="ts">
 import ImageFrame from '@/components/chat/messages/media/ImageFrame.vue';
 import FullsizeOverlay from '@/components/chat/messages/media/FullsizeOverlay.vue';
-import { reactive } from 'vue';
+import { reactive, PropType } from 'vue';
+import type { MediaMessage } from '@/types/db/MessagesTable';
+import type { ImageWithPreviewURL } from '@/components/chat/messages/media/ImageFrame.vue';
 
-const props = defineProps<{
-	images: any[]
-	alt?: string;
-}>();
+const props = defineProps({
+	images: {
+		type: Array as PropType<MediaMessage['images']>,
+		required: true,
+	},
+	alt: String,
+});
 
-const overlayState = reactive({
+const overlayState: { show: boolean; content: ImageWithPreviewURL | null } = reactive({
 	show: false,
 	content: null,
 });
 
-const openInOverlay = (img) => {
+const openInOverlay = (img: ImageWithPreviewURL) => {
 	overlayState.content = img;
 	overlayState.show = true;
 }
+const overlayClosed = () => {
+	overlayState.content = null;
+};
 </script>
 
 <style lang="scss" scoped>

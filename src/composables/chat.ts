@@ -1,17 +1,16 @@
+import { computed } from 'vue';
 import { useAuth } from '@/composables/auth';
 import { useUserdataStore } from '@/stores/userdata';
 import { FirebaseError } from 'firebase/app';
 import { getFirestore, collection, doc, setDoc, updateDoc, arrayUnion, query, where, getDoc, getDocs, Timestamp } from 'firebase/firestore';
-import { UserInfo } from '@/stores/userdata';
+import type { UserData, UserInfo } from '@/types/db/UserdataTable';
+import type { ChatInfo as DBChatTable } from '@/types/db/ChatTable';
 
-type ChatType = 'self' | 'private' | 'group';
-export interface ChatInfo<MembersType = UserInfo['uid']> {
-	id: string;
-	name: string;
-	avatar?: string;
-	type: ChatType;
-	created_at: Date;
-	members: MembersType[];
+const defaultAvatar = new URL('@/assets/img/default_user_avatar.jpg', import.meta.url).href;
+const savedMessages = new URL('@/assets/img/saved-messages.png', import.meta.url).href;
+
+export interface ChatInfo extends Omit<DBChatTable, 'members'> {
+	members: Pick<UserInfo, 'uid' | 'displayName' | 'photoURL'>[];
 }
 
 export const useChat = () => {
@@ -42,7 +41,7 @@ export const useChat = () => {
 			throw e instanceof FirebaseError ? e.code : e;
 		}
 	};
-	const createPrivateChat = async (...users: Array<UserInfo['uid']>): Promise<ChatInfo['id']> => {
+	const createPrivateChat = async (...users: UserInfo['uid'][]): Promise<ChatInfo['id']> => {
 		try {
 			const newChatRef = doc(chatCol);
 			const chatInfo = { id: newChatRef.id, name: 'Private chat', type: 'private', members: users, created_at: Timestamp.fromDate(new Date()) };
@@ -73,26 +72,50 @@ export const useChat = () => {
 			throw e instanceof FirebaseError ? e.code : e;
 		}
 	};
-	const getChatInfoById = async (chatId: ChatInfo['id']): Promise<ChatInfo<UserInfo> | undefined> => {
+	const getChatInfoById = async (chatId: ChatInfo['id']): Promise<ChatInfo | undefined> => {
 		try {
 			const chat = await getDoc(doc(chatCol, chatId));
 			if (chat.exists()) {
 				const { members, ...data } = chat.data() as ChatInfo;
-				const membersInfo = (await Promise.all(chat.data().members.map(userdataStore.getUserdataById))).map(m => m.info);
+				const membersInfo = <ChatInfo['members']>(
+					(await Promise.all(chat.data().members.map(userdataStore.getUserdataById))).map((m: UserData) => ({
+						uid: m.info.uid,
+						displayName: m.info.displayName,
+						photoURL: m.info.photoURL
+					}))
+				);
 				return {
 					...data,
 					members: membersInfo,
 					created_at: chat.data().created_at.toDate()
-				} as ChatInfo<UserInfo>;
+				} as ChatInfo;
 			}
 		} catch (e: unknown) {
 			console.error(e);
 			throw e instanceof FirebaseError ? e.code : e;
 		}
 	};
+
+	const setChatName = computed(() => (chat: ChatInfo) => {
+		return chat.type === 'self'
+			? 'Saved messages'
+			: chat.type === 'private'
+			? (chat.members.find(m => m.uid !== userdataStore.userdata?.info?.uid)?.displayName as string)
+			: chat.name;
+	});
+	const setChatAvatar = computed(() => (chat: ChatInfo) => {
+		return chat.type === 'private'
+			? (chat.members.find(m => m.uid !== userdataStore.userdata?.info?.uid)?.photoURL as string)
+			: chat.type === 'self'
+			? savedMessages
+			: defaultAvatar;
+	});
+
 	return {
 		createSelfChat,
 		joinPrivateChat,
-		getChatInfoById
+		getChatInfoById,
+		setChatName,
+		setChatAvatar
 	};
 };

@@ -20,10 +20,8 @@ import AttachDialog from '@/components/chat/AttachDialog.vue';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { reactive } from 'vue';
 import { uuidv4 } from '@firebase/util';
-import type { Message, MessageType, TextMessage } from '@/types/message/Message';
+import type { Message, TextMessage, MediaMessage, FileMessage } from '@/types/db/MessagesTable';
 import type { AttachedContent } from '@/components/chat/AttachDialog.vue';
-import type { MediaMessage } from '@/types/message/MediaMessage';
-import type { FileMessage } from '@/types/message/FileMessage';
 
 interface AttachedDialog {
 	show: boolean;
@@ -36,7 +34,7 @@ interface messageForm extends TextMessage {
 
 const { showMessage } = useSnackbarStore();
 const emit = defineEmits<{
-	(e: 'submitForm', msgData: Message['content'], msgType: MessageType): void
+	(e: 'submitForm', msgData: Message['content'], msgType: Message['type']): void
 }>();
 const messageState: messageForm = reactive({
 	text: '',
