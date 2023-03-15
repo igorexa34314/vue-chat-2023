@@ -11,7 +11,8 @@
 		<v-window v-model="pickedProfileTab">
 			<v-window-item :value="profileTabs[0].value">
 				<v-container fluid>
-					<InfoForm v-if="info && Object.keys(info).length" :uinfo="<ProfileForm>info" @submit="submitForm" />
+					<InfoForm v-if="userInfo && Object.keys(userInfo).length" :uinfo="userInfo"
+						@submit="submitForm" />
 					<div v-else><page-loader /></div>
 				</v-container>
 			</v-window-item>
@@ -21,30 +22,25 @@
 
 <script setup lang="ts">
 import InfoForm from '@/components/profile/InfoForm.vue';
-import pageLoader from '@/components/UI/pageLoader.vue';
 import messages from '@/utils/messages.json';
+import { storeToRefs } from 'pinia';
 import { useUserdataStore } from '@/stores/userdata';
 import { ref } from 'vue';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { useMeta } from 'vue-meta';
-import { userDataKey } from '@/injection-keys';
-import { computedInject } from '@vueuse/core';
 import type { ProfileForm } from '@/components/profile/InfoForm.vue';
 
 useMeta({ title: 'Мой профиль' });
 
-const { updateUserdata, updateUserAvatar } = useUserdataStore();
+const userdataStore = useUserdataStore();
+const { getUInfo: userInfo } = storeToRefs(userdataStore);
+const { updateUserdata, updateUserAvatar } = userdataStore;
 const { showMessage } = useSnackbarStore();
-const info = computedInject(userDataKey, (src) => {
-	if (src?.value?.info && Object.keys(src?.value?.info)) {
-		const { created_at, uid, ...dataToEdit } = src?.value?.info;
-		return dataToEdit as ProfileForm;
-	}
-});
+
 const profileTabs = [
 	{ title: 'Информация', value: 'info' },
 	{ title: 'Безопасность', value: 'security' },
-	{ title: 'Уведомлениия', value: 'notifications' },
+	{ title: 'Уведомления', value: 'notifications' },
 ];
 const pickedProfileTab = ref(profileTabs[0].value);
 

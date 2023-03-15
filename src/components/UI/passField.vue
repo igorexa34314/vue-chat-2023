@@ -58,7 +58,7 @@ const password = useVModel(props, 'modelValue', emit)
 const repeaterRules = [(v: Password) => !!v || 'Повторите пароль', (v: Password) => (v && v === password.value) || 'Пароли должны совпадать'];
 </script>
 
-<script>
+<script lang="ts">
 export default { name: 'pass-field' }
 </script>
 

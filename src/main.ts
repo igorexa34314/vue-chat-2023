@@ -7,6 +7,7 @@ import vueI18n from '@/plugins/vue-i18n';
 import App from '@/App.vue';
 import router from '@/router';
 import vuetify from '@/plugins/vuetify';
+import pageLoader from '@/components/UI/pageLoader.vue';
 
 const app = createApp(App);
 app.use(VueFire, {
@@ -17,4 +18,5 @@ app.use(VueFire, {
 		VueFireAuth()
 	]
 });
+app.component('page-loader', pageLoader);
 app.use(vuetify).use(vueI18n).use(router).use(createPinia()).use(createMetaManager()).mount('#app');

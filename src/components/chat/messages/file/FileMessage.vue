@@ -9,19 +9,20 @@
 					</span>
 					<v-btn v-else icon="mdi-download" size="default" variant="text" class="file-icon-btn" color="black"
 						density="compact" @click="downloadFile(file)" title="Download" />
-					<a v-if="showLink" hidden ref="linkElem" :href="downloadURL" :download="file.fullname" title="Download"></a>
 				</div>
 			</v-hover>
-			<div class="ml-2 text-subtitle-1 font-weight-medium">
+			<div class="file-details ml-2 text-subtitle-1 font-weight-medium">
 				<p class="text-subtitle-1" :title="file.fullname">{{ file.fullname }}</p>
 				<p class="mt-1 text-body-2">{{ formatFileSize(file.size) }}</p>
 			</div>
 		</div>
+		<a v-if="downloadLink.show" hidden ref="linkElem" :href="downloadLink.url" :download="downloadLink.filename"
+			title="Download"></a>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, PropType } from 'vue';
+import { ref, reactive, computed, PropType } from 'vue';
 import { formatFileSize as formatSize } from '@/utils/sizeFormat';
 import { ref as storageRef, getBlob } from 'firebase/storage';
 import { useFirebaseStorage } from 'vuefire';
@@ -36,17 +37,25 @@ const props = defineProps({
 });
 
 const linkElem = ref<HTMLLinkElement>();
-const showLink = ref(false);
-const downloadURL = ref<string>('');
+const downloadLink = reactive({
+	show: false,
+	url: '',
+	filename: '',
+});
 
 const downloadFile = async (file: FileMessage['files'][number]) => {
-	showLink.value = true;
-	const storage = useFirebaseStorage();
-	const blobFile = await getBlob(storageRef(storage, file.fullpath));
-	downloadURL.value = URL.createObjectURL(blobFile);
-	linkElem.value?.click();
-	showLink.value = false;
-	URL.revokeObjectURL(downloadURL.value);
+	try {
+		downloadLink.show = true;
+		downloadLink.filename = file.fullname;
+		const storage = useFirebaseStorage();
+		const blobFile = await getBlob(storageRef(storage, file.fullpath));
+		downloadLink.url = URL.createObjectURL(blobFile);
+		linkElem.value?.click();
+		downloadLink.show = false;
+		URL.revokeObjectURL(downloadLink.url);
+	} catch (e: unknown) {
+		console.error(e);
+	}
 }
 const formatFileSize = computed(() => (size: number) => formatSize(size));
 </script>
@@ -65,5 +74,10 @@ const formatFileSize = computed(() => (size: number) => formatSize(size));
 	&-btn {
 		transform: translate(-50%, -40%);
 	}
+}
+.file-details {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
 }
 </style>

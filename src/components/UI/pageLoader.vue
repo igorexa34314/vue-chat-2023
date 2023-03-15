@@ -4,10 +4,6 @@
 	</div>
 </template>
 
-<script>
-export default { name: 'page-loader' }
-</script>
-
 <script setup lang="ts">
 </script>
 

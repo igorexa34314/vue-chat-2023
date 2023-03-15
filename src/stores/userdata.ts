@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { getFirestore, getDoc, setDoc, onSnapshot, doc, updateDoc, arrayUnion, Timestamp, collection } from 'firebase/firestore';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useAuth } from '@/composables/auth';
@@ -26,6 +26,10 @@ export const useUserdataStore = defineStore('userdata', () => {
 	const setUserInfo = (info: UserInfo) => {
 		userdata.value!.info = info;
 	};
+	const getUdata = computed(() => userdata.value);
+	const getUInfo = computed(() => userdata.value?.info);
+	const getUChats = computed(() => userdata.value?.chats);
+
 	const getUserRef = (uid: UserInfo['uid'] | undefined) => doc(usersCol, uid);
 
 	const createUser = async ({ uid, email, displayName, phoneNumber, photoURL, metadata }: Omit<UserInfo, 'created_at'>) => {
@@ -75,18 +79,8 @@ export const useUserdataStore = defineStore('userdata', () => {
 	};
 	const updateUserdata = async (newData: Partial<UserInfo>) => {
 		try {
-			// const updateInfoField = (key) => (newData[key] ? { [`info.${key}`]: newData[key] } : undefined);
-			const infoField = Object.keys(newData).map(key => ({ [`info.${key}`]: newData[key] }));
-			console.log(infoField);
-			debugger;
-			await updateDoc(getUserRef(await auth.getUid()), {
-				// updateInfoField('displayName');
-				// 'info.displayName': displayName || null,
-				// 'info.phoneNumber': phoneNumber || null,
-				// 'info.birthday_date': birthday_date || null,
-				// 'info.gender': gender || 'unknown',
-				// 'info.photoURL': photoURL || null
-			});
+			const infoField = Object.assign({}, ...Object.keys(newData).map(key => ({ [`info.${key}`]: newData[key] })));
+			await updateDoc(getUserRef(await auth.getUid()), infoField);
 		} catch (e: unknown) {
 			console.error(e);
 			throw e instanceof FirebaseError ? e.code : e;
@@ -141,6 +135,9 @@ export const useUserdataStore = defineStore('userdata', () => {
 		clearData,
 		setUserInfo,
 		setUserData,
+		getUdata,
+		getUInfo,
+		getUChats,
 		createUser,
 		getUserRef,
 		updateUserAvatar,

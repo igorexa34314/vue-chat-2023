@@ -28,26 +28,26 @@
 </template>
 
 <script setup lang="ts">
-import pageLoader from '@/components/UI/pageLoader.vue';
 import MessageItem from '@/components/chat/MessageItem.vue';
 import MessageForm from '@/components/chat/MessageForm.vue';
 import { useSnackbarStore } from '@/stores/snackbar';
-import { useMessagesStore } from '@/stores/messages';
+import { useUserdataStore } from '@/stores/userdata';
+import { AttachFormContent, useMessagesStore } from '@/stores/messages';
 import { useCurrentUser } from 'vuefire';
 import { useChat } from '@/composables/chat';
-import { ref, computed, watchEffect, inject } from 'vue';
+import { ref, computed, watchEffect } from 'vue';
 import { useMeta } from 'vue-meta';
 import { useRoute } from 'vue-router';
-import { computedInject, useInfiniteScroll, watchPausable } from '@vueuse/core';
+import { useInfiniteScroll, watchPausable } from '@vueuse/core';
 import { useDropZone } from '@vueuse/core';
-import { userDataKey } from '@/injection-keys';
 import type { Unsubscribe } from '@firebase/database';
-import type { LastVisibleFbRef } from '@/stores/messages';
+import type { Message, LastVisibleFbRef } from '@/stores/messages';
 import type { ChatInfo } from '@/composables/chat';
-import type { Message } from '@/stores/messages';
+import type { TextMessage } from '@/types/db/MessagesTable';
 import type { VDialog } from 'vuetify/components';
+import { storeToRefs } from 'pinia';
 
-const userChats = computedInject(userDataKey, (src) => src?.value?.chats);
+const { getUChats: userChats } = storeToRefs(useUserdataStore());
 const route = useRoute();
 const { getChatInfoById, setChatName } = useChat();
 const { showMessage } = useSnackbarStore();
@@ -143,7 +143,7 @@ useMeta(computed(() => {
 }));
 const enTransition = ref(false);
 
-const createMessage = async (content: Message['content'], type: Message['type'] = 'text') => {
+const createMessage = async (content: TextMessage | AttachFormContent, type: Message['type'] = 'text') => {
 	enTransition.value = true;
 	try {
 		await messagesStore.createMessage(chatId, type, content);

@@ -11,7 +11,7 @@
 				<v-form @submit.prevent="submitHandler" :disabled="!isImgsReady">
 					<div v-if="contentType === 'image'" class="images-grid">
 						<v-card v-for="img of formState.files" class="image-wrapper d-flex" :key="img.id">
-							<v-img ref="imgsEl" :src="img.src" :alt="img.fullname" :id="img.id" cover />
+							<v-img ref="imgsEl" :src="img.preview" :alt="img.fileData.name" :id="img.id" cover />
 						</v-card>
 					</div>
 					<div v-else-if="contentType === 'file'" v-for="file of formState.files" :key="file.id"
@@ -19,18 +19,18 @@
 						<div class="file-icon">
 							<v-icon icon="mdi-file" size="100px" />
 							<span class="file-icon-ext font-weight-black text-brown-darken-4">
-								{{ getFileExt(file.fullname) }}</span>
+								{{ getFileExt(file.fileData.name) }}</span>
 						</div>
-						<div class="ml-2 text-subtitle-1 font-weight-medium">
-							<p class="text-subtitle-1">{{ file.fullname }}</p>
-							<p class="mt-1 text-body-2">{{ formatFileSize(file.size) }}</p>
+						<div class="file-details ml-2 text-subtitle-1 font-weight-medium">
+							<p class="text-subtitle-1">{{ file.fileData.name }}</p>
+							<p class="mt-1 text-body-2">{{ formatFileSize(file.fileData.size) }}</p>
 						</div>
 					</div>
 					<div class="d-flex align-center mt-6 mb-3 px-4">
 						<v-text-field v-model="formState.subtitle" variant="plain" placeholder="Добавить подпись" class="mr-4"
 							hide-details autofocus style="transform: translateY(-11px);" />
-						<v-btn type="submit" color="light-blue-darken-4" size="large" :disabled="!isImgsReady"
-							rounded>Отправить</v-btn>
+						<v-btn type="submit" color="light-blue-darken-4" size="large"
+							:disabled="contentType === 'image' ? !isImgsReady : false" rounded>Отправить</v-btn>
 					</div>
 				</v-form>
 			</v-card-text>
@@ -43,24 +43,20 @@ import { formatFileSize } from '@/utils/sizeFormat';
 import { ref, reactive, computed, watchEffect } from "vue";
 import { useVModel } from '@vueuse/core';
 import { useSnackbarStore } from '@/stores/snackbar';
-import type { Message, FileMessage, MediaMessage } from '@/types/db/MessagesTable';
+import type { FileMessage, MediaMessage } from '@/types/db/MessagesTable';
 import type { VImg } from 'vuetify/components';
+import type { AttachFormContent } from '@/stores/messages';
 
-export type AttachedContent = (AttachDialogProps['fileList'][number] & { preview: string })[];
+export type AttachedContent = (AttachDialogProps['fileList'][number] & { preview?: string })[];
 
 export interface AttachDialogProps {
 	modelValue?: boolean;
 	contentType: 'image' | 'video' | 'file';
-	fileList: { id: string; file: File }[]
+	fileList: { id: string; fileData: File }[]
 }
 interface SubmitAttachmentForm {
 	subtitle: MediaMessage['subtitle'] | FileMessage['subtitle'];
-	files: {
-		id: AttachedContent[number]['id'];
-		fullname: File['name'];
-		size: File['size'];
-		src: AttachedContent[number]['preview'];
-	}[];
+	files: AttachedContent
 }
 
 const props = withDefaults(defineProps<AttachDialogProps>(), {
@@ -69,14 +65,14 @@ const props = withDefaults(defineProps<AttachDialogProps>(), {
 
 const emit = defineEmits<{
 	(e: 'update:modelValue', val: boolean): void
-	(e: 'submit', type: AttachDialogProps['contentType'], content: Message['content']): void
+	(e: 'submit', type: AttachDialogProps['contentType'], content: AttachFormContent): void
 	(e: 'close'): void
 }>();
 
 const { showMessage } = useSnackbarStore();
 const dialog = useVModel(props, 'modelValue', emit)
 const imgsEl = ref<VImg[]>();
-const isImgsReady = computed(() => imgsEl.value?.every(img => img.state === 'loaded'));
+const isImgsReady = computed(() => props.contentType === 'image' && imgsEl.value?.every(img => img.state === 'loaded'));
 const formState: SubmitAttachmentForm = reactive({
 	subtitle: '',
 	files: [],
@@ -86,14 +82,14 @@ const readFilesAsURL = (file: AttachDialogProps['fileList'][number]): Promise<At
 		const reader = new FileReader();
 		reader.onload = () => res({ ...file, preview: reader.result } as AttachedContent[number]);
 		reader.onerror = () => rej(reader);
-		reader.readAsDataURL(file.file);
+		reader.readAsDataURL(file.fileData);
 	});
 };
 watchEffect(async () => {
 	if (props.fileList.length) {
 		const promises: (Promise<AttachedContent[number]>)[] = [];
 		for (const item of props.fileList) {
-			if (item.file.size > 3145728) {
+			if (item.fileData.size > 3145728) {
 				showMessage('Допустимый размер файлов - до 3 Мбайт', 'red-darken-3', 2500);
 				closeDialog();
 				return;
@@ -104,9 +100,8 @@ watchEffect(async () => {
 			(await Promise.all(promises)).forEach(item => {
 				formState.files.push({
 					id: item.id,
-					fullname: item.file.name,
-					size: item.file.size,
-					src: item.preview
+					fileData: item.fileData,
+					preview: item.preview
 				});
 			})
 		} catch (e) {
@@ -119,11 +114,8 @@ const submitHandler = () => {
 	const { subtitle, files } = formState;
 	emit('submit', props.contentType, {
 		subtitle,
-		files: files.map(f => {
-			const { id, data } = f;
-			return { id, data, sizes: getImageParams(id) };
-		}),
-	});
+		files: files.map(f => ({ ...f, sizes: getImageParams(f.id) })),
+	} as AttachFormContent);
 	emit('update:modelValue', false);
 };
 const closeDialog = () => {
@@ -170,6 +162,11 @@ const getFileExt = computed(() => (filename: string) => filename.split('.')[file
 	}
 }
 .image-wrapper {}
+.file-details, .file-details p {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
 .file-icon {
 	position: relative;
 	&-ext {

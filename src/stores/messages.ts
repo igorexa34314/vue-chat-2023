@@ -16,6 +16,14 @@ export interface Message<T extends DBMessage['type'] = DBMessage['type']> extend
 	content: T extends 'text' ? TextMessage : T extends 'media' ? MediaMessage : T extends 'file' ? FileMessage : TextMessage | MediaMessage | FileMessage;
 	sender: { id: UserInfo['uid'] } & Pick<UserInfo, 'displayName' | 'photoURL'>;
 }
+export interface AttachFormContent {
+	subtitle: MediaMessage['subtitle'] | FileMessage['subtitle'];
+	files: {
+		id: string;
+		fileData: File;
+		sizes?: MediaMessage['images'][number]['sizes'];
+	}[];
+}
 export type direction = 'top' | 'bottom';
 export type LastVisibleFbRef = Record<direction, QueryDocumentSnapshot<DocumentData> | null>;
 
@@ -48,14 +56,14 @@ export const useMessagesStore = defineStore('messages', () => {
 			messages.value.splice(0, count);
 		}
 	};
-	const uploadMedia = async <T extends MediaMessage>(chatId: ChatInfo['id'], messageId: Message['id'], { subtitle, files }) => {
+	const uploadMedia = async <T extends MediaMessage>(chatId: ChatInfo['id'], messageId: Message['id'], { subtitle, files }: AttachFormContent) => {
 		try {
-			if (files.every(f => f.data instanceof File)) {
+			if (files.every(f => f.fileData instanceof File)) {
 				const promises = <Promise<T['images'][number]>[]>[];
 				for (const file of files) {
 					promises.push(
 						(async () => {
-							const { data: fileData, id, ...data } = file;
+							const { fileData, id, ...data } = file;
 							const imageRef = storageRef(
 								storage,
 								`chat/${chatId}/messageData/${messageId}/${id + '.' + fileData.name.split('.')[fileData.name.split('.').length - 1]}`
@@ -84,20 +92,20 @@ export const useMessagesStore = defineStore('messages', () => {
 			throw e instanceof FirebaseError ? e.code : e;
 		}
 	};
-	const uploadFile = async <T extends FileMessage>(chatId: ChatInfo['id'], messageId: Message['id'], { subtitle, files }) => {
+	const uploadFile = async <T extends FileMessage>(chatId: ChatInfo['id'], messageId: Message['id'], { subtitle, files }: AttachFormContent) => {
 		try {
-			if (files.every(f => f.data instanceof File)) {
+			if (files.every(f => f.fileData instanceof File)) {
 				const promises = <Promise<T['files'][number]>[]>[];
 				for (const file of files) {
 					promises.push(
 						(async () => {
-							const { data: fileData, id, ...data } = file;
+							const { fileData, id } = file;
 							const fileRef = storageRef(
 								storage,
-								`chat/${chatId}/messageData/${messageId}/${uuidv4() + '.' + file.name.split('.')[file.name.split('.').length - 1]}`
+								`chat/${chatId}/messageData/${messageId}/${id + '.' + fileData.name.split('.')[fileData.name.split('.').length - 1]}`
 							);
-							await uploadBytes(fileRef, file, {
-								contentType: file.type
+							await uploadBytes(fileRef, fileData, {
+								contentType: fileData.type
 							});
 							return {
 								id,
@@ -105,8 +113,7 @@ export const useMessagesStore = defineStore('messages', () => {
 								fullname: fileData.name,
 								fullpath: fileRef.fullPath,
 								downloadURL: await getDownloadURL(fileRef),
-								size: fileData.size,
-								...data
+								size: fileData.size
 							} as T['files'][number];
 						})()
 					);
@@ -121,18 +128,19 @@ export const useMessagesStore = defineStore('messages', () => {
 			throw e instanceof FirebaseError ? e.code : e;
 		}
 	};
-	const createMessage = async (chatId: ChatInfo['id'], type: Message['type'], content: Message['content']) => {
+	const createMessage = async (chatId: ChatInfo['id'], type: Message['type'], content: TextMessage | AttachFormContent) => {
 		try {
 			const messageRef = doc(collection(doc(chatCol, chatId), 'messages'));
+			let attachContent: MediaMessage | FileMessage | null = null;
 			if (type === 'media') {
-				content = await uploadMedia(chatId, messageRef.id, content as MediaMessage);
+				attachContent = (await uploadMedia(chatId, messageRef.id, content as AttachFormContent)) as MediaMessage;
 			} else if (type === 'file') {
-				content = await uploadFile(chatId, messageRef.id, content as FileMessage);
+				attachContent = (await uploadFile(chatId, messageRef.id, content as AttachFormContent)) as FileMessage;
 			}
 			await setDoc(messageRef, {
 				id: messageRef.id,
 				type,
-				content: content,
+				content: attachContent || content,
 				created_at: Timestamp.fromDate(new Date()),
 				sender_id: await getUid()
 			});

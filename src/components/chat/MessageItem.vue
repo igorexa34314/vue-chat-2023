@@ -1,10 +1,11 @@
 <template>
 	<div :class="{ self }" class="message d-flex">
 		<v-avatar size="30px" :image="sender.photoURL || defaultAvatar" :class="self ? 'ml-2' : 'mr-2'"
-			class="sender__avatar" @click="$router.push({ name: 'user-id', params: { id: sender.id } })" />
+			class="sender__avatar" @click="$router.push({ name: 'user-id', params: { id: sender.id } })"
+			:title="sender.displayName" />
 		<v-card min-width="100px" max-width="650px" max-height="65vh" density="compact" class="message__card mb-4"
 			:class="self ? 'bg-light-blue-darken-3' : ''" variant="tonal">
-			<v-card-title v-if="type !== 'media'" class="message__head d-flex flex-row align-center">
+			<v-card-title v-if="type === 'text'" class="message__head d-flex flex-row align-center">
 				<small class="sender__name" @click="$router.push({ name: 'user-id', params: { id: sender.id } })">{{
 					sender.displayName }}</small>
 			</v-card-title>

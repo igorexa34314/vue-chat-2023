@@ -13,22 +13,17 @@
 <script setup lang="ts">
 import AppNavbar from '@/components/app/AppNavbar.vue';
 import AppSidebar from '@/components/app/AppSidebar.vue';
-import { ref, computed, provide, onUnmounted } from 'vue';
+import { ref, onUnmounted } from 'vue';
 import { useUserdataStore } from '@/stores/userdata';
-import { userDataKey } from '@/injection-keys';
-import type { UserData } from '@/types/db/UserdataTable';
 
 const userdataStore = useUserdataStore();
+const { fetchAuthUserdata } = userdataStore;
 const drawer = ref(true);
 
-const unsubscribe = await userdataStore.fetchAuthUserdata();
+const unsubscribe = await fetchAuthUserdata();
 
 // Unsubscribe from receiving userdata realtime firebase
 onUnmounted(() => unsubscribe?.());
-
-const userdata = computed(() => userdataStore.userdata as UserData);
-
-provide(userDataKey, userdata);
 </script>
 
 <style lang="scss" scoped></style>
