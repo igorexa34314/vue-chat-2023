@@ -1,7 +1,8 @@
 <template>
 	<v-overlay v-if="content" v-model="showOverlay" content-class="image-overlay" class="fullsize-image__dialog"
 		transition="scale-transition" @click:outside="$emit('close')">
-		<v-card class="fullsize-image__wrapper" variant="text" max-width="80vw" max-height="90vh" style="overflow: hidden;">
+		<v-card class="fullsize-image__wrapper" variant="text" max-width="80vw" max-height="90vh" style="overflow: hidden;"
+			:style="zoomed ? 'transform: scale(2);' : 'transform: scale(1);'">
 			<v-img :src="content.previewURL" :alt="alt || content.fullname" :width="content.sizes.w"
 				:height="content.sizes.h">
 				<template v-slot:placeholder>
@@ -12,6 +13,9 @@
 			</v-img>
 		</v-card>
 		<div class="actions__panel">
+			<v-btn class="zoom-in__btn" :icon="zoomed ? 'mdi-magnify-minus-outline' : 'mdi-magnify-plus-outline'"
+				variant="text" title="Zoom" @click="zoomImage" />
+			<!-- <v-btn class="zoom-in__btn" icon="mdi-magnify-minus-outline" variant="text" title="Zoom" @click="zoomIn" /> -->
 			<v-btn class="download__btn" icon="mdi-download" variant="text" :href="content.previewURL || content.downloadURL"
 				:download="content.fullname || 'image.png'" title="Download" />
 			<v-btn class="close__btn" icon="mdi-close" variant="text" @click="closeOverlay" title="Close" />
@@ -20,6 +24,7 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue';
 import { useVModel } from '@vueuse/core';
 import type { ImageWithPreviewURL } from '@/components/chat/messages/media/ImageFrame.vue';
 
@@ -40,7 +45,14 @@ const showOverlay = useVModel(props, 'modelValue', emit);
 
 const closeOverlay = () => {
 	emit('update:modelValue', false);
+	zoomed.value = false;
 	emit('close');
+};
+
+// Zoom Image
+const zoomed = ref(false);
+const zoomImage = () => {
+	zoomed.value = !zoomed.value;
 };
 </script>
 

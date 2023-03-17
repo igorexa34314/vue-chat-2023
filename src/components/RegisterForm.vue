@@ -61,7 +61,6 @@ const formState = reactive({
 
 const submitForm = async () => {
 	const valid = (await formEl.value?.validate())?.valid;
-
 	if (valid) {
 		try {
 			await registerWithEmail({
@@ -70,8 +69,8 @@ const submitForm = async () => {
 				password: formState.password
 			});
 			push('/profile');
-		} catch (e) {
-			showMessage(messages[e] || e, 'red-darken-3', 2000);
+		} catch (e: unknown) {
+			showMessage(messages[e as keyof typeof messages] || e as string, 'red-darken-3', 2000);
 		}
 	}
 };
@@ -80,7 +79,7 @@ const signWithGoogle = async () => {
 		await signInWithGoogle();
 		push('/profile');
 	} catch (e) {
-		showMessage(messages[e] || e, 'red-darken-3', 2000);
+		showMessage(messages[e as keyof typeof messages] || e as string, 'red-darken-3', 2000);
 	}
 };
 </script>

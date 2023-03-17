@@ -114,7 +114,10 @@ const submitHandler = () => {
 	const { subtitle, files } = formState;
 	emit('submit', props.contentType, {
 		subtitle,
-		files: files.map(f => ({ ...f, sizes: getImageParams(f.id) })),
+		files: files.map(file => {
+			const { preview, ...f } = file;
+			return { ...f, sizes: getImageParams(f.id) };
+		}),
 	} as AttachFormContent);
 	emit('update:modelValue', false);
 };

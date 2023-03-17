@@ -73,7 +73,7 @@ const goToChat = async () => {
 		const chatId = await joinPrivateChat(route.params.id as string);
 		push({ name: 'chat-id', params: { id: chatId } });
 	} catch (e) {
-		showMessage(messages[e] || e, 'red-darken-3', 2000);
+		showMessage(messages[e as keyof typeof messages] || e as string, 'red-darken-3', 2000);
 	}
 };
 const addToFriend = async () => {

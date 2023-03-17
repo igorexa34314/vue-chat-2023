@@ -25,13 +25,16 @@
 </template>
 
 <script setup lang="ts">
+import messages from '@/utils/messages.json';
 import { ref } from 'vue';
 import { computedAsync, useVModel } from '@vueuse/core';
 import { useChat } from '@/composables/chat';
 import { storeToRefs } from 'pinia';
+import { useSnackbarStore } from '@/stores/snackbar';
 import { useUserdataStore } from '@/stores/userdata';
 import type { ChatInfo } from '@/composables/chat';
 
+const { showMessage } = useSnackbarStore();
 const { getUChats: userChats, getUInfo: userInfo } = storeToRefs(useUserdataStore());
 const { getChatInfoById, setChatName, setChatAvatar } = useChat();
 const loading = ref(true);
@@ -53,6 +56,7 @@ const getUserChatsInfo = computedAsync(async () => {
 		}
 	} catch (e: unknown) {
 		console.error(e);
+		showMessage(messages[e as keyof typeof messages] || e as string, 'red-darken-3', 2000);
 	} finally {
 		loading.value = false;
 	}

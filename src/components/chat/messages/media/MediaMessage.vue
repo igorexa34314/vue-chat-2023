@@ -1,6 +1,6 @@
 <template>
 	<div class="images-frame">
-		<ImageFrame v-for="img of images" :image="img" :key="img.id" @open="openInOverlay(img)" :alt="alt" />
+		<ImageFrame v-for="img of images" :image="img" :key="img.id" @open="openInOverlay" :alt="alt" />
 		<FullsizeOverlay v-model="overlayState.show" :content="overlayState.content" @close="overlayClosed" />
 	</div>
 </template>

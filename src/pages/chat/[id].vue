@@ -3,17 +3,21 @@
 		<div v-if="userChats && userChats.length && !userChats.some(el => el === $route.params.id)" class="text-h5 pa-5">
 			Такого чата не существует либо вы не состоите в нем</div>
 		<div v-else-if="userChats && userChats.length" style="height: 100%; position: relative;" @dragenter="addAttachment"
-			@dragleave="removeAttachment">
+			@dragleave="removeAttachment" class="chat__field">
 			<div v-if="loading"><page-loader /></div>
-			<div v-else-if="messages && messages.length" ref="chatEl" class="chat__content px-12">
+			<div v-else-if="messages && messages.length" ref="chatEl" class="chat__content px-8">
 				<div class="messages-field mt-4">
 					<TransitionGroup :name="enTransition ? 'messages-list' : ''">
 						<MessageItem v-for="m in messages" :key="m.id" :self="uid === m.sender.id" :type="m.type"
 							:content="m.content" :sender="m.sender" :created_at="<Date>m.created_at" />
 					</TransitionGroup>
 				</div>
-				<!-- <div v-if="!messages || !messages.length" class="text-h5 pa-4">Сообщений в чате пока нет</div> -->
 			</div>
+			<!-- <div v-else class="text-h5 pa-4">Сообщений в чате пока нет</div> -->
+			<Transition name="fixed-btn-fade">
+				<v-btn v-if="chatEl && chatEl.scrollHeight > chatEl.clientHeight && !bottom" class="fixed-button-scrolldown"
+					color="blue-grey-darken-1" icon="mdi-arrow-down" size="large" @click="scrollChatBottom('smooth')" />
+			</Transition>
 			<MessageForm class="message-form py-4 px-6" @submitForm="createMessage" />
 		</div>
 		<v-dialog v-model="attachDialog" width="auto" ref="dropZone">
@@ -28,6 +32,7 @@
 </template>
 
 <script setup lang="ts">
+import sbMessages from '@/utils/messages.json';
 import MessageItem from '@/components/chat/MessageItem.vue';
 import MessageForm from '@/components/chat/MessageForm.vue';
 import { useSnackbarStore } from '@/stores/snackbar';
@@ -35,10 +40,10 @@ import { useUserdataStore } from '@/stores/userdata';
 import { AttachFormContent, useMessagesStore } from '@/stores/messages';
 import { useCurrentUser } from 'vuefire';
 import { useChat } from '@/composables/chat';
-import { ref, computed, watchEffect } from 'vue';
+import { ref, computed, watchEffect, toRefs, nextTick } from 'vue';
 import { useMeta } from 'vue-meta';
 import { useRoute } from 'vue-router';
-import { useInfiniteScroll, watchPausable } from '@vueuse/core';
+import { useScroll, useInfiniteScroll, watchPausable } from '@vueuse/core';
 import { useDropZone } from '@vueuse/core';
 import type { Unsubscribe } from '@firebase/database';
 import type { Message, LastVisibleFbRef } from '@/stores/messages';
@@ -91,10 +96,23 @@ const removeAttachment = () => {
 // 	}
 // };
 
-// Watchers to scroll bottom
+const { arrivedState } = useScroll(chatEl, {
+	offset: { bottom: 50 },
+})
+const { bottom } = toRefs(arrivedState);
+
+const scrollChatBottom = (behavior: ScrollBehavior = 'auto') => {
+	if (chatEl.value && chatEl.value?.scrollHeight > chatEl.value?.clientHeight) {
+		chatEl.value.scrollTo({
+			top: chatEl.value.scrollHeight,
+			behavior,
+		});
+	}
+};
+
+// Watchers to scroll bottom when new message add
 const { pause: pauseMessageWatcher, resume: resumeMessageWatcher } = watchPausable(messages, () => {
-	if (chatEl.value && chatEl.value.scrollHeight > chatEl.value.clientHeight && chatEl.value.scrollHeight)
-		chatEl.value.scrollTop = chatEl.value.scrollHeight;
+	scrollChatBottom();
 }, { deep: true, flush: 'post' });
 
 // Inf. scroll on top
@@ -123,10 +141,15 @@ watchEffect(async (onCleanup) => {
 	chatId = route.params.id as string;
 	unsubscribe?.();
 	if (chatId) {
-		loading.value = true;
-		chatInfo.value = await getChatInfoById(chatId);
-		unsubscribe = await messagesStore.fetchChatMessages(chatId);
-		loading.value = false;
+		try {
+			loading.value = true;
+			chatInfo.value = await getChatInfoById(chatId);
+			unsubscribe = await messagesStore.fetchChatMessages(chatId);
+		} catch (e: unknown) { }
+		finally {
+			await nextTick();
+			loading.value = false;
+		}
 	}
 	// Unsubscribe from receiving messages realtime firebase
 	onCleanup(() => {
@@ -147,8 +170,8 @@ const createMessage = async (content: TextMessage | AttachFormContent, type: Mes
 	enTransition.value = true;
 	try {
 		await messagesStore.createMessage(chatId, type, content);
-	} catch (e) {
-		showMessage(messages[e] || e, 'red-darken-3', 2000);
+	} catch (e: unknown) {
+		showMessage(sbMessages[e as keyof typeof sbMessages] || e as string, 'red-darken-3', 2000);
 	}
 	enTransition.value = false;
 };
@@ -159,6 +182,7 @@ const createMessage = async (content: TextMessage | AttachFormContent, type: Mes
 	padding: 0 !important;
 	height: 100%;
 }
+.chat__field {}
 .chat__content {
 	position: absolute;
 	bottom: 82px;
@@ -168,12 +192,18 @@ const createMessage = async (content: TextMessage | AttachFormContent, type: Mes
 	overflow: auto;
 }
 .message-form {
+	margin-left: auto;
+	margin-right: auto;
+	max-width: 1080px;
 	position: absolute;
 	left: 0;
 	right: 0;
 	bottom: 0;
 }
-.messages-field {}
+.messages-field {
+	margin: 0 auto;
+	max-width: 1080px;
+}
 .messages-list-enter-active,
 .messages-list-leave-active {
 	transition: all 0.35s ease-in;
@@ -210,6 +240,21 @@ const createMessage = async (content: TextMessage | AttachFormContent, type: Mes
 	display: flex;
 	align-items: center;
 	justify-content: center;
+}
+.fixed-button-scrolldown {
+	position: absolute;
+	bottom: 102px;
+	right: 5%;
+	z-index: 100;
+}
+.fixed-btn-fade-enter-active,
+.fade-leave-active {
+	transition: opacity 0.5s ease;
+}
+
+.fixed-btn-fade-enter-from,
+.fixed-btn-fade-leave-to {
+	opacity: 0;
 }
 </style>
 

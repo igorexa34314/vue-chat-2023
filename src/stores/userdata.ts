@@ -79,7 +79,7 @@ export const useUserdataStore = defineStore('userdata', () => {
 	};
 	const updateUserdata = async (newData: Partial<UserInfo>) => {
 		try {
-			const infoField = Object.assign({}, ...Object.keys(newData).map(key => ({ [`info.${key}`]: newData[key] })));
+			const infoField = Object.assign({}, ...(Object.keys(newData) as (keyof Partial<UserInfo>)[]).map(key => ({ [`info.${key}`]: newData[key] })));
 			await updateDoc(getUserRef(await auth.getUid()), infoField);
 		} catch (e: unknown) {
 			console.error(e);

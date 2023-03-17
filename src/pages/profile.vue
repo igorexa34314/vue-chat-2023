@@ -53,7 +53,7 @@ const submitForm = async ({ avatar, ...formData }: ProfileForm) => {
 		showMessage('succesfully_updated');
 	} catch (e: unknown) {
 		console.error(e);
-		showMessage(messages[e] || e, 'red-darken-3', 2000);
+		showMessage(messages[e as keyof typeof messages] || e as string, 'red-darken-3', 2000);
 	}
 };
 </script>

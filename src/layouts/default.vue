@@ -20,6 +20,7 @@ const userdataStore = useUserdataStore();
 const { fetchAuthUserdata } = userdataStore;
 const drawer = ref(true);
 
+// Fetching all auth userdata
 const unsubscribe = await fetchAuthUserdata();
 
 // Unsubscribe from receiving userdata realtime firebase

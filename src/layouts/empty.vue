@@ -7,17 +7,15 @@
 </template>
 
 <script setup lang="ts">
+import messages from '@/utils/messages.json';
 import { useRoute } from 'vue-router';
 import { useSnackbarStore } from '@/stores/snackbar';
-import messages from '@/utils/messages.json';
 
 const route = useRoute();
 const { showMessage } = useSnackbarStore();
-const msg = route.query.message as string;
+const msg = route.query.message as keyof typeof messages;
 
-if (messages[msg]) {
-	showMessage(messages[msg]);
-}
+showMessage(messages[msg] || msg);
 </script>
 
 <style lang="scss" scoped></style>

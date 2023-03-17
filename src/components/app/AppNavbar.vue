@@ -40,7 +40,8 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue';
+import messages from '@/utils/messages.json';
+import { reactive, ref, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuth } from '@/composables/auth';
 import { useUserdataStore } from '@/stores/userdata';
@@ -66,13 +67,13 @@ const searchState = reactive({
 const enableSearch = () => {
 	searchState.enabled = true;
 	// @ts-ignore
-	setTimeout(() => search.value?.focus(), 0);
+	nextTick(() => search.value?.focus());
 };
 const exit = async () => {
 	try {
 		await logout();
-	} catch (e) {
-		showMessage(messages[e] || e, 'red-darken-3', 2000);
+	} catch (e: unknown) {
+		showMessage(messages[e as keyof typeof messages] || e as string, 'red-darken-3', 2000);
 	}
 	clearData();
 	push('/login');
