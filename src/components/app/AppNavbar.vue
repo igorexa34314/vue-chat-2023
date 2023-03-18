@@ -18,18 +18,18 @@
 		<v-btn variant="text" icon="mdi-filter" disabled />
 
 		<v-menu>
-			<template v-slot:activator="{ props }">
+			<template #activator="{ props }">
 				<v-btn v-bind="props" variant="text" icon="mdi-dots-vertical" />
 			</template>
 			<v-list density="compact">
 				<v-list-item density="compact" to="/profile">
-					<template v-slot:prepend>
+					<template #prepend>
 						<v-icon icon="mdi-account-circle-outline" class="mr-6" />
 					</template>
 					<v-list-item-title>Профиль</v-list-item-title>
 				</v-list-item>
 				<v-list-item density="compact" @click="exit">
-					<template v-slot:prepend>
+					<template #prepend>
 						<v-icon icon="mdi-logout" class="mr-6" />
 					</template>
 					<v-list-item-title>Выйти</v-list-item-title>
@@ -43,14 +43,13 @@
 import messages from '@/utils/messages.json';
 import { reactive, ref, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
-import { useAuth } from '@/composables/auth';
+import { logout } from '@/services/auth';
 import { useUserdataStore } from '@/stores/userdata';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { VTextField } from 'vuetify/components';
 
 
 const { push } = useRouter();
-const { logout } = useAuth();
 const { clearData } = useUserdataStore();
 const { showMessage } = useSnackbarStore();
 

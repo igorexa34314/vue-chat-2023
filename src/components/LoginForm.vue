@@ -33,14 +33,13 @@ import messages from '@/utils/messages.json';
 import validations from '@/utils/validations';
 import { reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { useAuth } from '@/composables/auth';
+import { loginWithEmail, signInWithGoogle } from '@/services/auth';
 import { useSnackbarStore } from '@/stores/snackbar';
 import type { VForm } from 'vuetify/components';
 
 const googleImg = new URL('@/assets/img/google.png', import.meta.url).href;
 
 const { push } = useRouter();
-const { loginWithEmail, signInWithGoogle } = useAuth();
 const { showMessage } = useSnackbarStore();
 
 const formEl = ref<VForm>();

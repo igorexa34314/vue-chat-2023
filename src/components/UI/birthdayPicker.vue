@@ -7,9 +7,7 @@
 
 <script setup lang="ts">
 import { ref, watchEffect } from "vue";
-import { useDateFormat } from "@/utils/dateFormat";
-
-const { monthsForLocale } = useDateFormat();
+import { monthsForLocale } from "@/utils/date";
 
 const props = defineProps({
 	modelValue: {

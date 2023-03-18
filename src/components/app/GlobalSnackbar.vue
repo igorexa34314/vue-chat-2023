@@ -2,7 +2,7 @@
 	<v-snackbar v-model="sbProps.show" :color="sbProps.color" :timeout="sbProps.timeout" location="top" offset="-100"
 		variant="elevated" elevation="3" transition="slide-y-transition">
 		<p class="px-2 font-weight-medium">{{ sbProps.text }}</p>
-		<template v-slot:actions>
+		<template #actions>
 			<v-btn variant="text" color="white" @click="sbProps.show = false">
 				<v-icon icon="mdi-close" />
 			</v-btn>

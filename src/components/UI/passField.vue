@@ -2,7 +2,7 @@
 	<div>
 		<v-text-field v-model="password" :type="passFieldState.showPass ? 'text' : 'password'"
 			:rules="rules || validations.password" :label="label" :placeholder="placeholder" :variant="variant" required>
-			<template v-slot:append-inner>
+			<template #append-inner>
 				<v-icon :icon="passFieldState.showPass ? 'mdi-eye' : 'mdi-eye-off'" @mousedown="passFieldState.showPass = true"
 					@mouseup="passFieldState.showPass = false" class="mr-2" style="cursor: pointer" />
 			</template>
@@ -10,7 +10,7 @@
 		<v-text-field v-if="repeater" :type="passFieldState.showRepeater ? 'text' : 'password'" :rules="repeaterRules"
 			:label="repeaterLabel" :placeholder="repeaterPlaceholder" :variant="variant || 'underlined'"
 			:class="repeaterClass + ` mt-4`" required>
-			<template v-slot:append-inner>
+			<template #append-inner>
 				<v-icon :icon="passFieldState.showRepeater ? 'mdi-eye' : 'mdi-eye-off'"
 					@mousedown="passFieldState.showRepeater = true" @mouseup="passFieldState.showRepeater = false" class="mr-2"
 					style="cursor: pointer" />

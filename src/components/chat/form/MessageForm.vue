@@ -1,13 +1,20 @@
 <template>
 	<div>
-		<div class="message-form d-flex flex-row align-center">
-			<v-text-field v-model.trim="messageState.text" variant="solo" hide-details @keyup.enter="createTextMessage"
-				placeholder="Ваше сообщение">
+		<div class="message-form d-flex flex-row align-end">
+			<v-textarea v-model.trim="messageState.text" variant="solo" hide-details @keyup.enter="createTextMessage"
+				placeholder="Ваше сообщение" rows="1" max-rows="12" auto-grow focused>
 				<template #append-inner>
-					<AttachMenu @attach-file="attachFile" />
+					<AttachMenu @attach-file="attachFile">
+						<template #activator="{ props }">
+							<div class="attach-btn ml-4">
+								<v-icon v-bind="props" icon="mdi-attachment mdi-rotate-135" size="large" class="attach-icon"
+									v-ripple />
+							</div>
+						</template>
+					</AttachMenu>
 				</template>
-			</v-text-field>
-			<v-btn icon="mdi-send" label="Отправить" class="ml-3" @click="createTextMessage" />
+			</v-textarea>
+			<v-btn icon="mdi-send" label="Отправить" class="ml-3 mb-1" @click="createTextMessage" />
 		</div>
 		<AttachDialog v-model="attachDialogState.show" :contentType="attachDialogState.contentType"
 			:fileList="messageState.attachedFiles" @submit="createAttachment" @close="closeDialog" />
@@ -78,4 +85,21 @@ const closeDialog = () => {
 };
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.attach-btn {
+	position: relative;
+	opacity: 0.65;
+	width: 40px;
+	height: 100%;
+	display: flex;
+	align-items: flex-end;
+	justify-content: flex-end;
+}
+.attach-icon {
+	padding: 0.7em;
+	right: 4px;
+	transform: translateY(-20%);
+	bottom: 0;
+	border-radius: 50%;
+}
+</style>

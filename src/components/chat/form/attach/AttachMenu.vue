@@ -1,7 +1,7 @@
 <template>
 	<v-menu>
 		<template #activator="{ props }">
-			<v-icon icon="mdi-attachment mdi-rotate-135" v-bind="props" size="large" class="mr-2" />
+			<slot name="activator" :props="props"></slot>
 		</template>
 		<v-list density="compact">
 			<v-list-item v-for="item in attachMenuItems" :key="item.attachmentType" style="cursor: pointer; padding: 0;"
@@ -19,6 +19,10 @@
 
 <script setup lang="ts">
 import type { Message } from '@/types/db/MessagesTable';
+
+const props = defineProps<{
+	class?: string;
+}>();
 
 const emit = defineEmits<{
 	(e: 'attach-file', type: Exclude<Message['type'], 'text'>, event: Event): void

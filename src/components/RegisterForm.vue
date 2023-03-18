@@ -15,7 +15,7 @@
 				<pass-field v-model="formState.password" class="mt-4" repeater />
 
 				<v-checkbox v-model="formState.agreeTerms" :rules="validations.terms" required density="compact" class="mt-3">
-					<template v-slot:label>
+					<template #label>
 						<div class="">Согласен с <router-link to="" target="_blank">правилами</router-link></div>
 					</template>
 				</v-checkbox>
@@ -40,7 +40,7 @@ import passField from '@/components/UI/passField.vue';
 import validations from '@/utils/validations';
 import messages from '@/utils/messages.json';
 import { reactive, ref } from 'vue';
-import { useAuth } from '@/composables/auth';
+import { registerWithEmail, signInWithGoogle } from '@/services/auth';
 import { useRouter } from 'vue-router';
 import { useSnackbarStore } from '@/stores/snackbar';
 import type { VForm } from 'vuetify/components';
@@ -48,7 +48,6 @@ import type { VForm } from 'vuetify/components';
 const googleImg = new URL('@/assets/img/google.png', import.meta.url).href;
 
 const { push } = useRouter();
-const { registerWithEmail, signInWithGoogle } = useAuth();
 const { showMessage } = useSnackbarStore();
 
 const formEl = ref<VForm>();

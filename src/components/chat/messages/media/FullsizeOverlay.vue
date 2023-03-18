@@ -5,7 +5,7 @@
 			:style="zoomed ? 'transform: scale(2);' : 'transform: scale(1);'">
 			<v-img :src="content.previewURL" :alt="alt || content.fullname" :width="content.sizes.w"
 				:height="content.sizes.h">
-				<template v-slot:placeholder>
+				<template #placeholder>
 					<div class="d-flex align-center justify-center fill-height">
 						<v-progress-circular color="grey-lighten-4" indeterminate />
 					</div>
@@ -72,7 +72,7 @@ const zoomImage = () => {
 }
 .fullsize-image__wrapper {
 	pointer-events: all;
-	// transform: translate(-50%, -50%);
+	transition: transform 0.09s ease-in 0s;
 	margin: 0 auto;
 	& img {
 		display: block;

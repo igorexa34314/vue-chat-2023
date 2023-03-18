@@ -22,17 +22,8 @@ const emit = defineEmits<{
 
 const imgsEl = ref<VImg[]>();
 const isImgsReady = computed(() => imgsEl.value?.every(img => img.state === 'loaded'));
-const getImageParams = (imgId: AttachedContent[number]['id']) => {
-	const img = imgsEl.value?.find(img => img.$attrs.id === imgId);
-	if (img?.state === 'loaded' && img.naturalHeight !== 0) {
-		return { w: img.naturalWidth, h: img.naturalHeight };
-	}
-};
 
-defineExpose({
-	isImgsReady,
-	getImageParams,
-});
+defineExpose({ isImgsReady });
 </script>
 
 <style scoped lang="scss">

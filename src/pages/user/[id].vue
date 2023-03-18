@@ -19,13 +19,13 @@
 					</v-col>
 					<v-col class="" v-if="route.params.id !== uid">
 						<v-tooltip location="bottom">
-							<template v-slot:activator="{ props }">
+							<template #activator="{ props }">
 								<v-btn v-bind="props" size="x-large" variant="text" icon="mdi-message-text" @click="goToChat" />
 							</template>
 							<span class="text-subtitle-2 font-weight-medium">Перейти в сообщения</span>
 						</v-tooltip>
 						<v-tooltip location="bottom">
-							<template v-slot:activator="{ props }">
+							<template #activator="{ props }">
 								<v-btn v-bind="props" size="x-large" variant="text" icon="mdi-account-plus-outline" class="ml-2"
 									@click="addToFriend" />
 							</template>
@@ -43,16 +43,14 @@ import messages from '@/utils/messages.json';
 import { computed } from 'vue';
 import { useUserdataStore } from '@/stores/userdata';
 import { useRoute, useRouter } from 'vue-router';
-import { useAuth } from '@/composables/auth';
-import { useChat } from '@/composables/chat';
+import { getUid } from '@/services/auth';
+import { joinPrivateChat } from '@/services/chat';
 import { useMeta } from 'vue-meta';
 import { useSnackbarStore } from '@/stores/snackbar';
 
 const defaultAvatar = new URL('@/assets/img/default_user_avatar.jpg', import.meta.url).href;
 
-const { getUid } = useAuth();
 const { showMessage } = useSnackbarStore();
-const { joinPrivateChat } = useChat();
 const route = useRoute();
 const { push } = useRouter();
 const userdataStore = useUserdataStore();
