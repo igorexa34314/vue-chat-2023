@@ -1,14 +1,14 @@
 <template>
 	<div v-if="files.length" class="file-message__wrapper">
-		<div v-for="file of files" :key="file.id" class="d-flex align-center mb-2">
+		<div v-for="(file, index) in files" :key="file.id" :class="{ 'mb-1': index !== (files.length - 1) }"
+			class="d-flex align-center">
 			<v-hover v-slot="{ isHovering, props }">
 				<div class="file-icon" v-bind="props" style="cursor: pointer;">
-					<v-icon icon="mdi-file" size="60px" />
+					<v-icon icon="mdi-file" size="80px" />
 					<span v-if="!isHovering" class="file-icon-ext font-weight-bold text-brown-darken-4">
-						{{ file.fullname.split('.')[file.fullname.split('.').length - 1] }}
-					</span>
-					<v-btn v-else icon="mdi-download" size="default" variant="text" class="file-icon-btn" color="black"
-						density="compact" @click="downloadFile(file)" title="Download" />
+						{{ getFileExt(file.fullname).length <= 6 ? getFileExt(file.fullname) : '' }} </span>
+							<v-btn v-else icon="mdi-download" size="large" variant="text" class="file-icon-btn" color="black"
+								density="compact" @click="downloadFile(file)" title="Download" :flat="false" :ripple="false" />
 				</div>
 			</v-hover>
 			<div class="file-details ml-2 text-subtitle-1 font-weight-medium">
@@ -26,6 +26,7 @@ import { ref, reactive, computed, PropType } from 'vue';
 import { formatFileSize as formatSize } from '@/utils/sizeFormat';
 import { ref as storageRef, getBlob } from 'firebase/storage';
 import { useFirebaseStorage } from 'vuefire';
+import { getFileExt } from '@/composables/message';
 import type { FileMessage } from '@/types/db/MessagesTable';
 
 const props = defineProps({
@@ -64,7 +65,11 @@ const formatFileSize = computed(() => (size: number) => formatSize(size));
 .file-icon {
 	position: relative;
 	&-ext, &-btn {
-		font-size: 1.1rem;
+		margin-left: auto;
+		margin-right: auto;
+		max-width: 45px;
+		font-size: 1.15em;
+		line-height: 1;
 		display: inline-block;
 		position: absolute;
 		top: 50%;

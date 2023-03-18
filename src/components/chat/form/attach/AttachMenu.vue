@@ -10,7 +10,7 @@
 					<v-icon :icon="item.icon" class="mr-4"></v-icon>
 					<span>{{ item.title }}</span>
 					<input :id="item.attachmentType" type="file" :accept="item.accept" style="display:none;"
-						@change="$emit('attach-file', item.attachmentType, $event)" multiple>
+						@change="emit('attach-file', item.attachmentType, $event)" multiple>
 				</label>
 			</v-list-item>
 		</v-list>
@@ -24,7 +24,14 @@ const emit = defineEmits<{
 	(e: 'attach-file', type: Exclude<Message['type'], 'text'>, event: Event): void
 }>();
 
-const attachMenuItems = [
+interface AttachMenu {
+	title: string;
+	icon: string;
+	attachmentType: Exclude<Message['type'], 'text'>;
+	accept: string;
+}
+
+const attachMenuItems: AttachMenu[] = [
 	{ title: 'Фото или видео', icon: 'mdi-image', attachmentType: 'media', accept: 'image/*, video/*' },
 	{ title: 'Файл', icon: 'mdi-file-document-outline', attachmentType: 'file', accept: '.txt,.pdf,.doc,.docx' },
 ];

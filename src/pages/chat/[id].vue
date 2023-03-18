@@ -33,14 +33,14 @@
 
 <script setup lang="ts">
 import sbMessages from '@/utils/messages.json';
-import MessageItem from '@/components/chat/MessageItem.vue';
-import MessageForm from '@/components/chat/MessageForm.vue';
+import MessageItem from '@/components/chat/messages/MessageItem.vue';
+import MessageForm from '@/components/chat/form/MessageForm.vue';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { useUserdataStore } from '@/stores/userdata';
 import { AttachFormContent, useMessagesStore } from '@/stores/messages';
 import { useCurrentUser } from 'vuefire';
 import { useChat } from '@/composables/chat';
-import { ref, computed, watchEffect, toRefs, nextTick } from 'vue';
+import { ref, computed, watchEffect, toRefs, nextTick, onUnmounted } from 'vue';
 import { useMeta } from 'vue-meta';
 import { useRoute } from 'vue-router';
 import { useScroll, useInfiniteScroll, watchPausable } from '@vueuse/core';
@@ -158,6 +158,11 @@ watchEffect(async (onCleanup) => {
 	});
 });
 
+// Unsubscribe from receiving messages realtime firebase
+onUnmounted(() => {
+	messagesStore.clearMessages();
+	unsubscribe?.();
+});
 //Dynamic page title
 useMeta(computed(() => {
 	if (chatInfo.value && Object.keys(chatInfo.value).length)

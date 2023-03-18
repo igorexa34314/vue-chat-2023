@@ -10,24 +10,23 @@
 			<v-btn icon="mdi-send" label="Отправить" class="ml-3" @click="createTextMessage" />
 		</div>
 		<AttachDialog v-model="attachDialogState.show" :contentType="attachDialogState.contentType"
-			:fileList="attachDialogState.fileList" @submit="createAttachment" @close="closeDialog" />
+			:fileList="messageState.attachedFiles" @submit="createAttachment" @close="closeDialog" />
 	</div>
 </template>
 
 <script setup lang="ts">
-import AttachMenu from '@/components/chat/AttachMenu.vue';
-import AttachDialog from '@/components/chat/AttachDialog.vue';
+import AttachMenu from '@/components/chat/form/attach/AttachMenu.vue';
+import AttachDialog from '@/components/chat/form/attach/AttachDialog.vue';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { reactive } from 'vue';
 import { uuidv4 } from '@firebase/util';
 import type { AttachFormContent } from '@/stores/messages';
-import type { Message, TextMessage, MediaMessage, FileMessage } from '@/types/db/MessagesTable';
-import type { AttachDialogProps } from '@/components/chat/AttachDialog.vue';
-
+import type { Message, TextMessage, } from '@/types/db/MessagesTable';
+import type { AttachDialogProps } from '@/components/chat/form/attach/AttachDialog.vue';
 
 interface messageForm extends TextMessage {
-	attachedFiles?: MediaMessage[] | FileMessage[]
-}
+	attachedFiles: AttachDialogProps['fileList']
+};
 
 const { showMessage } = useSnackbarStore();
 const emit = defineEmits<{
@@ -35,12 +34,11 @@ const emit = defineEmits<{
 }>();
 const messageState: messageForm = reactive({
 	text: '',
-	attachedFiles: [],
+	attachedFiles: [] as AttachDialogProps['fileList'],
 });
 const attachDialogState = reactive({
 	show: false as AttachDialogProps['modelValue'],
 	contentType: 'file' as AttachDialogProps['contentType'],
-	fileList: [] as AttachDialogProps['fileList'],
 });
 
 const createTextMessage = () => {
@@ -53,6 +51,7 @@ const createTextMessage = () => {
 };
 const createAttachment = (type: AttachDialogProps['contentType'], content: TextMessage | AttachFormContent) => {
 	emit('submitForm', content, type === 'image' || type === 'video' ? 'media' : type);
+	messageState.attachedFiles = [];
 };
 
 const attachFile = async (type: Exclude<Message['type'], 'text'>, e: Event) => {
@@ -71,12 +70,11 @@ const attachFile = async (type: Exclude<Message['type'], 'text'>, e: Event) => {
 		attachDialogState.contentType = 'image';
 	}
 	else if (type === 'file') attachDialogState.contentType = 'file';
-	attachDialogState.fileList = files.map(f => ({ id: uuidv4(), fileData: f }));
+	messageState.attachedFiles = files.map(f => ({ id: uuidv4(), fileData: f }));
 	attachDialogState.show = true;
 };
 const closeDialog = () => {
 	messageState.attachedFiles = [];
-	attachDialogState.fileList = [];
 };
 </script>
 

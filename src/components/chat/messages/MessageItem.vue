@@ -3,24 +3,33 @@
 		<v-avatar size="30px" :image="sender.photoURL || defaultAvatar" :class="self ? 'ml-2' : 'mr-2'"
 			class="sender__avatar" @click="$router.push({ name: 'user-id', params: { id: sender.id } })"
 			:title="sender.displayName" />
+
 		<v-card min-width="120px" max-width="850px" max-height="65vh" density="compact" class="message__card mb-4"
 			:class="self ? 'bg-light-blue-darken-3' : ''" variant="tonal">
+
 			<v-card-title v-if="type === 'text'" class="message__head d-flex flex-row align-center">
 				<small class="sender__name" @click="$router.push({ name: 'user-id', params: { id: sender.id } })">{{
 					sender.displayName }}</small>
 			</v-card-title>
-			<v-card-text class="message__content pb-1">
+
+			<v-card-text class="message__content pb-1"
+				:class="type === 'file' ? 'pl-2 pt-2' : type === 'media' ? 'pl-3 pt-2' : ''">
+
 				<p class="message__text" :class="type !== 'text' && (<MediaContent>content).subtitle ? 'mb-4' : ''">
 					{{ type === 'text' ? (<TextContent>content).text : type === 'media' ?
 						(<MediaContent | FileContent>content).subtitle : '' }}</p>
 
-				<MediaMessage v-if="type === 'media'" :images="(<MediaContent>content).images"
+				<component :is="type === 'media' ? MediaMessage : type === 'file' ? FileMessage : undefined"
+					v-bind="{ images: (<MediaContent>content).images, files: (<FileContent>content).files, alt: (<MediaContent>content).subtitle }"
+					:class="{ 'my-2': type === 'media', 'pr-3': type === 'file' }" />
+
+				<!-- <MediaMessage v-if="type === 'media'" :images="(<MediaContent>content).images"
 					:alt="(<MediaContent>content).subtitle" class="my-2" />
 
-				<FileMessage v-else-if="type === 'file'" :files="(<FileContent>content).files" class="pr-3" />
+				<FileMessage v-else-if="type === 'file'" :files="(<FileContent>content).files" class="pr-3" /> -->
 
 				<i18n-d tag="small" :value="created_at" :format="messagesDate" scope="global" locale="ru-RU"
-					class="message__time mt-2" />
+					:class="{ 'mt-2': type !== 'file' }" class="message__time" />
 			</v-card-text>
 		</v-card>
 	</div>
