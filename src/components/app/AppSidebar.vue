@@ -28,15 +28,15 @@
 import messages from '@/utils/messages.json';
 import { ref } from 'vue';
 import { computedAsync, useVModel } from '@vueuse/core';
-import { useChat } from '@/composables/chat';
+import { getChatInfoById } from '@/services/chat';
 import { storeToRefs } from 'pinia';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { useUserdataStore } from '@/stores/userdata';
-import type { ChatInfo } from '@/composables/chat';
+import { setChatName, setChatAvatar } from '@/utils/chat';
+import type { ChatInfo } from '@/services/chat';
 
 const { showMessage } = useSnackbarStore();
 const { getUChats: userChats, getUInfo: userInfo } = storeToRefs(useUserdataStore());
-const { getChatInfoById, setChatName, setChatAvatar } = useChat();
 const loading = ref(true);
 
 const defaultAvatar = new URL('@/assets/img/default_user_avatar.jpg', import.meta.url).href;

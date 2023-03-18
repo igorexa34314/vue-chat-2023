@@ -43,16 +43,14 @@ import messages from '@/utils/messages.json';
 import { computed } from 'vue';
 import { useUserdataStore } from '@/stores/userdata';
 import { useRoute, useRouter } from 'vue-router';
-import { useAuth } from '@/composables/auth';
-import { useChat } from '@/composables/chat';
+import { getUid } from '@/services/auth';
+import { joinPrivateChat } from '@/services/chat';
 import { useMeta } from 'vue-meta';
 import { useSnackbarStore } from '@/stores/snackbar';
 
 const defaultAvatar = new URL('@/assets/img/default_user_avatar.jpg', import.meta.url).href;
 
-const { getUid } = useAuth();
 const { showMessage } = useSnackbarStore();
-const { joinPrivateChat } = useChat();
 const route = useRoute();
 const { push } = useRouter();
 const userdataStore = useUserdataStore();

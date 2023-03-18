@@ -15,8 +15,7 @@
 </template>
 
 <script setup lang="ts">
-import { formatFileSize } from '@/utils/sizeFormat';
-import { getFileExt } from '@/composables/message';
+import { formatFileSize, getFileExt } from '@/utils/filters/messages';
 import type { AttachedContent } from '@/components/chat/form/attach/AttachDialog.vue';
 
 const props = defineProps<{

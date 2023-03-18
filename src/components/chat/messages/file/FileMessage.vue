@@ -1,6 +1,7 @@
 <template>
-	<div v-if="files.length" class="file-message__wrapper">
-		<div v-for="(file, index) in files" :key="file.id" :class="{ 'mb-1': index !== (files.length - 1) }"
+	<div v-if="content.files.length" class="file-message__wrapper">
+		<p v-if="content.subtitle.length" class="message__subtitle mb-3">{{ content.subtitle }}</p>
+		<div v-for="(file, index) in content.files" :key="file.id" :class="{ 'mb-1': index !== (content.files.length - 1) }"
 			class="d-flex align-center">
 			<v-hover v-slot="{ isHovering, props }">
 				<div class="file-icon" v-bind="props" style="cursor: pointer;">
@@ -22,19 +23,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, PropType } from 'vue';
-import { formatFileSize as formatSize } from '@/utils/sizeFormat';
+import { ref, reactive, PropType } from 'vue';
+import { formatFileSize, getFileExt } from '@/utils/filters/messages';
 import { ref as storageRef, getBlob } from 'firebase/storage';
 import { useFirebaseStorage } from 'vuefire';
-import { getFileExt } from '@/composables/message';
 import type { FileMessage } from '@/types/db/MessagesTable';
 
 const props = defineProps({
-	files: {
-		type: Array as PropType<FileMessage['files']>,
+	content: {
+		type: Object as PropType<FileMessage>,
 		required: true
 	},
-	alt: String,
 });
 
 const linkElem = ref<HTMLLinkElement>();
@@ -58,7 +57,6 @@ const downloadFile = async (file: FileMessage['files'][number]) => {
 		console.error(e);
 	}
 }
-const formatFileSize = computed(() => (size: number) => formatSize(size));
 </script>
 
 <style lang="scss" scoped>

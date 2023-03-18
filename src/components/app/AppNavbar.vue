@@ -43,14 +43,13 @@
 import messages from '@/utils/messages.json';
 import { reactive, ref, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
-import { useAuth } from '@/composables/auth';
+import { logout } from '@/services/auth';
 import { useUserdataStore } from '@/stores/userdata';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { VTextField } from 'vuetify/components';
 
 
 const { push } = useRouter();
-const { logout } = useAuth();
 const { clearData } = useUserdataStore();
 const { showMessage } = useSnackbarStore();
 

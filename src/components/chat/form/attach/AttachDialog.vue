@@ -26,15 +26,15 @@
 </template>
 
 <script setup lang="ts">
-import FileAttachment from '@/components/chat/form/attach/attachments/FileAttachment.vue';
-import MediaAttachment from '@/components/chat/form/attach/attachments/MediaAttachment.vue';
+import FileAttachment from '@/components/chat/form/attach/FileAttachment.vue';
+import MediaAttachment from '@/components/chat/form/attach/MediaAttachment.vue';
 import { ref, reactive, computed, watchEffect, Ref } from "vue";
 import { useVModel } from '@vueuse/core';
 import { useSnackbarStore } from '@/stores/snackbar';
 import type { FileMessage, MediaMessage } from '@/types/db/MessagesTable';
 import type { AttachFormContent } from '@/stores/messages';
 
-export type AttachedContent = (AttachDialogProps['fileList'][number] & { preview?: string })[];
+export type AttachedContent = (AttachDialogProps['fileList'][number] & { sizes?: { w: number, h: number }, preview?: string })[];
 export interface AttachDialogProps {
 	modelValue?: boolean;
 	contentType: 'image' | 'video' | 'file';
@@ -73,53 +73,61 @@ const isDialogReady = computed(() => {
 const readFilesAsURL = (file: AttachDialogProps['fileList'][number]): Promise<AttachedContent[number]> => {
 	return new Promise((res, rej) => {
 		const reader = new FileReader();
-		reader.onload = () => res({ ...file, preview: reader.result } as AttachedContent[number]);
+		reader.onload = (e) => {
+			const preview = e.target?.result?.toString();
+			if (file.fileData.type.startsWith('image/')) {
+				const image = new Image();
+				image.src = preview || '';
+				image.onload = () => {
+					res({ ...file, sizes: { w: image.naturalWidth, h: image.naturalHeight }, preview } as AttachedContent[number]);
+				};
+				image.onerror = () => rej(image);
+			}
+			else res({ ...file, preview, } as AttachedContent[number]);
+		};
 		reader.onerror = () => rej(reader);
 		reader.readAsDataURL(file.fileData);
 	});
 };
 watchEffect(async () => {
 	if (props.fileList.length) {
-		const promises: (Promise<AttachedContent[number]>)[] = [];
-		for (const item of props.fileList) {
-			if (item.fileData.size > 3145728) {
+		const promises: Promise<AttachedContent[number]>[] = [];
+		for (const fileItem of props.fileList) {
+			if (fileItem.fileData.size > 3145728) {
 				showMessage('Допустимый размер файлов - до 3 Мбайт', 'red-darken-3', 2500);
 				closeDialog();
 				return;
 			}
-			promises.push(readFilesAsURL(item));
+			promises.push(readFilesAsURL(fileItem));
 		}
 		try {
 			(await Promise.all(promises)).forEach(item => {
-				formState.files.push({
-					id: item.id,
-					fileData: item.fileData,
-					preview: item.preview
-				});
+				const { id, sizes, preview, ...fData } = item;
+				formState.files.push({ id, sizes, preview, ...fData });
 			})
 		} catch (e: unknown) {
 			console.error(e);
 		}
 	}
 });
-
+const clearForm = () => {
+	formState.subtitle = '';
+	formState.files = [];
+};
 const submitHandler = () => {
 	const { subtitle, files } = formState;
 	emit('submit', props.contentType, {
 		subtitle,
 		files: files.map(file => {
 			const { preview, ...f } = file;
-			return { ...f, sizes: (attachment as Ref<InstanceType<typeof MediaAttachment>>).value?.getImageParams(f.id) };
+			return f;
 		}),
 	} as AttachFormContent);
-	emit('update:modelValue', false);
-	formState.subtitle = '';
-	formState.files = [];
+	closeDialog();
 };
 const closeDialog = () => {
 	emit('update:modelValue', false);
-	formState.subtitle = '';
-	formState.files = [];
+	clearForm();
 	emit('close');
 };
 const deleteAttachItem = (fileId: AttachedContent[number]['id']) => {

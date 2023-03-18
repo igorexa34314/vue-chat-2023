@@ -72,7 +72,7 @@ const zoomImage = () => {
 }
 .fullsize-image__wrapper {
 	pointer-events: all;
-	// transform: translate(-50%, -50%);
+	transition: transform 0.09s ease-in 0s;
 	margin: 0 auto;
 	& img {
 		display: block;

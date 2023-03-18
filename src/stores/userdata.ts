@@ -2,15 +2,13 @@ import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { getFirestore, getDoc, setDoc, onSnapshot, doc, updateDoc, arrayUnion, Timestamp, collection } from 'firebase/firestore';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { useAuth } from '@/composables/auth';
-import { useChat } from '@/composables/chat';
+import { getUid } from '@/services/auth';
+import { createSelfChat } from '@/services/chat';
 import { uuidv4 } from '@firebase/util';
 import { FirebaseError } from '@firebase/util';
 import type { UserData, UserInfo } from '@/types/db/UserdataTable';
 
 export const useUserdataStore = defineStore('userdata', () => {
-	const auth = useAuth();
-	const { createSelfChat } = useChat();
 	const storage = getStorage();
 	const db = getFirestore();
 	const usersCol = collection(db, 'userdata');
@@ -46,7 +44,7 @@ export const useUserdataStore = defineStore('userdata', () => {
 						displayName,
 						phoneNumber,
 						photoURL,
-						created_at: Timestamp.fromDate(new Date(metadata.creationTime || Date.now()))
+						created_at: Timestamp.fromDate(new Date(metadata.creationTime)) || Timestamp.now()
 						// location: (await navigator.geolocation.getCurrentPosition()) || 'unknown'
 					},
 					chats: [],
@@ -63,12 +61,12 @@ export const useUserdataStore = defineStore('userdata', () => {
 	const updateUserAvatar = async (avatar: File | File[]) => {
 		try {
 			if (avatar instanceof File) {
-				const avatarRef = storageRef(storage, `userdata/${await auth.getUid()}/avatar/${uuidv4() + '.' + avatar.name.split('.')[avatar.name.split('.').length - 1]}`);
+				const avatarRef = storageRef(storage, `userdata/${await getUid()}/avatar/${uuidv4() + '.' + avatar.name.split('.')[avatar.name.split('.').length - 1]}`);
 				await uploadBytes(avatarRef, avatar, {
 					contentType: avatar.type
 				});
 				const avatarURL = await getDownloadURL(avatarRef);
-				await updateDoc(getUserRef(await auth.getUid()), {
+				await updateDoc(getUserRef(await getUid()), {
 					'info.photoURL': avatarURL
 				});
 			}
@@ -80,7 +78,7 @@ export const useUserdataStore = defineStore('userdata', () => {
 	const updateUserdata = async (newData: Partial<UserInfo>) => {
 		try {
 			const infoField = Object.assign({}, ...(Object.keys(newData) as (keyof Partial<UserInfo>)[]).map(key => ({ [`info.${key}`]: newData[key] })));
-			await updateDoc(getUserRef(await auth.getUid()), infoField);
+			await updateDoc(getUserRef(await getUid()), infoField);
 		} catch (e: unknown) {
 			console.error(e);
 			throw e instanceof FirebaseError ? e.code : e;
@@ -88,7 +86,7 @@ export const useUserdataStore = defineStore('userdata', () => {
 	};
 	const fetchAuthUserdata = async () => {
 		try {
-			const userRef = getUserRef(await auth.getUid());
+			const userRef = getUserRef(await getUid());
 			const unsubscribe = onSnapshot(userRef, udata => {
 				if (udata && udata.exists()) {
 					const { info, ...data } = udata.data() as UserData;
@@ -122,7 +120,7 @@ export const useUserdataStore = defineStore('userdata', () => {
 	};
 	const addToFriend = async (uid: UserInfo['uid']) => {
 		try {
-			await updateDoc(getUserRef(await auth.getUid()), {
+			await updateDoc(getUserRef(await getUid()), {
 				friendsUid: arrayUnion(uid)
 			});
 		} catch (e: unknown) {

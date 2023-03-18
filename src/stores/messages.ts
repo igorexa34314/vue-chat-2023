@@ -1,14 +1,12 @@
 import { defineStore } from 'pinia';
 import { ref, reactive } from 'vue';
-import { useAuth } from '@/composables/auth';
-import { FirebaseError } from 'firebase/app';
+import { getUid, fbErrorHandler as errorHandler } from '@/services/auth';
 import { useUserdataStore } from '@/stores/userdata';
 import { getFirestore, collection, doc, setDoc, orderBy, query, Timestamp, onSnapshot, limit, getDoc, getDocs, startAfter } from 'firebase/firestore';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { uuidv4 } from '@firebase/util';
 import type { UserInfo } from '@/types/db/UserdataTable';
 import type { DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
-import type { ChatInfo } from '@/composables/chat';
+import type { ChatInfo } from '@/services/chat';
 import type { Message as DBMessage, TextMessage, MediaMessage, FileMessage } from '@/types/db/MessagesTable';
 
 export interface Message<T extends DBMessage['type'] = DBMessage['type']> extends Omit<DBMessage, 'sender_id'> {
@@ -28,7 +26,6 @@ export type direction = 'top' | 'bottom';
 export type LastVisibleFbRef = Record<direction, QueryDocumentSnapshot<DocumentData> | null>;
 
 export const useMessagesStore = defineStore('messages', () => {
-	const { getUid } = useAuth();
 	const { getUserdataById } = useUserdataStore();
 	const db = getFirestore();
 	const storage = getStorage();
@@ -88,8 +85,7 @@ export const useMessagesStore = defineStore('messages', () => {
 				} as Awaited<T>;
 			}
 		} catch (e: unknown) {
-			console.error(e);
-			throw e instanceof FirebaseError ? e.code : e;
+			errorHandler(e);
 		}
 	};
 	const uploadFile = async <T extends FileMessage>(chatId: ChatInfo['id'], messageId: Message['id'], { subtitle, files }: AttachFormContent) => {
@@ -124,8 +120,7 @@ export const useMessagesStore = defineStore('messages', () => {
 				} as Awaited<T>;
 			}
 		} catch (e: unknown) {
-			console.error(e);
-			throw e instanceof FirebaseError ? e.code : e;
+			errorHandler(e);
 		}
 	};
 	const createMessage = async (chatId: ChatInfo['id'], type: Message['type'], content: TextMessage | AttachFormContent) => {
@@ -145,8 +140,7 @@ export const useMessagesStore = defineStore('messages', () => {
 				sender_id: await getUid()
 			});
 		} catch (e: unknown) {
-			console.error(e);
-			throw e instanceof FirebaseError ? e.code : e;
+			errorHandler(e);
 		}
 	};
 	const getMessageSenderInfo = async (message: DBMessage) => {
@@ -155,8 +149,7 @@ export const useMessagesStore = defineStore('messages', () => {
 			const { displayName, photoURL } = (await getUserdataById(sender_id as string))?.info as UserInfo;
 			return { ...m, sender: { id: sender_id, displayName, photoURL } } as Message;
 		} catch (e: unknown) {
-			console.error(e);
-			throw e instanceof FirebaseError ? e.code : e;
+			errorHandler(e);
 		}
 	};
 	const fetchChatMessages = async (chatId: ChatInfo['id'], lmt: number = 10) => {
@@ -174,7 +167,7 @@ export const useMessagesStore = defineStore('messages', () => {
 					}
 				});
 				initialMessages.forEach(m => {
-					promises.push(getMessageSenderInfo(m));
+					promises.push(getMessageSenderInfo(m) as Promise<Message>);
 				});
 				(await Promise.all(promises)).forEach(m => {
 					addMessage(m, 'end');
@@ -185,8 +178,7 @@ export const useMessagesStore = defineStore('messages', () => {
 			});
 			return unsubscribe;
 		} catch (e: unknown) {
-			console.error(e);
-			throw e instanceof FirebaseError ? e.code : e;
+			errorHandler(e);
 		}
 	};
 	const loadMoreChatMessages = async (chatId: ChatInfo['id'], direction: direction = 'top', perPage: number = 10) => {
@@ -211,7 +203,7 @@ export const useMessagesStore = defineStore('messages', () => {
 					initialMessages.push({ ...msgData, created_at: (<Timestamp>created_at).toDate() });
 				});
 				initialMessages.forEach(m => {
-					promises.push(getMessageSenderInfo(m));
+					promises.push(getMessageSenderInfo(m) as Promise<Message>);
 				});
 				(await Promise.all(promises)).forEach(m => {
 					addMessage(m, direction === 'top' ? 'start' : 'end');
@@ -219,8 +211,7 @@ export const useMessagesStore = defineStore('messages', () => {
 				lastVisible[direction] = messagesRef.size >= perPage ? messagesRef.docs[messagesRef.docs.length - 1] : null;
 			}
 		} catch (e: unknown) {
-			console.error(e);
-			throw e instanceof FirebaseError ? e.code : e;
+			errorHandler(e);
 		}
 	};
 	return {

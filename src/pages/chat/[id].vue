@@ -15,8 +15,9 @@
 			</div>
 			<!-- <div v-else class="text-h5 pa-4">Сообщений в чате пока нет</div> -->
 			<Transition name="fixed-btn-fade">
-				<v-btn v-if="chatEl && chatEl.scrollHeight > chatEl.clientHeight && !bottom" class="fixed-button-scrolldown"
-					color="blue-grey-darken-1" icon="mdi-arrow-down" size="large" @click="scrollChatBottom('smooth')" />
+				<v-btn v-if="chatEl && chatEl.scrollHeight > chatEl.clientHeight && !isScrollOnBottom"
+					class="fixed-button-scrolldown" color="blue-grey-darken-1" icon="mdi-arrow-down" size="large"
+					@click="scrollBottom('smooth')" />
 			</Transition>
 			<MessageForm class="message-form py-4 px-6" @submitForm="createMessage" />
 		</div>
@@ -39,22 +40,22 @@ import { useSnackbarStore } from '@/stores/snackbar';
 import { useUserdataStore } from '@/stores/userdata';
 import { AttachFormContent, useMessagesStore } from '@/stores/messages';
 import { useCurrentUser } from 'vuefire';
-import { useChat } from '@/composables/chat';
-import { ref, computed, watchEffect, toRefs, nextTick, onUnmounted } from 'vue';
+import { getChatInfoById } from '@/services/chat';
+import { ref, computed, watchEffect, nextTick, onUnmounted } from 'vue';
 import { useMeta } from 'vue-meta';
 import { useRoute } from 'vue-router';
-import { useScroll, useInfiniteScroll, watchPausable } from '@vueuse/core';
+import { useChatScroll } from '@/composables/useChatScroll';
 import { useDropZone } from '@vueuse/core';
+import { storeToRefs } from 'pinia';
+import { setChatName } from '@/utils/chat';
 import type { Unsubscribe } from '@firebase/database';
-import type { Message, LastVisibleFbRef } from '@/stores/messages';
-import type { ChatInfo } from '@/composables/chat';
+import type { Message } from '@/stores/messages';
+import type { ChatInfo } from '@/services/chat';
 import type { TextMessage } from '@/types/db/MessagesTable';
 import type { VDialog } from 'vuetify/components';
-import { storeToRefs } from 'pinia';
 
 const { getUChats: userChats } = storeToRefs(useUserdataStore());
 const route = useRoute();
-const { getChatInfoById, setChatName } = useChat();
 const { showMessage } = useSnackbarStore();
 const messagesStore = useMessagesStore();
 
@@ -62,18 +63,26 @@ const chatInfo = ref<ChatInfo>();
 const chatEl = ref<HTMLDivElement>();
 const loading = ref(true);
 const messages = computed<Message[]>(() => messagesStore.messages);
-const lastVisible = computed<LastVisibleFbRef>(() => messagesStore.lastVisible);
-let unsubscribe: Unsubscribe;
-
+let unsubscribe: Unsubscribe | undefined;
+let chatId: string = route.params.id as string;
 const uid = useCurrentUser().value?.uid;
-let chatId = route.params.id as string;
 
 const attachDialog = ref(false);
 const dropZone = ref<VDialog | HTMLElement>();
 
+const { scrollOpacity, isScrollOnBottom, scrollBottom } = useChatScroll(chatId, chatEl, messages);
+
 const { isOverDropZone } = useDropZone(dropZone.value as HTMLElement, (files) => {
 	console.log('droppped', files)
 });
+
+//Dynamic page title
+useMeta(computed(() => {
+	if (chatInfo.value && Object.keys(chatInfo.value).length)
+		return { title: setChatName.value(chatInfo.value) };
+	else return { title: 'Чат' };
+}));
+
 const addAttachment = () => {
 	console.log('Drag enter');
 	attachDialog.value = true;
@@ -82,58 +91,6 @@ const removeAttachment = () => {
 	console.log('Drag leave');
 	attachDialog.value = false;
 };
-
-// Hide scroll when it's inactive
-// let time;
-// const scrollVisibility = ref('hidden');
-// const showScroll = () => {
-// 	scrollVisibility.value = 'visible';
-// 	if (!time) {
-// 		time = setTimeout(() => {
-// 			scrollVisibility.value = 'hidden';
-// 			console.log('timeout');
-// 		}, 1000);
-// 	}
-// };
-
-const { arrivedState } = useScroll(chatEl, {
-	offset: { bottom: 50 },
-})
-const { bottom } = toRefs(arrivedState);
-
-const scrollChatBottom = (behavior: ScrollBehavior = 'auto') => {
-	if (chatEl.value && chatEl.value?.scrollHeight > chatEl.value?.clientHeight) {
-		chatEl.value.scrollTo({
-			top: chatEl.value.scrollHeight,
-			behavior,
-		});
-	}
-};
-
-// Watchers to scroll bottom when new message add
-const { pause: pauseMessageWatcher, resume: resumeMessageWatcher } = watchPausable(messages, () => {
-	scrollChatBottom();
-}, { deep: true, flush: 'post' });
-
-// Inf. scroll on top
-useInfiniteScroll(chatEl, async () => {
-	if (lastVisible.value.top) {
-		pauseMessageWatcher();
-		await messagesStore.loadMoreChatMessages(chatId, 'top');
-		resumeMessageWatcher();
-	}
-}, { distance: 10, direction: 'top', preserveScrollPosition: true, }
-);
-
-// Inf. scroll on bottom
-useInfiniteScroll(chatEl, async () => {
-	if (lastVisible.value.bottom) {
-		pauseMessageWatcher();
-		await messagesStore.loadMoreChatMessages(chatId, 'bottom');
-		resumeMessageWatcher();
-	}
-}, { distance: 10, direction: 'bottom', preserveScrollPosition: false, }
-);
 
 // Reset messages when switching chat
 watchEffect(async (onCleanup) => {
@@ -158,17 +115,6 @@ watchEffect(async (onCleanup) => {
 	});
 });
 
-// Unsubscribe from receiving messages realtime firebase
-onUnmounted(() => {
-	messagesStore.clearMessages();
-	unsubscribe?.();
-});
-//Dynamic page title
-useMeta(computed(() => {
-	if (chatInfo.value && Object.keys(chatInfo.value).length)
-		return { title: setChatName.value(chatInfo.value) };
-	else return { title: 'Чат' };
-}));
 const enTransition = ref(false);
 
 const createMessage = async (content: TextMessage | AttachFormContent, type: Message['type'] = 'text') => {
@@ -180,6 +126,12 @@ const createMessage = async (content: TextMessage | AttachFormContent, type: Mes
 	}
 	enTransition.value = false;
 };
+
+// Unsubscribe from receiving messages realtime firebase
+onUnmounted(() => {
+	messagesStore.clearMessages();
+	unsubscribe?.();
+});
 </script>
 
 <style lang="scss" scoped>
@@ -227,15 +179,14 @@ const createMessage = async (content: TextMessage | AttachFormContent, type: Mes
 ::-webkit-scrollbar-track {
 	border-radius: 0.5rem;
 }
-
 /* Handle */
 ::-webkit-scrollbar-thumb {
-	// visibility: v-bind('scrollVisibility');
-	background-color: rgba($color: #ffffff, $alpha: .2);
+	background-color: v-bind(scrollOpacity);
 	border-radius: 0.5rem;
 	transition: all 0.35s ease-in 0s;
 	&:hover {
 		background-color: rgba($color: #ffffff, $alpha: .4);
+		transition: all 0.35s ease-in 0s;
 	}
 }
 .attach-frame {

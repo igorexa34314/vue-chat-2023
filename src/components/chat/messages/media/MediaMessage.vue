@@ -1,7 +1,11 @@
 <template>
-	<div class="images-frame">
-		<ImageFrame v-for="img of images" :image="img" :key="img.id" @open="openInOverlay" :alt="alt" />
-		<FullsizeOverlay v-model="overlayState.show" :content="overlayState.content" @close="overlayClosed" />
+	<div class="media-message">
+		<p v-if="content.subtitle.length" class="message__subtitle mb-3">{{ content.subtitle }}</p>
+		<div class="images-frame">
+			<ImageFrame v-for="img of content.images" :image="img" :key="img.id" @open="openInOverlay"
+				:alt="content.subtitle" />
+			<FullsizeOverlay v-model="overlayState.show" :content="overlayState.content" @close="overlayClosed" />
+		</div>
 	</div>
 </template>
 
@@ -13,11 +17,10 @@ import type { MediaMessage } from '@/types/db/MessagesTable';
 import type { ImageWithPreviewURL } from '@/components/chat/messages/media/ImageFrame.vue';
 
 const props = defineProps({
-	images: {
-		type: Array as PropType<MediaMessage['images']>,
+	content: {
+		type: Object as PropType<MediaMessage>,
 		required: true,
 	},
-	alt: String,
 });
 
 const overlayState: { show: boolean; content: ImageWithPreviewURL | null } = reactive({
