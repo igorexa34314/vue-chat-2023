@@ -8,7 +8,7 @@
 					formState.files.length === 1 ? 'файл' : formState.files.length > 4 ? 'файлов' : 'файла') }}</h3>
 			</v-card-title>
 			<v-card-text class="py-1">
-				<div class="attachments custom-scroll py-2">
+				<div class="attachments custom-scroll py-2 pr-4">
 					<component
 						:is="contentType === 'image' ? MediaAttachment : contentType === 'file' ? FileAttachment : undefined"
 						v-bind="{ files: formState.files }" ref="attachment" @deleteAttach="deleteAttachItem" />
@@ -152,6 +152,18 @@ const deleteAttachItem = (fileId: AttachedContent[number]['id']) => {
 	opacity: 55%;
 }
 ::-webkit-scrollbar {
-	width: 0.4rem;
+	width: 0.35rem;
+}
+::-webkit-scrollbar-track {
+	border-radius: 0.5rem;
+}
+::-webkit-scrollbar-thumb {
+	background-color: rgba($color: #ffffff, $alpha: .2);
+	border-radius: 0.5rem;
+	transition: all 0.35s ease-in 0s;
+	&:hover {
+		background-color: rgba($color: #ffffff, $alpha: .4);
+		transition: all 0.35s ease-in 0s;
+	}
 }
 </style>

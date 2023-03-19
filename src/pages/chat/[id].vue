@@ -9,9 +9,11 @@
 				<div class="messages-field mt-4">
 					<TransitionGroup :name="enTransition ? 'messages-list' : ''">
 						<MessageItem v-for="m in messages" :key="m.id" :self="uid === m.sender.id" :type="m.type"
-							:content="m.content" :sender="m.sender" :created_at="<Date>m.created_at" />
+							:content="m.content" :sender="m.sender" :created_at="<Date>m.created_at"
+							@contextmenu.prevent="openCtxMenu" :id="`message-${m.id}`" :data-message-id="m.id" />
 					</TransitionGroup>
 				</div>
+				<ContextMenu v-model="msgCtxMenu.show" :attach="msgCtxMenu.attachEl" />
 			</div>
 			<!-- <div v-else class="text-h5 pa-4">Сообщений в чате пока нет</div> -->
 			<Transition name="fixed-btn-fade">
@@ -36,12 +38,13 @@
 import sbMessages from '@/utils/messages.json';
 import MessageItem from '@/components/chat/messages/MessageItem.vue';
 import MessageForm from '@/components/chat/form/MessageForm.vue';
+import ContextMenu from '@/components/chat/ContextMenu.vue';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { useUserdataStore } from '@/stores/userdata';
 import { AttachFormContent, useMessagesStore } from '@/stores/messages';
 import { useCurrentUser } from 'vuefire';
 import { getChatInfoById } from '@/services/chat';
-import { ref, computed, watchEffect, nextTick, onUnmounted } from 'vue';
+import { ref, reactive, computed, watchEffect, nextTick, onUnmounted } from 'vue';
 import { useMeta } from 'vue-meta';
 import { useRoute } from 'vue-router';
 import { useChatScroll } from '@/composables/useChatScroll';
@@ -126,6 +129,20 @@ const createMessage = async (content: TextMessage | AttachFormContent, type: Mes
 	}
 	enTransition.value = false;
 };
+
+// Context menu on message right click
+const msgCtxMenu = reactive({
+	show: false,
+	attachEl: '' as string | boolean | Element,
+});
+const openCtxMenu = (e: MouseEvent) => {
+	console.log(`[data-message-id="${(e.target as HTMLElement).getAttribute('data-message-id') || ''}"]`);
+	// msgCtxMenu.position.x = e.clientX;
+	// msgCtxMenu.position.y = e.clientY;
+	msgCtxMenu.attachEl = `[data-message-id="${(e.target as HTMLElement).getAttribute('data-message-id') || ''}"]`;
+	msgCtxMenu.show = true;
+};
+
 
 // Unsubscribe from receiving messages realtime firebase
 onUnmounted(() => {
