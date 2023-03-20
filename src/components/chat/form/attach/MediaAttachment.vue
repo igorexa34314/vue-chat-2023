@@ -1,10 +1,15 @@
 <template>
 	<div class="images-grid">
-		<v-card v-for="img of files" class="image-wrapper d-flex" :key="img.id">
-			<v-img ref="imgsEl" :src="img.preview" :alt="img.fileData.name" :id="img.id" cover />
-			<v-btn color="blue-grey-darken-4" variant="text" position="absolute" icon="mdi-delete" class="delete-media-btn"
-				@click="emit('deleteAttach', img.id)" />
-		</v-card>
+		<v-row dense>
+			<v-col v-for="(img, index) in files" :key="img.id" :cols="files.length % 2 && !index ? '12' : '6'">
+				<v-card class="image-wrapper d-flex" height="100%" max-height="300px">
+					<v-img aspect-ratio="1" ref="imgsEl" :src="img.preview" :alt="img.fileData.name" :id="img.id" cover />
+					<v-btn color="white" variant="text" position="absolute" icon="mdi-delete"
+						class="bg-blue-grey-darken-2 delete-media-btn" @click="emit('deleteAttach', img.id)"
+						density="comfortable" elevation="5" />
+				</v-card>
+			</v-col>
+		</v-row>
 	</div>
 </template>
 
@@ -29,14 +34,11 @@ defineExpose({ isImgsReady });
 <style scoped lang="scss">
 .images-grid {
 	padding: 0.7em 0.2em 0.5em 0;
+	width: 100%;
+	height: 100%;
 	max-width: 450px;
 	max-height: 400px;
 	margin: 0 auto;
-	display: grid;
-	justify-content: space-between;
-	grid-gap: 8px;
-	grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-	grid-template-rows: repeat(auto-fit, minmax(48.5%, 1fr));
 
 	@media(max-width: 760px) {
 		max-width: 400px;
@@ -44,13 +46,13 @@ defineExpose({ isImgsReady });
 
 	@media(max-width: 560px) {
 		max-width: 320px;
-		grid-template-rows: repeat(auto-fit, minmax(35%, 1fr));
 	}
 }
 
 .delete-media-btn {
 	bottom: 0;
 	right: 0;
+	transform: translate(-25%, -25%);
 }
 
 .image-wrapper {}

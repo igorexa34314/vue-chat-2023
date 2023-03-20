@@ -1,7 +1,8 @@
 <template>
-	<v-menu v-model="showMenu" ref="ctxMenu" :attach="attach" :persistent="true" transition="scale-transition">
+	<v-menu ref="ctxMenu" :activator="activator" transition="scale-transition" max-width="400"
+		:contentProps="{ style: { top: `${position?.y}px`, left: `${position?.x}px` } }">
 		<template #activator="{ props, isActive }">
-			<slot name="activator" :props="props" :isActive="isActive"></slot>
+			<slot name="activator" v-bind="{ props, isActive }"></slot>
 		</template>
 		<v-list>
 			<v-list-item v-for="item of contextMenuItems" :key="item.value" :title="item.title" />
@@ -11,10 +12,12 @@
 
 <script setup lang="ts">
 import { useVModel } from '@vueuse/core';
+import type { ComponentPublicInstance } from 'vue';
 
 const props = withDefaults(defineProps<{
 	modelValue?: boolean;
-	attach?: string | boolean | Element;
+	activator?: string | Element | ComponentPublicInstance;
+	position?: { x: number | string, y: number | string };
 }>(), { modelValue: false });
 
 const emit = defineEmits<{

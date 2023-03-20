@@ -32,7 +32,7 @@ import { ref, reactive, computed, watchEffect, Ref } from "vue";
 import { useVModel } from '@vueuse/core';
 import { useSnackbarStore } from '@/stores/snackbar';
 import type { FileMessage, MediaMessage } from '@/types/db/MessagesTable';
-import type { AttachFormContent } from '@/stores/messages';
+import type { AttachFormContent } from '@/services/message';
 
 export type AttachedContent = (AttachDialogProps['fileList'][number] & { sizes?: { w: number, h: number }, preview?: string })[];
 export interface AttachDialogProps {
@@ -141,7 +141,7 @@ const deleteAttachItem = (fileId: AttachedContent[number]['id']) => {
 <style lang="scss" scoped>
 .attachments {
 	overflow: auto;
-	max-height: 400px;
+	max-height: 420px;
 	display: flex;
 	flex-direction: column;
 	justify-content: flex-start;

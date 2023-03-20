@@ -27,7 +27,7 @@ import AttachDialog from '@/components/chat/form/attach/AttachDialog.vue';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { reactive } from 'vue';
 import { uuidv4 } from '@firebase/util';
-import type { AttachFormContent } from '@/stores/messages';
+import type { AttachFormContent } from '@/services/message';
 import type { Message, TextMessage, } from '@/types/db/MessagesTable';
 import type { AttachDialogProps } from '@/components/chat/form/attach/AttachDialog.vue';
 

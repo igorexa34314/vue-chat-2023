@@ -24,6 +24,7 @@
 import InfoForm from '@/components/profile/InfoForm.vue';
 import messages from '@/utils/messages.json';
 import { storeToRefs } from 'pinia';
+import { updateUserdata, updateUserAvatar } from '@/services/userdata';
 import { useUserdataStore } from '@/stores/userdata';
 import { ref } from 'vue';
 import { useSnackbarStore } from '@/stores/snackbar';
@@ -32,9 +33,7 @@ import type { ProfileForm } from '@/components/profile/InfoForm.vue';
 
 useMeta({ title: 'Мой профиль' });
 
-const userdataStore = useUserdataStore();
-const { getUInfo: userInfo } = storeToRefs(userdataStore);
-const { updateUserdata, updateUserAvatar } = userdataStore;
+const { getUInfo: userInfo } = storeToRefs(useUserdataStore());
 const { showMessage } = useSnackbarStore();
 
 const profileTabs = [

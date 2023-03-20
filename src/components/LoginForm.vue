@@ -35,9 +35,9 @@ import { reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { loginWithEmail, signInWithGoogle } from '@/services/auth';
 import { useSnackbarStore } from '@/stores/snackbar';
+import { googleImg } from '@/utils/globals';
 import type { VForm } from 'vuetify/components';
 
-const googleImg = new URL('@/assets/img/google.png', import.meta.url).href;
 
 const { push } = useRouter();
 const { showMessage } = useSnackbarStore();

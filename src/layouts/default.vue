@@ -14,10 +14,8 @@
 import AppNavbar from '@/components/app/AppNavbar.vue';
 import AppSidebar from '@/components/app/AppSidebar.vue';
 import { ref, onUnmounted } from 'vue';
-import { useUserdataStore } from '@/stores/userdata';
+import { fetchAuthUserdata } from '@/services/userdata';
 
-const userdataStore = useUserdataStore();
-const { fetchAuthUserdata } = userdataStore;
 const drawer = ref(true);
 
 // Fetching all auth userdata

@@ -1,9 +1,7 @@
 import { computed } from 'vue';
 import { useUserdataStore } from '@/stores/userdata';
+import { defaultAvatar, savedMessages } from '@/utils/globals';
 import type { ChatInfo } from '@/services/chat';
-
-const defaultAvatar = new URL('@/assets/img/default_user_avatar.jpg', import.meta.url).href;
-const savedMessages = new URL('@/assets/img/saved-messages.png', import.meta.url).href;
 
 export const setChatName = computed(() => (chat: ChatInfo) => {
 	const userdataStore = useUserdataStore();

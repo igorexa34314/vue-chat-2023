@@ -41,21 +41,19 @@
 <script setup lang="ts">
 import messages from '@/utils/messages.json';
 import { computed } from 'vue';
-import { useUserdataStore } from '@/stores/userdata';
+import { getUserdataById, addToFriend as addFriend} from '@/services/userdata';
 import { useRoute, useRouter } from 'vue-router';
 import { getUid } from '@/services/auth';
 import { joinPrivateChat } from '@/services/chat';
 import { useMeta } from 'vue-meta';
 import { useSnackbarStore } from '@/stores/snackbar';
-
-const defaultAvatar = new URL('@/assets/img/default_user_avatar.jpg', import.meta.url).href;
+import { defaultAvatar } from '@/utils/globals';
 
 const { showMessage } = useSnackbarStore();
 const route = useRoute();
 const { push } = useRouter();
-const userdataStore = useUserdataStore();
 
-const userdata = await userdataStore.getUserdataById(route.params.id as string);
+const userdata = await getUserdataById(route.params.id as string);
 const uid = await getUid();
 
 //Dynamic page title
@@ -76,7 +74,7 @@ const goToChat = async () => {
 };
 const addToFriend = async () => {
 	if (route.params.id) {
-		await userdataStore.addToFriend(route.params.id as string);
+		await addFriend(route.params.id as string);
 	}
 }
 </script>
