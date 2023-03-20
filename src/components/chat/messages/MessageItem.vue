@@ -30,7 +30,8 @@ import FileMessage from '@/components/chat/messages/file/FileMessage.vue';
 import TextMessage from '@/components/chat/messages/text/TextMessage.vue';
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { messagesDateFormat } from '@/utils/filters/messages'
+import { messagesDateFormat } from '@/utils/filters/messages';
+import { defaultAvatar } from '@/utils/globals';
 import type { Message } from '@/stores/messages';
 
 interface MessageItemProps {
@@ -41,7 +42,6 @@ interface MessageItemProps {
 	self?: boolean
 };
 
-const defaultAvatar = new URL('@/assets/img/default_user_avatar.jpg', import.meta.url).href;
 const messageComponent = computed(() => props.type === 'media' ? MediaMessage : props.type === 'file' ? FileMessage : TextMessage);
 
 const { push } = useRouter();

@@ -38,14 +38,13 @@
 import birthdayPicker from '@/components/UI/birthdayPicker.vue';
 import validations from '@/utils/validations';
 import { ref } from 'vue';
+import { defaultAvatar } from '@/utils/globals';
 import type { UserInfo } from '@/types/db/UserdataTable';
 import type { VForm } from 'vuetify/components';
 
 export interface ProfileForm extends Omit<UserInfo, 'created_at' | 'uid' | 'providerId'> {
 	avatar?: File[];
 }
-
-const defaultAvatar = new URL('@/assets/img/default_user_avatar.jpg', import.meta.url).href;
 
 const props = defineProps<{
 	uinfo: ProfileForm

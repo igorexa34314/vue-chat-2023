@@ -14,7 +14,7 @@
 			</v-hover>
 			<div class="file-details ml-2 text-subtitle-1 font-weight-medium">
 				<p class="text-subtitle-1" :title="file.fullname">{{ file.fullname }}</p>
-				<p class="mt-1 text-body-2">{{ formatFileSize(file.size) }}</p>
+				<p class="mt-1 text-body-2">{{ formatFileSize(file.fullsize) }}</p>
 			</div>
 		</div>
 		<a v-if="downloadLink.show" hidden ref="linkElem" :href="downloadLink.url" :download="downloadLink.filename"

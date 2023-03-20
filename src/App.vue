@@ -28,4 +28,8 @@ const AppName = import.meta.env.VITE_APP_NAME || 'My Chat';
 .v-divider {
   --v-border-opacity: 0.6 !important;
 }
+
+.no-background-hover:hover {
+  background-color: transparent !important;
+}
 </style>

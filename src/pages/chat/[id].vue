@@ -13,7 +13,6 @@
 							@contextmenu.prevent="openCtxMenu" :id="`message-${m.id}`" :data-message-id="m.id" />
 					</TransitionGroup>
 				</div>
-				<ContextMenu v-model="msgCtxMenu.show" :attach="msgCtxMenu.attachEl" />
 			</div>
 			<!-- <div v-else class="text-h5 pa-4">Сообщений в чате пока нет</div> -->
 			<Transition name="fixed-btn-fade">
@@ -38,12 +37,12 @@
 import sbMessages from '@/utils/messages.json';
 import MessageItem from '@/components/chat/messages/MessageItem.vue';
 import MessageForm from '@/components/chat/form/MessageForm.vue';
-import ContextMenu from '@/components/chat/ContextMenu.vue';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { useUserdataStore } from '@/stores/userdata';
-import { AttachFormContent, useMessagesStore } from '@/stores/messages';
+import { useMessagesStore } from '@/stores/messages';
 import { useCurrentUser } from 'vuefire';
 import { getChatInfoById } from '@/services/chat';
+import { createMessage as createDBMessage } from '@/services/message';
 import { ref, reactive, computed, watchEffect, nextTick, onUnmounted } from 'vue';
 import { useMeta } from 'vue-meta';
 import { useRoute } from 'vue-router';
@@ -56,6 +55,8 @@ import type { Message } from '@/stores/messages';
 import type { ChatInfo } from '@/services/chat';
 import type { TextMessage } from '@/types/db/MessagesTable';
 import type { VDialog } from 'vuetify/components';
+import type { ComponentPublicInstance } from 'vue';
+import type { AttachFormContent } from '@/services/message';
 
 const { getUChats: userChats } = storeToRefs(useUserdataStore());
 const route = useRoute();
@@ -123,7 +124,7 @@ const enTransition = ref(false);
 const createMessage = async (content: TextMessage | AttachFormContent, type: Message['type'] = 'text') => {
 	enTransition.value = true;
 	try {
-		await messagesStore.createMessage(chatId, type, content);
+		await createDBMessage(chatId, type, content);
 	} catch (e: unknown) {
 		showMessage(sbMessages[e as keyof typeof sbMessages] || e as string, 'red-darken-3', 2000);
 	}
@@ -133,13 +134,14 @@ const createMessage = async (content: TextMessage | AttachFormContent, type: Mes
 // Context menu on message right click
 const msgCtxMenu = reactive({
 	show: false,
-	attachEl: '' as string | boolean | Element,
+	activator: '' as string | Element | ComponentPublicInstance | undefined,
+	position: { x: 0, y: 0 }
 });
 const openCtxMenu = (e: MouseEvent) => {
 	console.log(`[data-message-id="${(e.target as HTMLElement).getAttribute('data-message-id') || ''}"]`);
-	// msgCtxMenu.position.x = e.clientX;
-	// msgCtxMenu.position.y = e.clientY;
-	msgCtxMenu.attachEl = `[data-message-id="${(e.target as HTMLElement).getAttribute('data-message-id') || ''}"]`;
+	msgCtxMenu.position.x = e.clientX;
+	msgCtxMenu.position.y = e.clientY;
+	msgCtxMenu.activator = `[data-message-id="${(e.target as HTMLElement).getAttribute('data-message-id') || ''}"]`;
 	msgCtxMenu.show = true;
 };
 

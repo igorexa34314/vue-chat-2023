@@ -33,13 +33,12 @@ import { storeToRefs } from 'pinia';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { useUserdataStore } from '@/stores/userdata';
 import { setChatName, setChatAvatar } from '@/utils/chat';
+import { defaultAvatar } from '@/utils/globals';
 import type { ChatInfo } from '@/services/chat';
 
 const { showMessage } = useSnackbarStore();
 const { getUChats: userChats, getUInfo: userInfo } = storeToRefs(useUserdataStore());
 const loading = ref(true);
-
-const defaultAvatar = new URL('@/assets/img/default_user_avatar.jpg', import.meta.url).href;
 
 const props = withDefaults(defineProps<{ modelValue: boolean; }>(), { modelValue: false });
 const emit = defineEmits<{

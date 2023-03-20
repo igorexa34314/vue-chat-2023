@@ -1,8 +1,8 @@
-import { useUserdataStore } from '@/stores/userdata';
-import { FirebaseError } from 'firebase/app';
 import { getAuth, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { getStorage, ref, getDownloadURL } from 'firebase/storage';
 import { getCurrentUser } from 'vuefire';
+import { createUser } from '@/services/userdata';
+import { fbErrorHandler } from '@/services/errorHandler';
 import type { User as FirebaseUser } from 'firebase/auth';
 
 interface UserCredentials {
@@ -13,11 +13,6 @@ interface UserCredentials {
 
 export const auth = getAuth();
 
-export const fbErrorHandler = (e: unknown, msg?: string) => {
-	console.error(msg || '', e);
-	throw e instanceof FirebaseError ? e.code : e;
-};
-
 export const getUid = async () => {
 	const currentUser = await getCurrentUser();
 	if (currentUser && currentUser.uid) {
@@ -27,7 +22,6 @@ export const getUid = async () => {
 };
 export const signInWithGoogle = async () => {
 	try {
-		const { createUser } = useUserdataStore();
 		const provider = new GoogleAuthProvider();
 		const user = (await signInWithPopup(auth, provider)).user;
 		await createUser(user);
@@ -37,7 +31,6 @@ export const signInWithGoogle = async () => {
 };
 export const registerWithEmail = async ({ email, password, displayName }: UserCredentials) => {
 	try {
-		const { createUser } = useUserdataStore();
 		const avatarURL = await getDownloadURL(ref(getStorage(), 'assets/default_user_avatar.jpg'));
 		const user = (await createUserWithEmailAndPassword(auth, email, password)).user;
 		await updateProfile(user, { displayName, photoURL: avatarURL });
@@ -49,7 +42,6 @@ export const registerWithEmail = async ({ email, password, displayName }: UserCr
 };
 export const loginWithEmail = async ({ email, password }: UserCredentials) => {
 	try {
-		const { createUser } = useUserdataStore();
 		await signInWithEmailAndPassword(auth, email, password);
 		await createUser((await getCurrentUser()) as FirebaseUser);
 	} catch (e: unknown) {

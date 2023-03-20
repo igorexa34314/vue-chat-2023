@@ -21,10 +21,12 @@ export interface MediaMessage {
 		fullname: string;
 		fullpath: string;
 		downloadURL: string;
+		fullsize: number;
 		sizes: {
 			w: number;
 			h: number;
 		};
+		thumbnail?: string;
 	}[];
 }
 
@@ -36,6 +38,6 @@ export interface FileMessage {
 		fullname: string;
 		fullpath: string;
 		downloadURL: string;
-		size: number;
+		fullsize: number;
 	}[];
 }
