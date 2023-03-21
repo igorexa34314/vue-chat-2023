@@ -38,11 +38,12 @@ export const resizeImage = async (
 		return [w, h];
 	};
 
-	return new Promise(resolve => {
+	return new Promise((resolve, reject) => {
 		const img = new Image();
 		img.src = url;
 		img.onerror = function () {
 			URL.revokeObjectURL(img.src);
+			reject(img);
 		};
 		img.onload = function () {
 			URL.revokeObjectURL(img.src);
