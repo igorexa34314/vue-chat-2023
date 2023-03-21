@@ -3,7 +3,14 @@
 		<v-row dense>
 			<v-col v-for="(img, index) in files" :key="img.id" :cols="files.length % 2 && !index ? '12' : '6'">
 				<v-card class="image-wrapper d-flex" height="100%" max-height="300px">
-					<v-img aspect-ratio="1" ref="imgsEl" :src="img.preview" :alt="img.fileData.name" :id="img.id" cover />
+					<v-img aspect-ratio="1" ref="imgsEl" :lazy-src="img.thumbnail?.url" :src="img.preview"
+						:alt="img.fileData.name" :id="img.id" cover>
+						<template #placeholder>
+							<div class="d-flex align-center justify-center fill-height">
+								<v-progress-circular color="grey-lighten-4" indeterminate />
+							</div>
+						</template>
+					</v-img>
 					<v-btn color="white" variant="text" position="absolute" icon="mdi-delete"
 						class="bg-blue-grey-darken-2 delete-media-btn" @click="emit('deleteAttach', img.id)"
 						density="comfortable" elevation="5" />

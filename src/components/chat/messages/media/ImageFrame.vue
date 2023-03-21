@@ -16,7 +16,7 @@
 <script setup lang="ts">
 import { onUnmounted, watchEffect, ref, PropType, } from 'vue';
 import { loadImagebyFullpath } from '@/services/message';
-import type { MediaMessage } from '@/types/db/MessagesTable';
+import type { MediaMessage } from '@/stores/messages';
 
 
 export type ImageWithPreviewURL = { previewURL: string } & MediaMessage['images'][number];
