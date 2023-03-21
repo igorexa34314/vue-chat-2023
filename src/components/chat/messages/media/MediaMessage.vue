@@ -18,7 +18,7 @@
 import ImageFrame from '@/components/chat/messages/media/ImageFrame.vue';
 import FullsizeOverlay from '@/components/chat/messages/media/FullsizeOverlay.vue';
 import { reactive, PropType, computed } from 'vue';
-import type { MediaMessage } from '@/types/db/MessagesTable';
+import type { MediaMessage } from '@/stores/messages';
 import type { ImageWithPreviewURL } from '@/components/chat/messages/media/ImageFrame.vue';
 
 const props = defineProps({

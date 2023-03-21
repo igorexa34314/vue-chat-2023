@@ -1,9 +1,16 @@
 <template>
 	<div class="images-grid">
 		<v-row dense>
-			<v-col v-for="(img, index) in files" :key="img.id" :cols="files.length % 2 && !index ? '12' : '6'">
+			<v-col v-for="(img, index) in files" :key="img.id" :cols="calcImageCols(index)">
 				<v-card class="image-wrapper d-flex" height="100%" max-height="300px">
-					<v-img aspect-ratio="1" ref="imgsEl" :src="img.preview" :alt="img.fileData.name" :id="img.id" cover />
+					<v-img aspect-ratio="1" ref="imgsEl" :lazy-src="img.thumbnail?.url" :src="img.preview"
+						:alt="img.fileData.name" :id="img.id" cover>
+						<template #placeholder>
+							<div class="d-flex align-center justify-center fill-height">
+								<v-progress-circular color="grey-lighten-4" indeterminate />
+							</div>
+						</template>
+					</v-img>
 					<v-btn color="white" variant="text" position="absolute" icon="mdi-delete"
 						class="bg-blue-grey-darken-2 delete-media-btn" @click="emit('deleteAttach', img.id)"
 						density="comfortable" elevation="5" />
@@ -27,6 +34,20 @@ const emit = defineEmits<{
 
 const imgsEl = ref<VImg[]>();
 const isImgsReady = computed(() => imgsEl.value?.every(img => img.state === 'loaded'));
+const calcImageCols = computed(() => (imgIdx: number) => {
+	if (props.files.length < 5)
+		return imgIdx <= (props.files.length % 2) - 1 ? '12' : '6'
+	else if (props.files.length < 7)
+		return imgIdx <= (props.files.length % 3) - 1 ? '6' : '4'
+	else if (props.files.length < 9) {
+		if (props.files.length % 2)
+			return imgIdx <= Math.floor(props.files.length / 3) + ((props.files.length % 3)) ? '6' : '4';
+		else return imgIdx < Math.floor(props.files.length / 3) * ((props.files.length % 3) - 1) ? '6' : '4';
+	}
+	else if (props.files.length === 9)
+		return imgIdx < Math.floor(props.files.length / 3) * ((props.files.length % 3)) ? '6' : '4';
+	else return imgIdx < Math.floor(props.files.length / 3) + (props.files.length % 3) ? '6' : '4';
+});
 
 defineExpose({ isImgsReady });
 </script>

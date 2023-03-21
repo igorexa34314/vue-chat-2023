@@ -6,9 +6,13 @@ import { fbErrorHandler as errorHandler } from '@/services/errorHandler';
 import type { UserInfo } from '@/types/db/UserdataTable';
 import type { DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
 import type { ChatInfo } from '@/services/chat';
-import type { Message as DBMessage, TextMessage, MediaMessage, FileMessage } from '@/types/db/MessagesTable';
+import type { Message as DBMessage, TextMessage, MediaMessage as MediaDBMessage, FileMessage } from '@/types/db/MessagesTable';
 
-export interface Message<T extends DBMessage['type'] = DBMessage['type']> extends Omit<DBMessage, 'sender_id'> {
+export interface MediaMessage extends Omit<MediaDBMessage, 'images'> {
+	images: (Omit<MediaDBMessage['images'][number], 'thumbnail'> & { thumbnail: string })[];
+}
+
+export interface Message<T extends DBMessage['type'] = DBMessage['type']> extends Omit<DBMessage, 'sender_id' | 'content'> {
 	type: T;
 	content: T extends 'text' ? TextMessage : T extends 'media' ? MediaMessage : T extends 'file' ? FileMessage : TextMessage | MediaMessage | FileMessage;
 	sender: { id: UserInfo['uid'] } & Pick<UserInfo, 'displayName' | 'photoURL'>;
@@ -25,15 +29,21 @@ export const useMessagesStore = defineStore('messages', () => {
 	const clearMessages = () => {
 		messages.value = [];
 	};
-	const addMessage = (msg: Message, direction?: 'start' | 'end') => {
-		if (direction === 'end' || !direction) {
+	const addMessage = (msg: Message, direction: 'start' | 'end' = 'end') => {
+		if (direction === 'end') {
 			messages.value.push(msg);
 		} else {
 			messages.value.unshift(msg);
 		}
 	};
-	const deleteMessages = (count = 10, direction?: 'start' | 'end') => {
-		if (direction === 'end' || !direction) {
+	const deleteMessageById = (messageId: Message['id']) => {
+		messages.value = messages.value.filter(m => m.id === messageId);
+	};
+	const modifyMessage = (newMsg: Message) => {
+		messages.value = messages.value.map(m => (m.id === newMsg.id ? newMsg : m));
+	};
+	const deleteMessages = (count = 10, direction: 'start' | 'end' = 'end') => {
+		if (direction === 'end') {
 			messages.value.splice(-count, count);
 		} else {
 			messages.value.splice(0, count);
@@ -44,8 +54,12 @@ export const useMessagesStore = defineStore('messages', () => {
 			const messagesCol = collection(doc(chatCol, chatId), 'messages');
 			const q = query(messagesCol, orderBy('created_at', 'desc'), limit(lmt));
 			const unsubscribe = onSnapshot(q, async messagesRef => {
-				(await fetchMessages(messagesRef))?.forEach(m => {
-					addMessage(m, 'end');
+				(await fetchMessages(messagesRef))?.forEach(({ changeType, message }) => {
+					if (changeType === 'added') {
+						addMessage(message, 'end');
+					} else if (changeType === 'modified') {
+						modifyMessage(message);
+					}
 				});
 				if (messagesRef.size >= lmt) {
 					lastVisible.top = messagesRef.docs[messagesRef.docs.length - 1];
@@ -84,6 +98,8 @@ export const useMessagesStore = defineStore('messages', () => {
 		messages,
 		lastVisible,
 		clearMessages,
+		modifyMessage,
+		deleteMessageById,
 		deleteMessages,
 		fetchChatMessages,
 		loadMoreChatMessages
