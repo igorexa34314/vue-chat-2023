@@ -18,9 +18,7 @@
 					max-height="85vh" :style="{ transform: `scale(${zoomed ? '2' : '1'})`, width: `${item.sizes.w}px` }">
 					<v-img :src="item.previewURL" :alt="alt || item.fullname" :width="item.sizes.w">
 						<template #placeholder>
-							<div class="d-flex align-center justify-center fill-height">
-								<v-progress-circular color="grey-lighten-4" indeterminate />
-							</div>
+							<ImageLoader />
 						</template>
 					</v-img>
 				</v-card>
@@ -39,6 +37,7 @@
 </template>
 
 <script setup lang="ts">
+import ImageLoader from '@/components/chat/ImageLoader.vue';
 import { ref } from 'vue';
 import { useVModel } from '@vueuse/core';
 import type { ImageWithPreviewURL } from '@/components/chat/messages/media/ImageFrame.vue';

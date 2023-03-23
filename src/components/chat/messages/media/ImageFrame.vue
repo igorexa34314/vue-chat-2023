@@ -1,28 +1,30 @@
 <template>
-	<v-card class="image__wrapper" variant="text" @click="emit('open');"
-		:style="`width: ${image?.sizes.w}px; height: ${image?.sizes.h}px;`">
+	<v-card class="image__wrapper" variant="text" @click="emit('open');" width="100%" :height="image?.sizes.h"
+		:max-height="maxHeight" rounded="0">
 		<!-- <canvas></canvas> -->
 		<v-img :lazy-src="image?.thumbnail || ''" :src="previewURL || image?.downloadURL" :alt="alt || image?.fullname"
-			:width="image?.sizes.w" @load="imageLoaded">
+			:width="image?.sizes.w" @load="imageLoaded" cover>
 			<template #placeholder>
-				<div class="d-flex align-center justify-center fill-height">
-					<v-progress-circular color="grey-lighten-4" indeterminate />
-				</div>
+				<ImageLoader />
 			</template>
 		</v-img>
 	</v-card>
 </template>
 
 <script setup lang="ts">
+import ImageLoader from '@/components/chat/ImageLoader.vue';
 import { onUnmounted, watchEffect, ref, PropType, } from 'vue';
 import { loadImagebyFullpath } from '@/services/message';
 import type { MediaMessage } from '@/stores/messages';
-
 
 export type ImageWithPreviewURL = { previewURL: string } & MediaMessage['images'][number];
 
 const props = defineProps({
 	image: Object as PropType<MediaMessage['images'][number]>,
+	maxHeight: {
+		type: [String, Number],
+		default: '280px'
+	},
 	alt: String,
 });
 const emit = defineEmits<{
@@ -56,10 +58,5 @@ onUnmounted(() => {
 	justify-content: center;
 	max-width: 100%;
 	max-height: 100%;
-	&:deep(img) {
-		max-width: 100%;
-		display: block;
-		height: auto;
-	}
 }
 </style>

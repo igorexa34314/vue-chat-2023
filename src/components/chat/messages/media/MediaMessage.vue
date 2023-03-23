@@ -1,11 +1,12 @@
 <template>
-	<div class="media-message">
+	<div class="media-message mb-3">
 		<p v-if="content.subtitle.length" class="message__subtitle mb-3">{{ content.subtitle }}</p>
 		<div class="images-frame">
-			<v-row dense align="start" align-content="stretch">
-				<v-col v-for="(img, index) of content.images" :cols="getImageColSize(content.images)[index]">
+			<v-row dense align-content="stretch" no-gutters>
+				<v-col v-for="(img, index) of content.images" :cols="calcImageCols(index)"
+					:class="{ 'image-col': content.images.length > 2 }">
 					<ImageFrame :image="img" :key="img.id" :alt="content.subtitle" @open="openInOverlay(img)"
-						@loaded="addImagePreviewToOverlay" />
+						@loaded="addImagePreviewToOverlay" :max-height="content.images.length > 2 ? '280px' : '360px'" />
 				</v-col>
 			</v-row>
 			<FullsizeOverlay v-model="overlayState.show" :content="<ImageWithPreviewURL[]>overlayState.images"
@@ -18,6 +19,7 @@
 import ImageFrame from '@/components/chat/messages/media/ImageFrame.vue';
 import FullsizeOverlay from '@/components/chat/messages/media/FullsizeOverlay.vue';
 import { reactive, PropType, computed } from 'vue';
+import { calcImageCols as calcCols } from '@/utils/images';
 import type { MediaMessage } from '@/stores/messages';
 import type { ImageWithPreviewURL } from '@/components/chat/messages/media/ImageFrame.vue';
 
@@ -43,28 +45,11 @@ const addImagePreviewToOverlay = ({ id, previewURL }: Pick<ImageWithPreviewURL, 
 };
 const overlayClosed = () => {
 };
-const getImageColSize = computed(() => (imgArray: MediaMessage['images']) => {
-	const sizes = imgArray.map((img) => img.sizes.w);
-	const acc = [];
-	for (let i = 0; i < sizes.length - 1;) {
-		const cols = Math.round(12 / ((sizes[i + 1] / sizes[i]) + 1));
-		if (cols >= 7 || cols <= 4) {
-			acc.push(12);
-			i++;
-		}
-		else {
-			acc.push(cols, 12 - cols);
-			i += 2;
-		}
-	}
-	return acc;
-});
+const calcImageCols = computed(() => (imgIdx: number) => calcCols(props.content.images.length, imgIdx));
 </script>
 
 <style lang="scss" scoped>
-// .images-frame {
-// 	display: grid;
-// 	grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-// 	grid-template-rows: repeat(auto-fit, minmax(1fr, 200px));
-// }
+.image-col {
+	border: 0.15em solid #311B92 !important;
+}
 </style>

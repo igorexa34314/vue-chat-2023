@@ -6,6 +6,27 @@
 				<h3 class="text-center flex-grow-1">{{ 'Отправить ' + formState.files.length + ' ' + (contentType === 'image' ?
 					'фото' :
 					formState.files.length === 1 ? 'файл' : formState.files.length > 4 ? 'файлов' : 'файла') }}</h3>
+
+				<v-menu location="bottom left" :offset="[0, -30]" :elevation="8">
+					<template #activator="{ props }">
+						<v-btn v-bind="props" variant="text" icon="mdi-dots-vertical" />
+					</template>
+					<v-list density="compact" class="bg-blue-grey-darken-4">
+						<v-list-item density="compact">
+							<template #prepend>
+								<v-icon icon="mdi-plus" class="mr-4" />
+							</template>
+							<v-list-item-title>Добавить еще</v-list-item-title>
+						</v-list-item>
+						<v-list-item density="compact">
+							<template #prepend>
+								<v-icon icon="mdi-file-multiple-outline" class="mr-4" />
+							</template>
+							<v-list-item-title>Как файлы</v-list-item-title>
+						</v-list-item>
+					</v-list>
+				</v-menu>
+
 			</v-card-title>
 			<v-card-text class="py-1">
 				<div class="attachments custom-scroll py-2 pr-4">

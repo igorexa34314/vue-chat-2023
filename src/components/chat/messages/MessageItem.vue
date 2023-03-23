@@ -4,7 +4,7 @@
 			class="sender__avatar" @click="push({ name: 'user-id', params: { id: sender.id } })"
 			:title="sender.displayName" />
 
-		<v-card min-width="120px" max-width="850px" max-height="65vh" density="compact" class="message__card mb-4"
+		<v-card min-width="120px" max-width="850px" density="compact" class="message__card mb-4"
 			:class="self ? 'bg-light-blue-darken-3' : ''" variant="tonal">
 
 			<v-card-title v-if="type === 'text'" class="message__head d-flex flex-row align-center">
