@@ -1,11 +1,11 @@
 <template>
-	<v-card class="image__wrapper" variant="text" @click="emit('open');" width="100%" :height="image?.sizes.h"
-		:max-height="maxHeight" rounded="0">
+	<v-card class="image__wrapper" variant="text" @click="previewURL || image?.downloadURL ? emit('open') : undefined"
+		width="100%" :height="height" :max-height="maxHeight" rounded="0">
 		<!-- <canvas></canvas> -->
 		<v-img :lazy-src="image?.thumbnail || ''" :src="previewURL || image?.downloadURL" :alt="alt || image?.fullname"
-			:width="image?.sizes.w" @load="imageLoaded" cover>
+			:width="image?.sizes.w" @load="imageLoaded" cover draggable="false">
 			<template #placeholder>
-				<ImageLoader />
+				<ImageLoader @cancel="cancelImageLoading" />
 			</template>
 		</v-img>
 	</v-card>
@@ -25,6 +25,10 @@ const props = defineProps({
 		type: [String, Number],
 		default: '280px'
 	},
+	height: {
+		type: [String, Number],
+		default: 'auto'
+	},
 	alt: String,
 });
 const emit = defineEmits<{
@@ -39,12 +43,15 @@ watchEffect(async () => {
 		previewURL.value = await loadImagebyFullpath(props.image as MediaMessage['images'][number]) || '';
 	} catch (e: unknown) { }
 });
+const cancelImageLoading = () => {
+	console.log('Loading canceled')
+};
 
 const imageLoaded = () => {
 	if (previewURL.value) {
 		emit('loaded', { id: props.image?.id as string, previewURL: previewURL.value });
 	}
-}
+};
 onUnmounted(() => {
 	if (previewURL.value) {
 		URL.revokeObjectURL(previewURL.value);
@@ -58,5 +65,9 @@ onUnmounted(() => {
 	justify-content: center;
 	max-width: 100%;
 	max-height: 100%;
+	:deep(img) {
+		user-select: none !important;
+		pointer-events: none !important;
+	}
 }
 </style>

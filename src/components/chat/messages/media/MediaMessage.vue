@@ -6,7 +6,8 @@
 				<v-col v-for="(img, index) of content.images" :cols="calcImageCols(index)"
 					:class="{ 'image-col': content.images.length > 2 }">
 					<ImageFrame :image="img" :key="img.id" :alt="content.subtitle" @open="openInOverlay(img)"
-						@loaded="addImagePreviewToOverlay" :max-height="content.images.length > 2 ? '280px' : '360px'" />
+						@loaded="addImagePreviewToOverlay" :max-height="content.images.length > 2 ? '280px' : '360px'"
+						:height="img.sizes.h" />
 				</v-col>
 			</v-row>
 			<FullsizeOverlay v-model="overlayState.show" :content="<ImageWithPreviewURL[]>overlayState.images"
@@ -50,6 +51,6 @@ const calcImageCols = computed(() => (imgIdx: number) => calcCols(props.content.
 
 <style lang="scss" scoped>
 .image-col {
-	border: 0.15em solid #311B92 !important;
+	padding: 0.12em !important;
 }
 </style>

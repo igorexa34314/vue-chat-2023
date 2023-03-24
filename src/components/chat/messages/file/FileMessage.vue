@@ -3,13 +3,15 @@
 		<p v-if="content.subtitle.length" class="message__subtitle mb-3">{{ content.subtitle }}</p>
 		<div v-for="(file, index) in content.files" :key="file.id" :class="{ 'mb-1': index !== (content.files.length - 1) }"
 			class="d-flex align-center">
-			<v-hover v-slot="{ isHovering, props }">
+			<v-hover #default="{ isHovering, props }">
 				<div class="file-icon" v-bind="props" style="cursor: pointer;">
 					<v-icon icon="mdi-file" size="80px" />
-					<span v-if="!isHovering" class="file-icon-ext font-weight-bold text-brown-darken-4">
-						{{ getFileExt(file.fullname).length <= 6 ? getFileExt(file.fullname) : '' }} </span>
-							<v-btn v-else icon="mdi-download" size="large" variant="text" class="file-icon-btn" color="black"
-								density="compact" @click="downloadFile(file)" title="Download" :flat="false" :ripple="false" />
+					<Transition name="fade">
+						<span v-if="!isHovering" class="file-icon-ext font-weight-bold text-brown-darken-4">
+							{{ getFileExt(file.fullname).length <= 6 ? getFileExt(file.fullname) : '' }} </span>
+								<v-btn v-else icon="mdi-download" size="large" variant="text" class="file-icon-btn" color="black"
+									density="compact" @click="downloadFile(file)" title="Download" :flat="false" :ripple="false" />
+					</Transition>
 				</div>
 			</v-hover>
 			<div class="file-details ml-2 text-subtitle-1 font-weight-medium">
@@ -79,8 +81,26 @@ const downloadFile = async (file: FileMessage['files'][number]) => {
 	}
 }
 .file-details {
-	overflow: hidden;
-	white-space: nowrap;
-	text-overflow: ellipsis;
+	max-width: 360px;
+	p {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	@media(max-width: 720px) {
+		max-width: 320px;
+	}
+	@media(max-width: 640px) {
+		max-width: 280px;
+	}
+}
+.fade-enter-active,
+.fade-leave-active {
+	transition: opacity 0.25s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+	opacity: 0;
 }
 </style>

@@ -3,17 +3,18 @@
 		<!-- <div v-if="!userdata || !Object.keys(userdata.info).length || !userChatsInfo || !userChatsInfo.length">
 			<page-loader />
 		</div> -->
-		<v-card v-if="userInfo && Object.keys(userInfo).length" class="py-1 bg-blue-grey-darken-4" density="compact"
-			variant="text" to="/profile">
+		<v-card v-if="userInfo && Object.keys(userInfo).length" class="user-info py-1 bg-blue-grey-darken-4"
+			density="compact" variant="text" to="/profile" draggable="false">
 			<template #prepend>
 				<v-avatar :image="userInfo.photoURL || defaultAvatar" />
 			</template>
 			<template #title>{{ userInfo.displayName || 'Unknown' }}</template>
 		</v-card>
 		<v-divider thickness="2" class="mt-2" />
-		<v-list v-if="getUserChatsInfo?.length && !loading" density="comfortable" class="mt-3">
+		<v-list v-if="getUserChatsInfo?.length && !loading" density="comfortable" class="chat-list mt-3">
 			<v-list-item v-for="chat of getUserChatsInfo" :key="chat.id" :title="setChatName(chat)"
-				:prepend-avatar="setChatAvatar(chat)" :to="{ name: 'chat-id', params: { id: chat.id } }" class="py-3 mb-3" />
+				:prepend-avatar="setChatAvatar(chat)" :to="{ name: 'chat-id', params: { id: chat.id } }" class="py-3 mb-3"
+				draggable="false" />
 		</v-list>
 		<div v-else-if="loading">
 			<page-loader />
@@ -62,4 +63,17 @@ const getUserChatsInfo = computedAsync(async () => {
 });
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.user-info {
+	:deep(img) {
+		user-select: none !important;
+		pointer-events: none !important;
+	}
+}
+.chat-list {
+	:deep(img) {
+		user-select: none !important;
+		pointer-events: none !important;
+	}
+}
+</style>

@@ -1,27 +1,30 @@
 <template>
 	<v-overlay v-if="content.length" v-model="showOverlay" content-class="image-overlay" class="fullsize-image__dialog"
-		transition="scale-transition" @click:outside="$emit('close')">
-		<v-carousel v-model="overlayItem" hide-delimiters hide-delimiter-background height="100%" show-arrows>
-			<template v-slot:prev="{ props }">
+		transition="scale-transition" @click:outside="$emit('close')" close-on-back scroll-strategy="close">
+		<v-carousel v-model="overlayItem" hide-delimiters hide-delimiter-background height="85vh" show-arrows>
+			<template #prev="{ props }">
 				<div v-if="overlayItem" class="carousel__control carousel__control-prev" @click="props.onClick">
 					<v-icon icon="mdi-arrow-left" size="55px" class="carousel-prev-btn" />
 				</div>
 			</template>
-			<template v-slot:next="{ props }">
+			<template #next="{ props }">
 				<div v-if="overlayItem < content.length - 1" class="carousel__control carousel__control-next"
 					@click="props.onClick">
 					<v-icon icon="mdi-arrow-right" size="55px" class="carousel-next-btn" />
 				</div>
 			</template>
 			<v-carousel-item v-for="item of content" :key="item.id" cover>
-				<v-card class="fullsize-image__wrapper d-flex align-center justify-center" variant="text" max-width="75vw"
-					max-height="85vh" :style="{ transform: `scale(${zoomed ? '2' : '1'})`, width: `${item.sizes.w}px` }">
-					<v-img :src="item.previewURL" :alt="alt || item.fullname" :width="item.sizes.w">
-						<template #placeholder>
-							<ImageLoader />
-						</template>
-					</v-img>
-				</v-card>
+				<div class="carousel-image-element" style="max-width: 75vw;">
+					<v-card class="fullsize-image__wrapper d-flex align-center justify-center" variant="text"
+						:width="item.sizes.w" :height="item.sizes.h" max-height="100%" max-width="100%"
+						:style="{ transform: `scale(${zoomed ? '2' : '1'})` }">
+						<v-img :src="item.previewURL" :alt="alt || item.fullname" :width="item.sizes.w">
+							<template #placeholder>
+								<ImageLoader />
+							</template>
+						</v-img>
+					</v-card>
+				</div>
 			</v-carousel-item>
 		</v-carousel>
 
@@ -110,6 +113,14 @@ const zoomImage = () => {
 	column-gap: 0.5rem;
 	justify-content: flex-end;
 }
+.carousel-image-element {
+	width: 100%;
+	height: 100%;
+	margin: auto;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
 .carousel__control {
 	padding: 0px 1em;
 	height: 100vh;
@@ -119,19 +130,26 @@ const zoomImage = () => {
 	top: 50%;
 	z-index: 1000;
 	&-prev {
-		padding-left: 2em;
+		padding-left: 1.5em;
 		left: 0;
 		transform: translateY(-50%);
 
 	}
 	&-next {
-		padding-right: 2em;
+		padding-right: 1.5em;
 		right: 0;
 		transform: translateY(-50%);
 	}
 }
 .carousel-prev-btn,
 .carousel-next-btn {
+	visibility: hidden;
+	opacity: 0;
 	cursor: pointer;
+	transition: all 0.2s ease 0s;
+	.carousel__control:hover & {
+		opacity: 1;
+		visibility: visible;
+	}
 }
 </style>

@@ -4,7 +4,7 @@
 			<v-col v-for="(img, index) in files" :key="img.id" :cols="calcImageCols(index)">
 				<v-card class="image-wrapper d-flex" height="100%" :max-height="files.length < 2 ? '380px' : '300px'">
 					<v-img :aspect-ratio="+calcImageCols(index) > 6 && index ? '1.778' : '1'" ref="imgsEl"
-						:lazy-src="img.thumbnail?.url" :src="img.preview" :alt="img.fileData.name" :id="img.id" cover>
+						:lazy-src="img.thumbnail?.url" :src="img.preview" :alt="img.fileData.name" cover>
 						<template #placeholder>
 							<ImageLoader />
 						</template>

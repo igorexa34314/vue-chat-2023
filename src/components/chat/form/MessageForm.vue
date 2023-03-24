@@ -4,7 +4,7 @@
 			<v-textarea v-model.trim="messageState.text" variant="solo" hide-details @keyup.enter="createTextMessage"
 				placeholder="Ваше сообщение" rows="1" max-rows="12" auto-grow focused>
 				<template #append-inner>
-					<AttachMenu @attach-file="attachFile">
+					<AttachMenu ref="attachMenuEl" @attach-file="attachFile">
 						<template #activator="{ props }">
 							<div class="attach-btn ml-4">
 								<v-icon v-bind="props" icon="mdi-attachment mdi-rotate-135" size="large" class="attach-icon"
@@ -17,7 +17,8 @@
 			<v-btn icon="mdi-send" label="Отправить" class="ml-3 mb-1" @click="createTextMessage" />
 		</div>
 		<AttachDialog v-model="attachDialogState.show" :contentType="attachDialogState.contentType"
-			:fileList="messageState.attachedFiles" @submit="createAttachment" @close="closeDialog" />
+			:fileList="messageState.attachedFiles" @submit="createAttachment" @close="closeDialog"
+			@add-more-files="attachFile" @change-content-type="changeContentType" />
 	</div>
 </template>
 
@@ -57,12 +58,11 @@ const createTextMessage = () => {
 	}
 };
 const createAttachment = (type: AttachDialogProps['contentType'], content: TextMessage | AttachFormContent) => {
-	emit('submitForm', content, type === 'image' || type === 'video' ? 'media' : type);
+	emit('submitForm', content, type);
 	messageState.attachedFiles = [];
 };
 
-const attachFile = async (type: Exclude<Message['type'], 'text'>, e: Event) => {
-	const fileList = (<HTMLInputElement>e.target).files;
+const attachFile = async (type: Exclude<Message['type'], 'text'>, fileList: FileList) => {
 	if (!fileList?.length)
 		return;
 	if (fileList.length > 10) {
@@ -73,13 +73,21 @@ const attachFile = async (type: Exclude<Message['type'], 'text'>, e: Event) => {
 	for (let i = 0; i < fileList.length; i++) {
 		files.push(fileList.item(i) as File);
 	}
-	if (type === 'media' && files.length && files.every(f => f.type.startsWith('image/'))) {
-		attachDialogState.contentType = 'image';
+	if (type === 'media' && files.length && files.every(f => f.type.startsWith('image/') || f.type.startsWith('video/'))) {
+		attachDialogState.contentType = 'media';
 	}
 	else if (type === 'file') attachDialogState.contentType = 'file';
 	messageState.attachedFiles = files.map(f => ({ id: uuidv4(), fileData: f }));
 	attachDialogState.show = true;
 };
+const changeContentType = () => {
+	if (attachDialogState.contentType === 'media') {
+		attachDialogState.contentType = 'file';
+	}
+	else if (attachDialogState.contentType === 'file' && messageState.attachedFiles.every(({ fileData }) => fileData.type.startsWith('image/'))) {
+		attachDialogState.contentType = 'media';
+	}
+}
 const closeDialog = () => {
 	messageState.attachedFiles = [];
 };

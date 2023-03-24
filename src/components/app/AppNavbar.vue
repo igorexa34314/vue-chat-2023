@@ -17,18 +17,18 @@
 
 		<v-btn variant="text" icon="mdi-filter" disabled />
 
-		<v-menu>
+		<v-menu draggable="false">
 			<template #activator="{ props }">
 				<v-btn v-bind="props" variant="text" icon="mdi-dots-vertical" />
 			</template>
 			<v-list density="compact">
-				<v-list-item density="compact" to="/profile">
+				<v-list-item density="compact" to="/profile" draggable="false">
 					<template #prepend>
 						<v-icon icon="mdi-account-circle-outline" class="mr-6" />
 					</template>
 					<v-list-item-title>Профиль</v-list-item-title>
 				</v-list-item>
-				<v-list-item density="compact" @click="exit">
+				<v-list-item density="compact" @click="exit" draggable="false">
 					<template #prepend>
 						<v-icon icon="mdi-logout" class="mr-6" />
 					</template>

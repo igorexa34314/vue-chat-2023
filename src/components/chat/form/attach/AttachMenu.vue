@@ -10,7 +10,7 @@
 					<v-icon :icon="item.icon" class="mr-4"></v-icon>
 					<span>{{ item.title }}</span>
 					<input :id="item.attachmentType" type="file" :accept="item.accept" style="display:none;"
-						@change="emit('attach-file', item.attachmentType, $event)" multiple>
+						@change="addFiles(item.attachmentType, $event)" multiple>
 				</label>
 			</v-list-item>
 		</v-list>
@@ -25,20 +25,26 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-	(e: 'attach-file', type: Exclude<Message['type'], 'text'>, event: Event): void
+	(e: 'attach-file', type: Exclude<Message['type'], 'text'>, files: FileList): void
 }>();
 
 interface AttachMenu {
 	title: string;
 	icon: string;
 	attachmentType: Exclude<Message['type'], 'text'>;
-	accept: string;
+	accept?: string;
 }
 
 const attachMenuItems: AttachMenu[] = [
 	{ title: 'Фото или видео', icon: 'mdi-image', attachmentType: 'media', accept: 'image/*, video/*' },
-	{ title: 'Файл', icon: 'mdi-file-document-outline', attachmentType: 'file', accept: '.txt,.pdf,.doc,.docx' },
+	{ title: 'Файл', icon: 'mdi-file-document-outline', attachmentType: 'file' },
 ];
+const addFiles = (type: AttachMenu['attachmentType'], e: Event) => {
+	const files = (e.target as HTMLInputElement).files;
+	if (files && files.length) {
+		emit('attach-file', type, files);
+	}
+};
 </script>
 
 <style lang="scss" scoped>

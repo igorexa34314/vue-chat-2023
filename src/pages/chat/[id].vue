@@ -6,11 +6,12 @@
 			@dragleave="removeAttachment" class="chat__field">
 			<div v-if="loading"><page-loader /></div>
 			<div v-else-if="messages && messages.length" ref="chatEl" class="chat__content px-8">
-				<div class="messages-field mt-4">
+				<div class="messages-field mt-4" draggable="false">
 					<TransitionGroup :name="enTransition ? 'messages-list' : ''">
 						<MessageItem v-for="m in messages" :key="m.id" :self="uid === m.sender.id" :type="m.type"
 							:content="m.content" :sender="m.sender" :created_at="<Date>m.created_at"
-							@contextmenu.prevent="openCtxMenu" :id="`message-${m.id}`" :data-message-id="m.id" />
+							@contextmenu.prevent="openCtxMenu" :id="`message-${m.id}`" :data-message-id="m.id"
+							draggable="false" />
 					</TransitionGroup>
 				</div>
 			</div>

@@ -77,6 +77,10 @@ const props = withDefaults(defineProps<MessageItemProps>(), {
 	}
 	&__avatar {
 		cursor: pointer;
+		user-select: none !important;
+		:deep(img) {
+			pointer-events: none !important;
+		}
 	}
 }
 .self {

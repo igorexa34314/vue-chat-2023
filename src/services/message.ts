@@ -33,14 +33,21 @@ export const fetchMessages = async (messagesRef: QuerySnapshot<DocumentData>) =>
 		const snapsPromises = [] as Promise<{ changeType: DocumentChangeType; message: Message }>[];
 
 		messagesRef.docChanges().forEach(change => {
-			const { created_at, ...msgData } = change.doc.data() as DBMessage;
 			if (change.type === 'added' || change.type === 'modified') {
-				msgSnaps.unshift({ changeType: change.type, message: { ...msgData, created_at: (<Timestamp>created_at).toDate() } });
-			} else if (change.type === 'removed') {
-				const { deleteMessageById } = useMessagesStore();
-				debugger;
-				deleteMessageById(change.doc.id);
+				const { created_at, ...msgData } = change.doc.data() as DBMessage;
+				msgSnaps.unshift({
+					changeType: change.type,
+					message: {
+						created_at: (<Timestamp>created_at).toDate(),
+						...JSON.parse(JSON.stringify(msgData))
+					}
+				});
 			}
+			// else if (change.type === 'removed') {
+			// 	const { deleteMessageById } = useMessagesStore();
+			// 	debugger;
+			// 	deleteMessageById(change.doc.id);
+			// }
 		});
 		msgSnaps.forEach(({ changeType, message }) => {
 			snapsPromises.push(
@@ -87,16 +94,17 @@ export const getFullMessageInfo = async (DbMessage: DBMessage) => {
 		let { sender_id, content, ...m } = DbMessage;
 		const sender = await getMessageSenderInfo(sender_id);
 		if (m.type === 'media') {
-			const { images } = content as unknown as MediaMessage;
+			const { subtitle, images } = content as unknown as MediaDBMessage;
 			const messageMediaThumb = [] as Promise<string | undefined>[];
 			images.forEach(img => {
 				messageMediaThumb.push(getMediaMessageThumb(img));
 			});
 			const thumbURLs = await Promise.all(messageMediaThumb);
-			(content as unknown as MediaMessage).images = images.map((img, idx) => {
+			const imagesWithThumb = (images as unknown as MediaMessage['images']).map((img, idx) => {
 				img.thumbnail = thumbURLs[idx] as string;
 				return img;
 			});
+			return { ...m, sender, content: { subtitle, images: imagesWithThumb } } as Message;
 		}
 		return { ...m, sender, content } as Message;
 	} catch (e: unknown) {
@@ -104,10 +112,11 @@ export const getFullMessageInfo = async (DbMessage: DBMessage) => {
 	}
 };
 
-export const getMediaMessageThumb = async (image: MediaMessage['images'][number]) => {
-	if (image.fullpath && image.fullname) {
+export const getMediaMessageThumb = async (image: MediaDBMessage['images'][number]) => {
+	const thumb = image.thumbnail;
+	if (thumb?.fullpath && thumb?.fullpath) {
 		try {
-			const thumbpath = `${image.fullpath.split('/').slice(0, -1).join('/')}/${image.id}_thumb.${image.fullname.split('.').slice(1).join('.')}`;
+			const thumbpath = `${thumb.fullpath.split('/').slice(0, -1).join('/')}/${image.id}_thumb.${thumb.fullname.split('.').slice(1).join('.')}`;
 			const blobFile = await getBytes(storageRef(storage, thumbpath));
 			if (blobFile) {
 				return `data:${image.type};base64,${encode(blobFile)}`;
@@ -170,7 +179,6 @@ const uploadMedia = async <T extends MediaDBMessage['images']>(
 				docRefPromises.push(
 					(async () => {
 						const { fileData, id, thumbnail, ...data } = img;
-						const imageRef = storageRef(storage, `chat/${chatId}/messageData/${messageRef.id}/${id + '.' + fileData.name.split('.').slice(1).join('.')}`);
 						const thumbData = (await uploadThumb(chatId, messageRef.id, img)) as T[number]['thumbnail'];
 
 						const mediaContent = {
@@ -182,29 +190,8 @@ const uploadMedia = async <T extends MediaDBMessage['images']>(
 							...data
 						} as T[number];
 
-						const uploadTask = uploadBytesResumable(imageRef, fileData, {
-							contentType: fileData.type
-						});
-						uploadTask
-							.then(async snapshot => ({
-								bucket: snapshot.ref.bucket,
-								fullpath: snapshot.ref.fullPath,
-								downloadURL: await getDownloadURL(snapshot.ref)
-							}))
-							.then(async (uploadData: any) => {
-								const batch = writeBatch(db);
-								batch.update(messageRef, {
-									'content.images': arrayRemove(mediaContent)
-								});
-								batch.update(messageRef, {
-									'content.images': arrayUnion({ ...mediaContent, ...uploadData })
-								});
-								await batch.commit();
-							})
-							.catch(e => {
-								console.log(e);
-								throw e;
-							});
+						createUploadTask(chatId, messageRef, img, mediaContent);
+
 						return mediaContent;
 					})()
 				);
@@ -214,6 +201,66 @@ const uploadMedia = async <T extends MediaDBMessage['images']>(
 	} catch (e: unknown) {
 		errorHandler(e);
 	}
+};
+
+const createUploadTask = (chatId: ChatInfo['id'], messageRef: DocumentReference<DocumentData>, file: AttachFormContent['files'][number], DBcontent: object) => {
+	const { fileData, id } = file;
+	const imageRef = storageRef(storage, `chat/${chatId}/messageData/${messageRef.id}/${id + '.' + fileData.name.split('.').slice(1).join('.')}`);
+	const uploadTask = uploadBytesResumable(imageRef, fileData, {
+		contentType: fileData.type
+	});
+
+	uploadTask.on(
+		'state_changed',
+		snapshot => {
+			// Observe state change events such as progress, pause, and resume
+			// Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
+			const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+			console.log('Upload is ' + progress + '% done');
+			switch (snapshot.state) {
+				case 'paused':
+					console.log('Upload is paused');
+					break;
+				case 'running':
+					console.log('Upload is running');
+					break;
+			}
+		},
+		error => {
+			// Handle unsuccessful uploads
+			console.error(error);
+			switch (error.code) {
+				case 'storage/unauthorized':
+					// User doesn't have permission to access the object
+					break;
+				case 'storage/canceled':
+					// User canceled the upload
+					break;
+				case 'storage/unknown':
+					// Unknown error occurred, inspect error.serverResponse
+					break;
+			}
+		},
+		async () => {
+			// Handle successful uploads on complete
+			const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+			const batch = writeBatch(db);
+			batch.update(messageRef, {
+				'content.images': arrayRemove(DBcontent)
+			});
+			batch.update(messageRef, {
+				'content.images': arrayUnion({
+					...DBcontent,
+					...{
+						bucket: uploadTask.snapshot.ref.bucket,
+						fullpath: uploadTask.snapshot.ref.fullPath,
+						downloadURL
+					}
+				})
+			});
+			await batch.commit();
+		}
+	);
 };
 
 const uploadThumb = async <T extends MediaDBMessage['images'][number]['thumbnail']>(
