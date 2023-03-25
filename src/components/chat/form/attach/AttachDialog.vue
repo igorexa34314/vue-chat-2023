@@ -11,7 +11,7 @@
 					<template #activator="{ props }">
 						<v-btn v-bind="props" variant="text" icon="mdi-dots-vertical" />
 					</template>
-					<v-list density="compact" class="bg-blue-grey-darken-4">
+					<v-list density="compact" class="bg-blue-grey-darken-4" min-width="180">
 						<v-list-item style="cursor: pointer; padding: 0;" class="add-attachment">
 							<label for="add-more" style="cursor: pointer; display: block; padding: 4px 0.7em;">
 								<v-icon icon="mdi-plus" class="mr-3" />
@@ -20,7 +20,9 @@
 									style="display:none;" @change="addMoreFiles" multiple>
 							</label>
 						</v-list-item>
-						<v-list-item density="compact" @click="emit('changeContentType')" class="px-3">
+						<v-list-item
+							v-if="contentType !== 'file' || formState.files.every(f => f.fileData.type.startsWith('image/'))"
+							density="compact" @click="emit('changeContentType')" class="px-3">
 							<template #prepend>
 								<v-icon :icon="contentType !== 'file' ? 'mdi-file-multiple-outline' : 'mdi-folder-multiple-image'"
 									class="mr-3" />
@@ -33,6 +35,7 @@
 
 			</v-card-title>
 			<v-card-text class="py-1">
+
 				<div class="attachments custom-scroll py-2 pr-4">
 					<component :is="contentType === 'media' ? MediaAttachment : FileAttachment"
 						v-bind="{ files: formState.files }" ref="attachment" @deleteAttach="deleteAttachItem" />
@@ -130,7 +133,7 @@ const submitHandler = () => {
 	const { subtitle, files } = formState as SubmitAttachmentForm;
 	emit('submit', props.contentType, {
 		subtitle,
-		files: files.map(({ preview, sizes, thumbnail, ...f }) => ({ ...f, sizes, thumbnail })),
+		files: files.map(({ preview, ...f }) => f),
 	} as AttachFormContent);
 	closeDialog();
 };

@@ -13,6 +13,7 @@
 							@contextmenu.prevent="openCtxMenu" :id="`message-${m.id}`" :data-message-id="m.id"
 							draggable="false" />
 					</TransitionGroup>
+					<ContextMenu v-model="msgCtxMenu.show" :position="msgCtxMenu.position" ref="ctxMenu" />
 				</div>
 			</div>
 			<!-- <div v-else class="text-h5 pa-4">Сообщений в чате пока нет</div> -->
@@ -38,6 +39,7 @@
 import sbMessages from '@/utils/messages.json';
 import MessageItem from '@/components/chat/messages/MessageItem.vue';
 import MessageForm from '@/components/chat/form/MessageForm.vue';
+import ContextMenu from '@/components/chat/ContextMenu.vue';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { useUserdataStore } from '@/stores/userdata';
 import { useMessagesStore } from '@/stores/messages';
@@ -133,17 +135,15 @@ const createMessage = async (content: TextMessage | AttachFormContent, type: Mes
 };
 
 // Context menu on message right click
+const ctxMenu = ref<InstanceType<typeof ContextMenu>>();
 const msgCtxMenu = reactive({
 	show: false,
 	activator: '' as string | Element | ComponentPublicInstance | undefined,
 	position: { x: 0, y: 0 }
 });
 const openCtxMenu = (e: MouseEvent) => {
-	console.log(`[data-message-id="${(e.target as HTMLElement).getAttribute('data-message-id') || ''}"]`);
-	msgCtxMenu.position.x = e.clientX;
-	msgCtxMenu.position.y = e.clientY;
-	msgCtxMenu.activator = `[data-message-id="${(e.target as HTMLElement).getAttribute('data-message-id') || ''}"]`;
 	msgCtxMenu.show = true;
+	ctxMenu.value?.updateLocation?.(e);
 };
 
 

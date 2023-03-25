@@ -4,7 +4,18 @@
 		<div v-for="(file, index) in content.files" :key="file.id" :class="{ 'mb-1': index !== (content.files.length - 1) }"
 			class="d-flex align-center">
 			<v-hover #default="{ isHovering, props }">
-				<div class="file-icon" v-bind="props" style="cursor: pointer;">
+				<div v-if="file.thumbnail && file.sizes" v-bind="props" class="file-icon px-1"
+					style="cursor: pointer; width: 80px;">
+					<ImageFrame :image="file" max-height="80" width="100%" rounded="true"
+						:loader="{ size: '30px', iconSize: '18px' }" />
+					<Transition name="fade">
+						<div class="preview-hover" v-if="isHovering">
+							<v-btn icon="mdi-eye-outline" size="large" variant="text" class="file-icon-btn" color="white"
+								density="compact" @click="downloadFile(file)" title="Download" :flat="false" :ripple="false" />
+						</div>
+					</Transition>
+				</div>
+				<div v-else class="file-icon" v-bind="props" style="cursor: pointer;">
 					<v-icon icon="mdi-file" size="80px" />
 					<Transition name="fade">
 						<span v-if="!isHovering" class="file-icon-ext font-weight-bold text-brown-darken-4">
@@ -25,11 +36,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, PropType } from 'vue';
+import ImageFrame from '@/components/chat/messages/media/ImageFrame.vue';
+import { ref, reactive, PropType, watchEffect } from 'vue';
 import { formatFileSize, getFileExt } from '@/utils/filters/messages';
 import { ref as storageRef, getBlob } from 'firebase/storage';
 import { useFirebaseStorage } from 'vuefire';
-import type { FileMessage } from '@/types/db/MessagesTable';
+import type { FileMessage } from '@/stores/messages';
 
 const props = defineProps({
 	content: {
@@ -62,6 +74,15 @@ const downloadFile = async (file: FileMessage['files'][number]) => {
 </script>
 
 <style lang="scss" scoped>
+.preview-hover {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	border-radius: 4px;
+	background-color: rgba($color: #000000, $alpha: 0.75);
+}
 .file-icon {
 	position: relative;
 	&-ext, &-btn {

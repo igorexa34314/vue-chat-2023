@@ -1,11 +1,11 @@
 <template>
 	<v-card class="image__wrapper" variant="text" @click="previewURL || image?.downloadURL ? emit('open') : undefined"
-		width="100%" :height="height" :max-height="maxHeight" rounded="0">
+		width="100%" :height="height" :max-height="maxHeight" :rounded="rounded">
 		<!-- <canvas></canvas> -->
-		<v-img :lazy-src="image?.thumbnail || ''" :src="previewURL || image?.downloadURL" :alt="alt || image?.fullname"
-			:width="image?.sizes.w" @load="imageLoaded" cover draggable="false">
+		<v-img :lazy-src="image?.thumbnail" :src="previewURL || image?.downloadURL" :alt="alt || image?.fullname"
+			:width="image?.sizes?.w" @load="imageLoaded" cover draggable="false">
 			<template #placeholder>
-				<ImageLoader @cancel="cancelImageLoading" />
+				<ImageLoader @cancel="cancelImageLoading" v-bind="loader" />
 			</template>
 		</v-img>
 	</v-card>
@@ -13,14 +13,14 @@
 
 <script setup lang="ts">
 import ImageLoader from '@/components/chat/ImageLoader.vue';
-import { onUnmounted, watchEffect, ref, PropType, } from 'vue';
+import { onUnmounted, watchEffect, ref, PropType } from 'vue';
 import { loadImagebyFullpath } from '@/services/message';
-import type { MediaMessage } from '@/stores/messages';
+import type { MediaMessage, FileMessage } from '@/stores/messages';
 
-export type ImageWithPreviewURL = { previewURL: string } & MediaMessage['images'][number];
+export type ImageWithPreviewURL = { previewURL: string } & (MediaMessage['images'][number] | FileMessage['files'][number]);
 
 const props = defineProps({
-	image: Object as PropType<MediaMessage['images'][number]>,
+	image: Object as PropType<MediaMessage['images'][number] | FileMessage['files'][number]>,
 	maxHeight: {
 		type: [String, Number],
 		default: '280px'
@@ -29,6 +29,11 @@ const props = defineProps({
 		type: [String, Number],
 		default: 'auto'
 	},
+	rounded: {
+		type: [String, Number, Boolean],
+		default: 0
+	},
+	loader: Object as PropType<InstanceType<typeof ImageLoader>['$props']>,
 	alt: String,
 });
 const emit = defineEmits<{

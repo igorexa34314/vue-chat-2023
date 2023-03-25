@@ -15,33 +15,29 @@ export interface TextMessage {
 
 export interface MediaMessage {
 	subtitle: string;
-	images: {
-		id: string;
-		type: string;
-		fullname: string;
-		fullpath: string;
-		downloadURL?: string;
-		fullsize: number;
-		sizes: {
-			w: number;
-			h: number;
-		};
-		thumbnail?: {
-			fullname: string;
-			fullpath: string;
-			size: number;
-		};
-	}[];
+	images: MessageImageItem[];
 }
 
 export interface FileMessage {
 	subtitle: string;
-	files: {
-		id: string;
-		type: string;
+	files: MessageFileItem[];
+}
+
+export type MessageImageItem = Required<MessageFileItem>;
+export interface MessageFileItem {
+	id: string;
+	type: string;
+	fullname: string;
+	fullpath: string;
+	fullsize: number;
+	downloadURL?: string;
+	sizes?: {
+		w: number;
+		h: number;
+	};
+	thumbnail?: {
 		fullname: string;
 		fullpath: string;
-		downloadURL?: string;
-		fullsize: number;
-	}[];
+		size: number;
+	};
 }

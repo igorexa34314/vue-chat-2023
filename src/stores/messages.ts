@@ -6,10 +6,14 @@ import { fbErrorHandler as errorHandler } from '@/services/errorHandler';
 import type { UserInfo } from '@/types/db/UserdataTable';
 import type { DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
 import type { ChatInfo } from '@/services/chat';
-import type { Message as DBMessage, TextMessage, MediaMessage as MediaDBMessage, FileMessage } from '@/types/db/MessagesTable';
+import type { Message as DBMessage, TextMessage, MediaMessage as MediaDBMessage, FileMessage as FileDBMessage } from '@/types/db/MessagesTable';
 
 export interface MediaMessage extends Omit<MediaDBMessage, 'images'> {
 	images: (Omit<MediaDBMessage['images'][number], 'thumbnail'> & { thumbnail: string })[];
+}
+
+export interface FileMessage extends Omit<FileDBMessage, 'files'> {
+	files: (Omit<FileDBMessage['files'][number], 'thumbnail'> & { thumbnail?: string })[];
 }
 
 export interface Message<T extends DBMessage['type'] = DBMessage['type']> extends Omit<DBMessage, 'sender_id' | 'content'> {

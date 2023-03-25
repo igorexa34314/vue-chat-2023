@@ -1,29 +1,24 @@
 <template>
-	<div class="images-grid">
+	<div v-if="mediaFiles.length" class="images-grid">
 		<v-row dense>
-			<v-col v-for="(img, index) in files" :key="img.id" :cols="calcImageCols(index)">
-				<v-card class="image-wrapper d-flex" height="100%" :max-height="files.length < 2 ? '380px' : '300px'">
-					<v-img :aspect-ratio="+calcImageCols(index) > 6 && index ? '1.778' : '1'" ref="imgsEl"
-						:lazy-src="img.thumbnail?.url" :src="img.preview" :alt="img.fileData.name" cover>
-						<template #placeholder>
-							<ImageLoader />
-						</template>
-					</v-img>
-					<v-btn color="white" variant="text" position="absolute" icon="mdi-delete"
-						class="bg-blue-grey-darken-2 delete-media-btn" @click="emit('deleteAttach', img.id)"
-						density="comfortable" elevation="5" />
-				</v-card>
+			<v-col v-for="(img, index) in mediaFiles" :key="img.id" :cols="calcImageCols(index)">
+				<PreviewImage :preview-item="img" :max-height="files.length < 2 ? '380px' : '300px'"
+					:img-ratio="+calcImageCols(index) > 6 && index ? '1.778' : '1'" ref="prevEl"
+					@delete-item="imgId => emit('deleteAttach', imgId)" />
 			</v-col>
 		</v-row>
 	</div>
+	<!-- <div v-if="otherFiles.length" class="mt-4">
+		<FileAttachment :files="otherFiles" />
+	</div> -->
 </template>
 
 <script setup lang="ts">
-import ImageLoader from '@/components/chat/ImageLoader.vue';
+// import FileAttachment from '@/components/chat/form/attach/FileAttachment.vue';
+import PreviewImage from '@/components/chat/form/attach/PreviewImage.vue';
 import { ref, computed } from 'vue';
 import { calcImageCols as calcCols } from '@/utils/images';
 import type { AttachedContent } from '@/components/chat/form/attach/AttachDialog.vue';
-import type { VImg } from 'vuetify/components';
 
 const props = defineProps<{
 	files: AttachedContent
@@ -32,9 +27,11 @@ const emit = defineEmits<{
 	(e: 'deleteAttach', imgId: AttachedContent[number]['id']): void
 }>();
 
-const imgsEl = ref<VImg[]>();
-const isImgsReady = computed(() => imgsEl.value?.every(img => img.state === 'loaded'));
-const calcImageCols = computed(() => (imgIdx: number) => calcCols(props.files.length, imgIdx));
+const mediaFiles = computed(() => props.files.filter(file => file.fileData.type.startsWith('image/')));
+// const otherFiles = computed(() => props.files.filter(file => !file.fileData.type.startsWith('image/')));
+const prevEl = ref<InstanceType<typeof PreviewImage>[]>();
+const isImgsReady = computed(() => prevEl.value?.map(img => img.imgEl).every(img => img?.state === 'loaded'));
+const calcImageCols = computed(() => (imgIdx: number) => calcCols(mediaFiles.value.length, imgIdx));
 defineExpose({ isImgsReady });
 </script>
 
@@ -55,12 +52,4 @@ defineExpose({ isImgsReady });
 		max-width: 320px;
 	}
 }
-
-.delete-media-btn {
-	bottom: 0;
-	right: 0;
-	transform: translate(-25%, -25%);
-}
-
-.image-wrapper {}
 </style>

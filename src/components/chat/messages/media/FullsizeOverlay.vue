@@ -16,9 +16,9 @@
 			<v-carousel-item v-for="item of content" :key="item.id" cover>
 				<div class="carousel-image-element" style="max-width: 75vw;">
 					<v-card class="fullsize-image__wrapper d-flex align-center justify-center" variant="text"
-						:width="item.sizes.w" :height="item.sizes.h" max-height="100%" max-width="100%"
+						:width="item.sizes?.w" :height="item.sizes?.h" max-height="100%" max-width="100%"
 						:style="{ transform: `scale(${zoomed ? '2' : '1'})` }">
-						<v-img :src="item.previewURL" :alt="alt || item.fullname" :width="item.sizes.w">
+						<v-img :src="item.previewURL" :alt="alt || item.fullname" :width="item.sizes?.w">
 							<template #placeholder>
 								<ImageLoader />
 							</template>
