@@ -1,11 +1,13 @@
 <template>
-	<v-card class="image__wrapper" variant="text" @click="previewURL || image?.downloadURL ? emit('open') : undefined"
-		width="100%" :height="height" :max-height="maxHeight" :rounded="rounded">
+	<v-card v-if="image" class="image__wrapper" variant="text"
+		@click="previewURL || image?.downloadURL ? emit('open') : undefined" width="100%" :height="height"
+		:max-height="maxHeight" :rounded="rounded" v-ripple="false">
 		<!-- <canvas></canvas> -->
-		<v-img :lazy-src="image?.thumbnail" :src="previewURL || image?.downloadURL" :alt="alt || image?.fullname"
-			:width="image?.sizes?.w" @load="imageLoaded" cover draggable="false">
+		<v-img :lazy-src="image.thumbnail" :src="previewURL || image?.downloadURL" :alt="alt || image.fullname"
+			:width="image.sizes?.w" @load="imageLoaded" cover draggable="false">
 			<template #placeholder>
-				<ImageLoader @cancel="cancelImageLoading" v-bind="loader" />
+				<ImageLoader v-bind="loader" :model-value="getUploadingStateById(image.id)?.progress"
+					@cancel="cancelImageLoading(image?.id as string)" />
 			</template>
 		</v-img>
 	</v-card>
@@ -15,6 +17,8 @@
 import ImageLoader from '@/components/chat/ImageLoader.vue';
 import { onUnmounted, watchEffect, ref, PropType } from 'vue';
 import { loadImagebyFullpath } from '@/services/message';
+import { storeToRefs } from 'pinia';
+import { useLoadingStore } from '@/stores/loading';
 import type { MediaMessage, FileMessage } from '@/stores/messages';
 
 export type ImageWithPreviewURL = { previewURL: string } & (MediaMessage['images'][number] | FileMessage['files'][number]);
@@ -41,15 +45,16 @@ const emit = defineEmits<{
 	(e: 'loaded', image: Pick<ImageWithPreviewURL, 'id' | 'previewURL'>): void,
 }>();
 
+const { getUploadingStateById } = storeToRefs(useLoadingStore());
 const previewURL = ref('');
 
 watchEffect(async () => {
 	try {
 		previewURL.value = await loadImagebyFullpath(props.image as MediaMessage['images'][number]) || '';
-	} catch (e: unknown) { }
+	} catch (e) { }
 });
-const cancelImageLoading = () => {
-	console.log('Loading canceled')
+const cancelImageLoading = (imgId: string) => {
+	getUploadingStateById.value(imgId)?.task.cancel();
 };
 
 const imageLoaded = () => {

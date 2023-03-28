@@ -1,16 +1,19 @@
 import { storage, db } from '@/firebase';
-import { arrayRemove, arrayUnion, collection, doc, DocumentChangeType, DocumentReference, setDoc, Timestamp, updateDoc, writeBatch } from 'firebase/firestore';
-import { ref as storageRef, uploadBytesResumable, uploadString, getBlob, getDownloadURL, getBytes, UploadTask, UploadTaskSnapshot } from 'firebase/storage';
+import { arrayRemove, arrayUnion, collection, doc, setDoc, Timestamp, writeBatch, deleteDoc, onSnapshot, getDoc, getDocs } from 'firebase/firestore';
+import { limit, query, orderBy, startAfter } from 'firebase/firestore';
+import { ref as storageRef, uploadBytesResumable, uploadString, getBlob, getDownloadURL, getBytes, deleteObject } from 'firebase/storage';
 import { getUid } from '@/services/auth';
 import { getUserdataById } from '@/services/userdata';
 import { fbErrorHandler as errorHandler } from '@/services/errorHandler';
 import { encode } from 'base64-arraybuffer';
+import { storeToRefs } from 'pinia';
 import { useMessagesStore } from '@/stores/messages';
-import type { DocumentData, QuerySnapshot } from 'firebase/firestore';
+import { useLoadingStore } from '@/stores/loading';
+import type { DocumentReference, DocumentData } from 'firebase/firestore';
 import type { UserInfo } from '@/types/db/UserdataTable';
 import type { Message as DBMessage, TextMessage, MediaMessage as MediaDBMessage, FileMessage as FileDBMessage } from '@/types/db/MessagesTable';
 import type { ChatInfo } from '@/services/chat';
-import type { Message, MediaMessage, FileMessage } from '@/stores/messages';
+import type { Message, MediaMessage, FileMessage, LastVisibleFbRef, Direction } from '@/stores/messages';
 
 export interface AttachFormContent {
 	subtitle: MediaDBMessage['subtitle'] | FileMessage['subtitle'];
@@ -25,57 +28,110 @@ export interface AttachFormContent {
 	}[];
 }
 
-export const chatCol = collection(db, 'chat');
+const chatCol = collection(db, 'chat');
 
-export const fetchMessages = async (messagesRef: QuerySnapshot<DocumentData>) => {
+export const fetchChatMessages = async (chatId: ChatInfo['id'], lmt: number = 10) => {
 	try {
-		let msgSnaps = [] as { changeType: DocumentChangeType; message: DBMessage }[];
-		const snapsPromises = [] as Promise<{ changeType: DocumentChangeType; message: Message }>[];
+		const messagesStore = useMessagesStore();
+		const { addMessage } = messagesStore;
+		const { lastVisible } = storeToRefs(messagesStore);
+		const messagesCol = collection(doc(chatCol, chatId), 'messages');
+		const q = query(messagesCol, orderBy('created_at', 'desc'), limit(lmt));
+		return onSnapshot(q, async messagesRef => {
+			const initialMessages = [] as DBMessage[];
+			const promises = [] as Promise<Message | undefined>[];
 
-		messagesRef.docChanges().forEach(change => {
-			if (change.type === 'added' || change.type === 'modified') {
+			messagesRef.docChanges().forEach(change => {
 				const { created_at, ...msgData } = change.doc.data() as DBMessage;
-				msgSnaps.unshift({
-					changeType: change.type,
-					message: {
-						created_at: (<Timestamp>created_at).toDate(),
-						...JSON.parse(JSON.stringify(msgData))
-					}
-				});
-			} else if (change.type === 'removed') {
-				const { deleteMessageById } = useMessagesStore();
-				debugger;
-				deleteMessageById(change.doc.id);
+				if (change.type === 'added') {
+					initialMessages.unshift({ ...msgData, created_at: (<Timestamp>created_at).toDate() });
+				}
+			});
+			initialMessages.forEach(m => {
+				promises.push(getFullMessageInfo(m));
+			});
+			(await Promise.all(promises)).forEach(m => {
+				if (m) addMessage(m, 'end');
+			});
+			if (messagesRef.size >= lmt) {
+				lastVisible.value.top = messagesRef.docs[messagesRef.docs.length - 1];
 			}
 		});
-		msgSnaps.forEach(({ changeType, message }) => {
-			snapsPromises.push(
-				(async () =>
-					({
-						changeType,
-						message: await getFullMessageInfo(message)
-					} as { changeType: DocumentChangeType; message: Message }))()
-			);
-		});
-		return await Promise.all(snapsPromises);
-	} catch (e: unknown) {
+	} catch (e) {
 		errorHandler(e);
 	}
 };
 
-export const loadMoreMessages = async (messagesRef: QuerySnapshot<DocumentData>) => {
+export const loadMoreMessages = async (chatId: ChatInfo['id'], direction: Direction, perPage: number = 10) => {
 	try {
-		const newDBMessages = [] as DBMessage[];
-		const msgPromises = [] as Promise<Message>[];
-		messagesRef.forEach(doc => {
-			const { created_at, ...msgData } = doc.data() as DBMessage;
-			newDBMessages.push({ ...msgData, created_at: (<Timestamp>created_at).toDate() });
-		});
-		newDBMessages.forEach(m => {
-			msgPromises.push(getFullMessageInfo(m) as Promise<Message>);
-		});
-		return await Promise.all(msgPromises);
-	} catch (e: unknown) {
+		const messagesStore = useMessagesStore();
+		const { messages, addMessage, deleteMessages } = messagesStore;
+		const { lastVisible } = storeToRefs(messagesStore);
+		if (lastVisible.value[direction]) {
+			const messagesCol = collection(doc(chatCol, chatId), 'messages');
+			const q = query(messagesCol, orderBy('created_at', direction === 'top' ? 'desc' : 'asc'), startAfter(lastVisible.value[direction]), limit(perPage));
+			return onSnapshot(q, async messagesRef => {
+				if (messagesRef.empty) {
+					lastVisible.value[direction] = null;
+					return;
+				}
+				if (messages.length > 40) {
+					deleteMessages(perPage, direction === 'top' ? 'end' : 'start');
+					const msgBeforeDel = await getDoc(doc(messagesCol, messages[direction === 'top' ? messages.length - 1 : 0].id));
+					lastVisible.value[direction === 'top' ? 'bottom' : 'top'] = msgBeforeDel as LastVisibleFbRef[Direction];
+				}
+				const initialMessages = [] as DBMessage[];
+				const promises = [] as Promise<Message | undefined>[];
+				messagesRef.forEach(doc => {
+					const { created_at, ...msgData } = doc.data() as DBMessage;
+					initialMessages.push({ ...msgData, created_at: (<Timestamp>created_at).toDate() });
+				});
+				initialMessages.forEach(m => {
+					promises.push(getFullMessageInfo(m));
+				});
+				(await Promise.all(promises)).forEach(m => {
+					if (m) addMessage(m, direction === 'top' ? 'start' : 'end');
+				});
+				lastVisible.value[direction] = messagesRef.size >= perPage ? messagesRef.docs[messagesRef.docs.length - 1] : null;
+			});
+		}
+	} catch (e) {
+		errorHandler(e);
+	}
+};
+export const loadMoreChatMessages = async (chatId: ChatInfo['id'], direction: Direction, perPage: number = 10) => {
+	try {
+		const messagesStore = useMessagesStore();
+		const { addMessage, deleteMessages } = messagesStore;
+		const { messages, lastVisible } = storeToRefs(messagesStore);
+		if (lastVisible.value[direction]) {
+			const messagesCol = collection(doc(chatCol, chatId), 'messages');
+			const q = query(messagesCol, orderBy('created_at', direction === 'top' ? 'desc' : 'asc'), startAfter(lastVisible.value[direction]), limit(perPage));
+			const messagesRef = await getDocs(q);
+			if (messagesRef.empty) {
+				lastVisible.value[direction] = null;
+				return;
+			}
+			if (messages.value.length > 40) {
+				deleteMessages(perPage, direction === 'top' ? 'end' : 'start');
+				const msgBeforeDel = await getDoc(doc(messagesCol, messages.value[direction === 'top' ? messages.value.length - 1 : 0].id));
+				lastVisible.value[direction === 'top' ? 'bottom' : 'top'] = msgBeforeDel as LastVisibleFbRef[Direction];
+			}
+			const initialMessages = [] as DBMessage[];
+			const promises = [] as Promise<Message | undefined>[];
+			messagesRef.forEach(doc => {
+				const { created_at, ...msgData } = doc.data() as DBMessage;
+				initialMessages.push({ ...msgData, created_at: (<Timestamp>created_at).toDate() });
+			});
+			initialMessages.forEach(m => {
+				promises.push(getFullMessageInfo(m));
+			});
+			(await Promise.all(promises)).forEach(m => {
+				if (m) addMessage(m, direction === 'top' ? 'start' : 'end');
+			});
+			lastVisible.value[direction] = messagesRef.size >= perPage ? messagesRef.docs[messagesRef.docs.length - 1] : null;
+		}
+	} catch (e) {
 		errorHandler(e);
 	}
 };
@@ -84,7 +140,7 @@ export const getMessageSenderInfo = async (senderId: DBMessage['sender_id']) => 
 	try {
 		const { displayName, photoURL } = (await getUserdataById(senderId))?.info as UserInfo;
 		return { id: senderId, displayName, photoURL } as Message['sender'];
-	} catch (e: unknown) {
+	} catch (e) {
 		errorHandler(e);
 	}
 };
@@ -131,7 +187,7 @@ export const getFullMessageInfo = async (DbMessage: DBMessage) => {
 			return { ...m, sender, content: { subtitle, files: filesWithThumb } } as Message;
 		}
 		return { ...m, sender, content } as Message;
-	} catch (e: unknown) {
+	} catch (e) {
 		errorHandler(e);
 	}
 };
@@ -145,22 +201,22 @@ export const getMessageThumb = async (file: MediaDBMessage['images'][number] | F
 			if (blobFile) {
 				return `data:${file.type};base64,${encode(blobFile)}`;
 			}
-		} catch (e: unknown) {
+		} catch (e) {
 			errorHandler(e);
 		}
 	}
 };
 
 export const loadImagebyFullpath = async (image: MediaMessage['images'][number]) => {
-	if (image.fullpath) {
-		try {
+	try {
+		if (image.fullpath) {
 			const blobFile = await getBlob(storageRef(storage, image.fullpath));
 			if (blobFile) {
 				return URL.createObjectURL(blobFile);
 			}
-		} catch (e: unknown) {
-			errorHandler(e);
 		}
+	} catch (e) {
+		errorHandler(e);
 	}
 };
 
@@ -185,7 +241,7 @@ export const createMessage = async (chatId: ChatInfo['id'], type: Message['type'
 			created_at: Timestamp.now(),
 			sender_id: await getUid()
 		});
-	} catch (e: unknown) {
+	} catch (e) {
 		errorHandler(e);
 	}
 };
@@ -221,7 +277,7 @@ const uploadMedia = async <T extends MediaDBMessage['images']>(
 			}
 			return await Promise.all(docRefPromises);
 		}
-	} catch (e: unknown) {
+	} catch (e) {
 		errorHandler(e);
 	}
 };
@@ -231,14 +287,15 @@ const createUploadTask = (
 	messageRef: DocumentReference<DocumentData>,
 	messageType: 'file' | 'media',
 	file: AttachFormContent['files'][number],
-	DBcontent: object
+	DBcontentToUpdate: MediaDBMessage['images'][number] | FileDBMessage['files'][number]
 ) => {
-	const { fileData, id } = file;
-	const fileRef = storageRef(storage, `chat/${chatId}/messageData/${messageRef.id}/${id + '.' + fileData.name.split('.').slice(1).join('.')}`);
+	const { setUploading, updateLoading, finishLoading } = useLoadingStore();
+	const { fileData, id: fileId } = file;
+	const fileRef = storageRef(storage, `chat/${chatId}/messageData/${messageRef.id}/${fileId + '.' + fileData.name.split('.').slice(1).join('.')}`);
 	const uploadTask = uploadBytesResumable(fileRef, fileData, {
 		contentType: fileData.type
 	});
-
+	setUploading(fileId, uploadTask);
 	uploadTask.on(
 		'state_changed',
 		snapshot => {
@@ -246,6 +303,7 @@ const createUploadTask = (
 			// Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
 			const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
 			console.log('Upload is ' + progress + '% done');
+			updateLoading(fileId, progress);
 			switch (snapshot.state) {
 				case 'paused':
 					console.log('Upload is paused');
@@ -255,40 +313,52 @@ const createUploadTask = (
 					break;
 			}
 		},
-		error => {
-			// Handle unsuccessful uploads
-			console.error(error);
-			switch (error.code) {
-				case 'storage/unauthorized':
-					// User doesn't have permission to access the object
-					break;
-				case 'storage/canceled':
-					// User canceled the upload
-					break;
-				case 'storage/unknown':
-					// Unknown error occurred, inspect error.serverResponse
-					break;
+		async error => {
+			try {
+				finishLoading(fileId);
+				// Handle unsuccessful uploads
+				await deleteDoc(messageRef);
+				await deleteObject(storageRef(storage, DBcontentToUpdate.thumbnail?.fullpath));
+				switch (error.code) {
+					case 'storage/unauthorized':
+						// User doesn't have permission to access the object
+						break;
+					case 'storage/canceled':
+						// User canceled the upload
+						break;
+					case 'storage/unknown':
+						// Unknown error occurred, inspect error.serverResponse
+						break;
+				}
+				throw error;
+			} catch (e) {
+				console.error(e);
 			}
 		},
 		async () => {
-			// Handle successful uploads on complete
-			const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-			const batch = writeBatch(db);
-			const fieldToUpdate = `content.${messageType === 'media' ? 'images' : 'files'}`;
-			batch.update(messageRef, {
-				[fieldToUpdate]: arrayRemove(DBcontent)
-			});
-			batch.update(messageRef, {
-				[fieldToUpdate]: arrayUnion({
-					...DBcontent,
-					...{
-						bucket: uploadTask.snapshot.ref.bucket,
-						fullpath: uploadTask.snapshot.ref.fullPath,
-						downloadURL
-					}
-				})
-			});
-			await batch.commit();
+			try {
+				// Handle successful uploads on complete
+				const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+				const batch = writeBatch(db);
+				const fieldToUpdate = `content.${messageType === 'media' ? 'images' : 'files'}`;
+				batch.update(messageRef, {
+					[fieldToUpdate]: arrayRemove(DBcontentToUpdate)
+				});
+				batch.update(messageRef, {
+					[fieldToUpdate]: arrayUnion({
+						...DBcontentToUpdate,
+						...{
+							bucket: uploadTask.snapshot.ref.bucket,
+							fullpath: uploadTask.snapshot.ref.fullPath,
+							downloadURL
+						}
+					})
+				});
+				await batch.commit();
+				finishLoading(fileId);
+			} catch (e) {
+				console.error(e);
+			}
 		}
 	);
 };
@@ -309,7 +379,7 @@ const uploadThumb = async <T extends MediaDBMessage['images'][number]['thumbnail
 				size: thumbnail.size
 			} as T;
 		}
-	} catch (e: unknown) {
+	} catch (e) {
 		errorHandler(e);
 	}
 };
@@ -344,7 +414,7 @@ const uploadFiles = async <T extends FileDBMessage['files']>(chatId: ChatInfo['i
 			}
 			return await Promise.all(docRefPromises);
 		}
-	} catch (e: unknown) {
+	} catch (e) {
 		errorHandler(e);
 	}
 };

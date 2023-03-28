@@ -71,7 +71,7 @@ const enableSearch = () => {
 const exit = async () => {
 	try {
 		await logout();
-	} catch (e: unknown) {
+	} catch (e) {
 		showMessage(messages[e as keyof typeof messages] || e as string, 'red-darken-3', 2000);
 	}
 	clearData();

@@ -13,16 +13,20 @@
 <script setup lang="ts">
 import AppNavbar from '@/components/app/AppNavbar.vue';
 import AppSidebar from '@/components/app/AppSidebar.vue';
-import { ref, onUnmounted } from 'vue';
+import { ref, onUnmounted, provide } from 'vue';
 import { fetchAuthUserdata } from '@/services/userdata';
+import { useAsyncState } from '@vueuse/core';
+import { globalLoadingKey } from '@/injection-keys';
 
 const drawer = ref(true);
 
 // Fetching all auth userdata
-const unsubscribe = await fetchAuthUserdata();
+const { state: unsub, isLoading } = useAsyncState(fetchAuthUserdata, undefined, {});
+
+provide(globalLoadingKey, isLoading);
 
 // Unsubscribe from receiving userdata realtime firebase
-onUnmounted(() => unsubscribe?.());
+onUnmounted(() => unsub.value?.());
 </script>
 
 <style lang="scss" scoped></style>

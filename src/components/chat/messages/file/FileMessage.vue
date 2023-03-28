@@ -67,7 +67,7 @@ const downloadFile = async (file: FileMessage['files'][number]) => {
 		linkElem.value?.click();
 		downloadLink.show = false;
 		URL.revokeObjectURL(downloadLink.url);
-	} catch (e: unknown) {
+	} catch (e) {
 		console.error(e);
 	}
 }

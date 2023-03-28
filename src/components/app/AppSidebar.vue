@@ -11,17 +11,15 @@
 			<template #title>{{ userInfo.displayName || 'Unknown' }}</template>
 		</v-card>
 		<v-divider thickness="2" class="mt-2" />
-		<v-list v-if="getUserChatsInfo?.length && !loading" density="comfortable" class="chat-list mt-3">
+		<div v-if="loading"><page-loader /></div>
+		<div v-else-if="!getUserChatsInfo || !getUserChatsInfo?.length" class="mt-4 pa-3">
+			<p class="text-h6 text-center">Чатов нет</p>
+		</div>
+		<v-list v-else density="comfortable" class="chat-list mt-3">
 			<v-list-item v-for="chat of getUserChatsInfo" :key="chat.id" :title="setChatName(chat)"
 				:prepend-avatar="setChatAvatar(chat)" :to="{ name: 'chat-id', params: { id: chat.id } }" class="py-3 mb-3"
 				draggable="false" />
 		</v-list>
-		<div v-else-if="loading">
-			<page-loader />
-		</div>
-		<div v-else class="mt-4 pa-3">
-			<p class="text-h6 text-center">Чатов нет</p>
-		</div>
 	</v-navigation-drawer>
 </template>
 
@@ -49,16 +47,14 @@ const drawer = useVModel(props, 'modelValue', emit);
 
 // fetchChatsInfo
 const getUserChatsInfo = computedAsync(async () => {
-	try {
-		if (userChats.value?.length) {
-			loading.value = true;
-			return (await Promise.all(userChats.value.map(getChatInfoById)) as ChatInfo[]);
-		}
-	} catch (e: unknown) {
+	if (userChats.value?.length) {
+		return (await Promise.all(userChats.value.map(getChatInfoById)) as ChatInfo[]);
+	}
+}, [], {
+	evaluating: loading,
+	onError: (e) => {
 		console.error(e);
 		showMessage(messages[e as keyof typeof messages] || e as string, 'red-darken-3', 2000);
-	} finally {
-		loading.value = false;
 	}
 });
 </script>

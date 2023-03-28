@@ -25,7 +25,7 @@ export const signInWithGoogle = async () => {
 		const provider = new GoogleAuthProvider();
 		const user = (await signInWithPopup(auth, provider)).user;
 		await createUser(user);
-	} catch (e: unknown) {
+	} catch (e) {
 		fbErrorHandler(e);
 	}
 };
@@ -36,7 +36,7 @@ export const registerWithEmail = async ({ email, password, displayName }: UserCr
 		await updateProfile(user, { displayName, photoURL: avatarURL });
 		await createUser(user);
 		return user.uid;
-	} catch (e: unknown) {
+	} catch (e) {
 		fbErrorHandler(e);
 	}
 };
@@ -44,14 +44,14 @@ export const loginWithEmail = async ({ email, password }: UserCredentials) => {
 	try {
 		await signInWithEmailAndPassword(auth, email, password);
 		await createUser((await getCurrentUser()) as FirebaseUser);
-	} catch (e: unknown) {
+	} catch (e) {
 		fbErrorHandler(e);
 	}
 };
 export const logout = async () => {
 	try {
 		await signOut(auth);
-	} catch (e: unknown) {
+	} catch (e) {
 		fbErrorHandler(e);
 	}
 };
