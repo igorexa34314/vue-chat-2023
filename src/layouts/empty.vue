@@ -15,7 +15,9 @@ const route = useRoute();
 const { showMessage } = useSnackbarStore();
 const msg = route.query.message as keyof typeof messages;
 
-showMessage(messages[msg] || msg);
+if (msg && messages[msg]) {
+	showMessage(messages[msg]);
+}
 </script>
 
 <style lang="scss" scoped></style>

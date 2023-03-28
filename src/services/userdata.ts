@@ -34,7 +34,7 @@ export const createUser = async ({ uid, email, displayName, phoneNumber, photoUR
 			await setDoc(getUserRef(uid), userdata, { merge: true });
 			await createSelfChat(uid);
 		}
-	} catch (e: unknown) {
+	} catch (e) {
 		errorHandler(e, 'Error adding document: ');
 	}
 };
@@ -50,7 +50,7 @@ export const updateUserAvatar = async (avatar: File | File[]) => {
 				'info.photoURL': avatarURL
 			});
 		}
-	} catch (e: unknown) {
+	} catch (e) {
 		errorHandler(e);
 	}
 };
@@ -58,14 +58,14 @@ export const updateUserdata = async (newData: Partial<UserInfo>) => {
 	try {
 		const infoField = Object.assign({}, ...(Object.keys(newData) as (keyof Partial<UserInfo>)[]).map(key => ({ [`info.${key}`]: newData[key] })));
 		await updateDoc(getUserRef(await getUid()), infoField);
-	} catch (e: unknown) {
+	} catch (e) {
 		errorHandler(e);
 	}
 };
 export const fetchAuthUserdata = async () => {
 	try {
 		const userRef = getUserRef(await getUid());
-		const unsubscribe = onSnapshot(userRef, udata => {
+		return onSnapshot(userRef, udata => {
 			if (udata && udata.exists()) {
 				const { setUserData } = useUserdataStore();
 				const { info, ...data } = udata.data() as UserData;
@@ -80,8 +80,7 @@ export const fetchAuthUserdata = async () => {
 				});
 			}
 		});
-		return unsubscribe;
-	} catch (e: unknown) {
+	} catch (e) {
 		errorHandler(e);
 	}
 };
@@ -91,7 +90,7 @@ export const getUserdataById = async (uid: UserInfo['uid']) => {
 		if (udata && udata.exists()) {
 			return udata.data() as UserData;
 		}
-	} catch (e: unknown) {
+	} catch (e) {
 		errorHandler(e);
 	}
 };
@@ -100,7 +99,7 @@ export const addToFriend = async (uid: UserInfo['uid']) => {
 		await updateDoc(getUserRef(await getUid()), {
 			friendsUid: arrayUnion(uid)
 		});
-	} catch (e: unknown) {
+	} catch (e) {
 		errorHandler(e);
 	}
 };

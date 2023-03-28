@@ -54,7 +54,7 @@ const submitForm = async () => {
 		try {
 			await loginWithEmail(formState);
 			push('/profile');
-		} catch (e: unknown) {
+		} catch (e) {
 			showMessage(messages[e as keyof typeof messages] || e as string, 'red-darken-3', 2000);
 		}
 	}
@@ -63,7 +63,7 @@ const loginWithGoogle = async () => {
 	try {
 		await signInWithGoogle();
 		push('/profile');
-	} catch (e: unknown) {
+	} catch (e) {
 		showMessage(messages[e as keyof typeof messages] || e as string, 'red-darken-3', 2000);
 	}
 };

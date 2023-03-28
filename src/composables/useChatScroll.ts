@@ -1,6 +1,7 @@
 import { ref, watchEffect, toRefs, computed, Ref, ComputedRef } from 'vue';
 import { useScroll, useInfiniteScroll, watchPausable } from '@vueuse/core';
 import { useMessagesStore } from '@/stores/messages';
+import { loadMoreChatMessages } from '@/services/message';
 import type { LastVisibleFbRef } from '@/stores/messages';
 import type { Color } from 'csstype';
 
@@ -50,7 +51,7 @@ export const useChatScroll = (chatId: string, chatEl: Ref<HTMLElement | undefine
 		async () => {
 			if (lastVisible.value.top) {
 				pauseMessageWatcher();
-				await messagesStore.loadMoreChatMessages(chatId, 'top');
+				await loadMoreChatMessages(chatId, 'top');
 				resumeMessageWatcher();
 			}
 		},
@@ -63,7 +64,7 @@ export const useChatScroll = (chatId: string, chatEl: Ref<HTMLElement | undefine
 		async () => {
 			if (lastVisible.value.bottom) {
 				pauseMessageWatcher();
-				await messagesStore.loadMoreChatMessages(chatId, 'bottom');
+				await loadMoreChatMessages(chatId, 'bottom');
 				resumeMessageWatcher();
 			}
 		},

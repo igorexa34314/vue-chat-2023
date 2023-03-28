@@ -5,6 +5,7 @@
 		<div v-else-if="userChats && userChats.length" style="height: 100%; position: relative;" @dragenter="addAttachment"
 			@dragleave="removeAttachment" class="chat__field">
 			<div v-if="loading"><page-loader /></div>
+			<!-- <div v-else-if="!messages || !messages.length" class="text-h5 pa-4">Сообщений в чате пока нет</div> -->
 			<div v-else-if="messages && messages.length" ref="chatEl" class="chat__content px-8">
 				<div class="messages-field mt-4" draggable="false">
 					<TransitionGroup :name="enTransition ? 'messages-list' : ''">
@@ -16,7 +17,6 @@
 					<ContextMenu v-model="msgCtxMenu.show" :position="msgCtxMenu.position" ref="ctxMenu" />
 				</div>
 			</div>
-			<!-- <div v-else class="text-h5 pa-4">Сообщений в чате пока нет</div> -->
 			<Transition name="fixed-btn-fade">
 				<v-btn v-if="chatEl && chatEl.scrollHeight > chatEl.clientHeight && !isScrollOnBottom"
 					class="fixed-button-scrolldown" color="blue-grey-darken-1" icon="mdi-arrow-down" size="large"
@@ -40,13 +40,14 @@ import sbMessages from '@/utils/messages.json';
 import MessageItem from '@/components/chat/messages/MessageItem.vue';
 import MessageForm from '@/components/chat/form/MessageForm.vue';
 import ContextMenu from '@/components/chat/ContextMenu.vue';
+import { fetchChatMessages } from '@/services/message';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { useUserdataStore } from '@/stores/userdata';
 import { useMessagesStore } from '@/stores/messages';
 import { useCurrentUser } from 'vuefire';
 import { getChatInfoById } from '@/services/chat';
 import { createMessage as createDBMessage } from '@/services/message';
-import { ref, reactive, computed, watchEffect, nextTick, onUnmounted } from 'vue';
+import { ref, reactive, computed, watchEffect, onUnmounted } from 'vue';
 import { useMeta } from 'vue-meta';
 import { useRoute } from 'vue-router';
 import { useChatScroll } from '@/composables/useChatScroll';
@@ -65,13 +66,14 @@ const { getUChats: userChats } = storeToRefs(useUserdataStore());
 const route = useRoute();
 const { showMessage } = useSnackbarStore();
 const messagesStore = useMessagesStore();
+const { clearMessages } = messagesStore;
 
 const chatInfo = ref<ChatInfo>();
 const chatEl = ref<HTMLDivElement>();
 const loading = ref(true);
-const messages = computed<Message[]>(() => messagesStore.messages);
-let unsubscribe: Unsubscribe | undefined;
-let chatId: string = route.params.id as string;
+const messages = computed(() => messagesStore.messages);
+let unsub: Unsubscribe | undefined;
+let chatId = route.params.id as string;
 const uid = useCurrentUser().value?.uid;
 
 const attachDialog = ref(false);
@@ -79,9 +81,9 @@ const dropZone = ref<VDialog | HTMLElement>();
 
 const { scrollOpacity, isScrollOnBottom, scrollBottom } = useChatScroll(chatId, chatEl, messages);
 
-const { isOverDropZone } = useDropZone(dropZone.value as HTMLElement, (files) => {
-	console.log('droppped', files)
-});
+// const { isOverDropZone } = useDropZone(dropZone.value as HTMLElement, (files) => {
+// 	console.log('droppped', files)
+// });
 
 //Dynamic page title
 useMeta(computed(() => {
@@ -101,37 +103,40 @@ const removeAttachment = () => {
 
 // Reset messages when switching chat
 watchEffect(async (onCleanup) => {
-	messagesStore.clearMessages();
+	clearMessages();
 	chatId = route.params.id as string;
-	unsubscribe?.();
+	unsub?.();
 	if (chatId) {
 		try {
 			loading.value = true;
 			chatInfo.value = await getChatInfoById(chatId);
-			unsubscribe = await messagesStore.fetchChatMessages(chatId);
-		} catch (e: unknown) { }
+			unsub = await fetchChatMessages(chatId);
+		} catch (e) {
+			console.error(e);
+		}
 		finally {
-			await nextTick();
 			loading.value = false;
 		}
 	}
 	// Unsubscribe from receiving messages realtime firebase
 	onCleanup(() => {
-		messagesStore.clearMessages();
-		unsubscribe?.();
+		clearMessages();
+		unsub?.();
 	});
 });
 
 const enTransition = ref(false);
 
 const createMessage = async (content: TextMessage | AttachFormContent, type: Message['type'] = 'text') => {
-	enTransition.value = true;
 	try {
+		enTransition.value = true;
 		await createDBMessage(chatId, type, content);
-	} catch (e: unknown) {
+	} catch (e) {
 		showMessage(sbMessages[e as keyof typeof sbMessages] || e as string, 'red-darken-3', 2000);
 	}
-	enTransition.value = false;
+	finally {
+		enTransition.value = false;
+	}
 };
 
 // Context menu on message right click
@@ -146,11 +151,10 @@ const openCtxMenu = (e: MouseEvent) => {
 	ctxMenu.value?.updateLocation?.(e);
 };
 
-
 // Unsubscribe from receiving messages realtime firebase
 onUnmounted(() => {
-	messagesStore.clearMessages();
-	unsubscribe?.();
+	clearMessages();
+	unsub?.();
 });
 </script>
 

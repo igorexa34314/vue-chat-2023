@@ -120,7 +120,7 @@ watchEffect(async () => {
 			(await Promise.all(promises)).forEach(item => {
 				formState.files.push(item);
 			})
-		} catch (e: unknown) {
+		} catch (e) {
 			console.error(e);
 		}
 	}

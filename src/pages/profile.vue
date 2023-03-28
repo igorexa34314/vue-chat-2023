@@ -9,11 +9,10 @@
 		</v-tabs>
 
 		<v-window v-model="pickedProfileTab">
-			<v-window-item :value="profileTabs[0].value">
+			<v-window-item :value="profileTabs[0].value" style="min-height: 100px;">
 				<v-container fluid>
-					<InfoForm v-if="userInfo && Object.keys(userInfo).length" :uinfo="userInfo"
-						@submit="submitForm" />
-					<div v-else><page-loader /></div>
+					<div v-if="loading"><page-loader /></div>
+					<InfoForm v-if="userInfo && Object.keys(userInfo).length" :uinfo="userInfo" @submit="submitForm" />
 				</v-container>
 			</v-window-item>
 		</v-window>
@@ -26,16 +25,17 @@ import messages from '@/utils/messages.json';
 import { storeToRefs } from 'pinia';
 import { updateUserdata, updateUserAvatar } from '@/services/userdata';
 import { useUserdataStore } from '@/stores/userdata';
-import { ref } from 'vue';
+import { ref, inject } from 'vue';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { useMeta } from 'vue-meta';
+import { globalLoadingKey } from '@/injection-keys';
 import type { ProfileForm } from '@/components/profile/InfoForm.vue';
 
 useMeta({ title: 'Мой профиль' });
 
 const { getUInfo: userInfo } = storeToRefs(useUserdataStore());
 const { showMessage } = useSnackbarStore();
-
+const loading = inject(globalLoadingKey);
 const profileTabs = [
 	{ title: 'Информация', value: 'info' },
 	{ title: 'Безопасность', value: 'security' },
@@ -50,14 +50,18 @@ const submitForm = async ({ avatar, ...formData }: ProfileForm) => {
 			await updateUserAvatar(avatar[0]);
 		}
 		showMessage('succesfully_updated');
-	} catch (e: unknown) {
+	} catch (e) {
 		console.error(e);
 		showMessage(messages[e as keyof typeof messages] || e as string, 'red-darken-3', 2000);
 	}
 };
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+[v-cloak] {
+	display: none;
+}
+</style>
 
 <route lang="yaml">
 meta:

@@ -38,7 +38,7 @@ const createPrivateChat = async (...users: UserInfo['uid'][]): Promise<ChatInfo[
 		});
 		await Promise.all(promises);
 		return newChatRef.id;
-	} catch (e: unknown) {
+	} catch (e) {
 		errorHandler(e);
 	}
 };
@@ -51,7 +51,7 @@ export const createSelfChat = async (uid: UserInfo['uid']): Promise<ChatInfo['id
 			chats: arrayUnion(newChatRef.id)
 		});
 		return newChatRef.id;
-	} catch (e: unknown) {
+	} catch (e) {
 		errorHandler(e);
 	}
 };
@@ -60,7 +60,7 @@ export const joinPrivateChat = async (companionId: UserInfo['uid']): Promise<Cha
 	try {
 		const senderId = (await getUid()) as UserInfo['uid'];
 		return (await isPrivateChatExists(senderId, companionId)) || (await createPrivateChat(senderId, companionId));
-	} catch (e: unknown) {
+	} catch (e) {
 		errorHandler(e);
 	}
 };
@@ -81,7 +81,7 @@ export const getChatInfoById = async (chatId: ChatInfo['id']): Promise<ChatInfo 
 				created_at: chat.data().created_at.toDate()
 			} as ChatInfo;
 		}
-	} catch (e: unknown) {
+	} catch (e) {
 		errorHandler(e);
 	}
 };
