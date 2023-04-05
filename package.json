@@ -9,6 +9,7 @@
 		"preview": "vite preview"
 	},
 	"dependencies": {
+		"@imengyu/vue3-context-menu": "^1.2.3",
 		"@mdi/font": "^7.1.96",
 		"@vueuse/core": "^9.13.0",
 		"base64-arraybuffer": "^1.0.2",

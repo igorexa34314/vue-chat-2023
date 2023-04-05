@@ -14,7 +14,14 @@
 							@contextmenu.prevent="openCtxMenu" :id="`message-${m.id}`" :data-message-id="m.id"
 							draggable="false" />
 					</TransitionGroup>
-					<ContextMenu v-model="msgCtxMenu.show" :position="msgCtxMenu.position" ref="ctxMenu" />
+					<ContextMenu v-model:show="msgCtxMenu.show" :options="msgCtxMenu.options">
+						<context-menu-item>
+							<v-list max-width="400">
+								<v-list-item title="item.title" />
+							</v-list>
+						</context-menu-item>
+
+					</ContextMenu>
 				</div>
 			</div>
 			<Transition name="fixed-btn-fade">
@@ -36,10 +43,11 @@
 </template>
 
 <script setup lang="ts">
+import { ContextMenu, ContextMenuItem } from '@imengyu/vue3-context-menu'
 import sbMessages from '@/utils/messages.json';
 import MessageItem from '@/components/chat/messages/MessageItem.vue';
 import MessageForm from '@/components/chat/form/MessageForm.vue';
-import ContextMenu from '@/components/chat/ContextMenu.vue';
+// import ContextMenu from '@/components/chat/ContextMenu.vue';
 import { fetchChatMessages } from '@/services/message';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { useUserdataStore } from '@/stores/userdata';
@@ -47,7 +55,7 @@ import { useMessagesStore } from '@/stores/messages';
 import { useCurrentUser } from 'vuefire';
 import { getChatInfoById } from '@/services/chat';
 import { createMessage as createDBMessage } from '@/services/message';
-import { ref, reactive, computed, watchEffect, onUnmounted } from 'vue';
+import { ref, reactive, computed, watchEffect, onUnmounted, nextTick } from 'vue';
 import { useMeta } from 'vue-meta';
 import { useRoute } from 'vue-router';
 import { useChatScroll } from '@/composables/useChatScroll';
@@ -61,6 +69,7 @@ import type { TextMessage } from '@/types/db/MessagesTable';
 import type { VDialog } from 'vuetify/components';
 import type { ComponentPublicInstance } from 'vue';
 import type { AttachFormContent } from '@/services/message';
+import '@imengyu/vue3-context-menu/lib/vue3-context-menu.css';
 
 const { getUChats: userChats } = storeToRefs(useUserdataStore());
 const route = useRoute();
@@ -140,15 +149,19 @@ const createMessage = async (content: TextMessage | AttachFormContent, type: Mes
 };
 
 // Context menu on message right click
-const ctxMenu = ref<InstanceType<typeof ContextMenu>>();
 const msgCtxMenu = reactive({
 	show: false,
 	activator: '' as string | Element | ComponentPublicInstance | undefined,
-	position: { x: 0, y: 0 }
+	options: {
+		zIndex: 3,
+		minWidth: 230,
+		x: 500,
+		y: 200
+	},
 });
 const openCtxMenu = (e: MouseEvent) => {
 	msgCtxMenu.show = true;
-	ctxMenu.value?.updateLocation?.(e);
+	// ContextMenu.showContextMenu({ x: e.clientX, y: e.clientY });
 };
 
 // Unsubscribe from receiving messages realtime firebase

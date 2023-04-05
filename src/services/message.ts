@@ -62,43 +62,6 @@ export const fetchChatMessages = async (chatId: ChatInfo['id'], lmt: number = 10
 	}
 };
 
-export const loadMoreMessages = async (chatId: ChatInfo['id'], direction: Direction, perPage: number = 10) => {
-	try {
-		const messagesStore = useMessagesStore();
-		const { messages, addMessage, deleteMessages } = messagesStore;
-		const { lastVisible } = storeToRefs(messagesStore);
-		if (lastVisible.value[direction]) {
-			const messagesCol = collection(doc(chatCol, chatId), 'messages');
-			const q = query(messagesCol, orderBy('created_at', direction === 'top' ? 'desc' : 'asc'), startAfter(lastVisible.value[direction]), limit(perPage));
-			return onSnapshot(q, async messagesRef => {
-				if (messagesRef.empty) {
-					lastVisible.value[direction] = null;
-					return;
-				}
-				if (messages.length > 40) {
-					deleteMessages(perPage, direction === 'top' ? 'end' : 'start');
-					const msgBeforeDel = await getDoc(doc(messagesCol, messages[direction === 'top' ? messages.length - 1 : 0].id));
-					lastVisible.value[direction === 'top' ? 'bottom' : 'top'] = msgBeforeDel as LastVisibleFbRef[Direction];
-				}
-				const initialMessages = [] as DBMessage[];
-				const promises = [] as Promise<Message | undefined>[];
-				messagesRef.forEach(doc => {
-					const { created_at, ...msgData } = doc.data() as DBMessage;
-					initialMessages.push({ ...msgData, created_at: (<Timestamp>created_at).toDate() });
-				});
-				initialMessages.forEach(m => {
-					promises.push(getFullMessageInfo(m));
-				});
-				(await Promise.all(promises)).forEach(m => {
-					if (m) addMessage(m, direction === 'top' ? 'start' : 'end');
-				});
-				lastVisible.value[direction] = messagesRef.size >= perPage ? messagesRef.docs[messagesRef.docs.length - 1] : null;
-			});
-		}
-	} catch (e) {
-		errorHandler(e);
-	}
-};
 export const loadMoreChatMessages = async (chatId: ChatInfo['id'], direction: Direction, perPage: number = 10) => {
 	try {
 		const messagesStore = useMessagesStore();
