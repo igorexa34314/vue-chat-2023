@@ -6,22 +6,18 @@
 			@dragleave="removeAttachment" class="chat__field">
 			<div v-if="loading"><page-loader /></div>
 			<!-- <div v-else-if="!messages || !messages.length" class="text-h5 pa-4">Сообщений в чате пока нет</div> -->
-			<div v-else-if="messages && messages.length" ref="chatEl" class="chat__content px-8">
+			<div v-else-if="messages && messages.length" ref="chatEl" class="chat__content px-6">
 				<div class="messages-field mt-4" draggable="false">
-					<TransitionGroup :name="enTransition ? 'messages-list' : ''">
-						<MessageItem v-for="m in messages" :key="m.id" :self="uid === m.sender.id" :type="m.type"
-							:content="m.content" :sender="m.sender" :created_at="<Date>m.created_at"
-							@contextmenu.prevent="openCtxMenu" :id="`message-${m.id}`" :data-message-id="m.id"
-							draggable="false" />
-					</TransitionGroup>
-					<ContextMenu v-model:show="msgCtxMenu.show" :options="msgCtxMenu.options">
-						<context-menu-item>
-							<v-list max-width="400">
-								<v-list-item title="item.title" />
-							</v-list>
-						</context-menu-item>
-
-					</ContextMenu>
+					<!-- <TransitionGroup :name="enTransition ? 'messages-list' : ''"> -->
+					<MessageItem v-for="m in messages" :key="m.id" :self="uid === m.sender.id" :type="m.type"
+						:content="m.content" :sender="m.sender" :created_at="<Date>m.created_at"
+						@contextmenu.prevent="openCtxMenu(m.id, $event)" :id="`message-${m.id}`" :data-message-id="m.id"
+						draggable="false" class="message-item" @blur="closeCtxMenu" @open-in-overlay="openInOverlay"
+						@media-loaded="addMediaPreviewToOverlay" />
+					<!-- </TransitionGroup> -->
+					<ContextMenu v-model="msgCtxMenu.show" :position="msgCtxMenu.position" />
+					<FullsizeOverlay v-model="overlayState.show" :content="<ImageWithPreviewURL[]>overlayState.images"
+						v-model:currentItem="overlayState.currentImage" @close="overlayClosed" />
 				</div>
 			</div>
 			<Transition name="fixed-btn-fade">
@@ -43,11 +39,11 @@
 </template>
 
 <script setup lang="ts">
-import { ContextMenu, ContextMenuItem } from '@imengyu/vue3-context-menu'
+import FullsizeOverlay from '@/components/chat/messages/media/FullsizeOverlay.vue';
 import sbMessages from '@/utils/messages.json';
 import MessageItem from '@/components/chat/messages/MessageItem.vue';
 import MessageForm from '@/components/chat/form/MessageForm.vue';
-// import ContextMenu from '@/components/chat/ContextMenu.vue';
+import ContextMenu from '@/components/chat/ContextMenu.vue';
 import { fetchChatMessages } from '@/services/message';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { useUserdataStore } from '@/stores/userdata';
@@ -63,19 +59,18 @@ import { useDropZone } from '@vueuse/core';
 import { storeToRefs } from 'pinia';
 import { setChatName } from '@/utils/chat';
 import type { Unsubscribe } from '@firebase/database';
-import type { Message } from '@/stores/messages';
+import type { MediaMessage, Message } from '@/stores/messages';
 import type { ChatInfo } from '@/services/chat';
 import type { TextMessage } from '@/types/db/MessagesTable';
-import type { VDialog } from 'vuetify/components';
-import type { ComponentPublicInstance } from 'vue';
+import type { VMenu, VDialog } from 'vuetify/components';
 import type { AttachFormContent } from '@/services/message';
-import '@imengyu/vue3-context-menu/lib/vue3-context-menu.css';
+import type { ImageWithPreviewURL } from '@/components/chat/messages/media/ImageFrame.vue';
 
 const { getUChats: userChats } = storeToRefs(useUserdataStore());
 const route = useRoute();
 const { showMessage } = useSnackbarStore();
 const messagesStore = useMessagesStore();
-const { clearMessages } = messagesStore;
+const { $reset } = messagesStore;
 
 const chatInfo = ref<ChatInfo>();
 const chatEl = ref<HTMLDivElement>();
@@ -112,7 +107,7 @@ const removeAttachment = () => {
 
 // Reset messages when switching chat
 watchEffect(async (onCleanup) => {
-	clearMessages();
+	$reset();
 	chatId = route.params.id as string;
 	unsub?.();
 	if (chatId) {
@@ -129,7 +124,7 @@ watchEffect(async (onCleanup) => {
 	}
 	// Unsubscribe from receiving messages realtime firebase
 	onCleanup(() => {
-		clearMessages();
+		$reset();
 		unsub?.();
 	});
 });
@@ -151,27 +146,43 @@ const createMessage = async (content: TextMessage | AttachFormContent, type: Mes
 // Context menu on message right click
 const msgCtxMenu = reactive({
 	show: false,
-	activator: '' as string | Element | ComponentPublicInstance | undefined,
-	options: {
-		zIndex: 3,
-		minWidth: 230,
-		x: 500,
-		y: 200
-	},
+	position: { x: 0, y: 0 }
 });
-const openCtxMenu = (e: MouseEvent) => {
-	msgCtxMenu.show = true;
-	// ContextMenu.showContextMenu({ x: e.clientX, y: e.clientY });
+const openCtxMenu = (mId: Message['id'], e: MouseEvent) => {
+	msgCtxMenu.show = false;
+	msgCtxMenu.position.x = e.clientX;
+	msgCtxMenu.position.y = e.clientY;
+	(e.target as HTMLElement).style.backgroundColor = "rgba(255, 255, 255, 0.2)";
+	nextTick(() => msgCtxMenu.show = true);
 };
-
+const closeCtxMenu = () => console.log('closeCtxMenu');
 // Unsubscribe from receiving messages realtime firebase
 onUnmounted(() => {
-	clearMessages();
+	$reset();
 	unsub?.();
 });
+
+const overlayState = reactive({
+	show: false,
+	images: [] as ImageWithPreviewURL[],
+	currentImage: 0,
+});
+const addMediaPreviewToOverlay = (media: ImageWithPreviewURL) => {
+	overlayState.images.push(media);
+};
+const openInOverlay = (imgId: ImageWithPreviewURL['id']) => {
+	overlayState.currentImage = overlayState.images.findIndex(img => img.id == imgId);
+	overlayState.show = true;
+}
+const overlayClosed = () => {
+};
 </script>
 
 <style lang="scss" scoped>
+// Custom scroll
+$scroll-bg: v-bind(scrollOpacity) !important;
+@import "@/assets/styles/scroll";
+
 .container {
 	padding: 0 !important;
 	height: 100%;
@@ -207,23 +218,11 @@ onUnmounted(() => {
 	opacity: 0;
 	transform: translateX(30px);
 }
-/* width */
-::-webkit-scrollbar {
-	width: 0.55rem;
-}
 
-/* Track */
-::-webkit-scrollbar-track {
-	border-radius: 0.5rem;
-}
-/* Handle */
-::-webkit-scrollbar-thumb {
-	background-color: v-bind(scrollOpacity);
-	border-radius: 0.5rem;
-	transition: all 0.35s ease-in 0s;
-	&:hover {
-		background-color: rgba($color: #ffffff, $alpha: .4);
-		transition: all 0.35s ease-in 0s;
+.message-item {
+	transition: all 0.25s ease-in 0s;
+	&._context {
+		background-color: rgba(255, 255, 255, 0.2);
 	}
 }
 .attach-frame {

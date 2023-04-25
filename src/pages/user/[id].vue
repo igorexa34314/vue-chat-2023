@@ -6,7 +6,7 @@
 				<v-row align="center" justify="space-between">
 					<v-col cols="10" class="d-flex align-center">
 						<v-img :lazy-src="defaultAvatar" :src="(userdata?.info?.photoURL)?.toString()" alt="Фото"
-							max-width="100px" class="mr-5" />
+							max-width="100px" class="mr-5" eager />
 						<div class="">
 							<h2 class="mb-2">{{ userdata?.info?.displayName }}</h2>
 							<div class="d-flex align-center mt-2">
@@ -41,7 +41,7 @@
 <script setup lang="ts">
 import messages from '@/utils/messages.json';
 import { computed } from 'vue';
-import { getUserdataById, addToFriend as addFriend} from '@/services/userdata';
+import { getUserdataById, addToFriend as addFriend } from '@/services/userdata';
 import { useRoute, useRouter } from 'vue-router';
 import { getUid } from '@/services/auth';
 import { joinPrivateChat } from '@/services/chat';

@@ -5,47 +5,31 @@
 			<v-row dense align-content="stretch" no-gutters>
 				<v-col v-for="(img, index) of content.images" :cols="calcImageCols(index)"
 					:class="{ 'image-col': content.images.length > 2 }">
-					<ImageFrame :image="img" :key="img.id" :alt="content.subtitle" @open="openInOverlay(img)"
-						@loaded="addImagePreviewToOverlay" :max-height="content.images.length > 2 ? '280px' : '360px'"
-						:height="img.sizes.h" />
+					<ImageFrame :image="img" :key="img.id" :alt="content.subtitle" @open="emit('openInOverlay', img.id)"
+						@loaded="(mediaReady: ImageWithPreviewURL) => emit('mediaLoaded', mediaReady)"
+						:max-height="content.images.length > 2 ? '280px' : '360px'" :height="img.sizes.h" />
 				</v-col>
 			</v-row>
-			<FullsizeOverlay v-model="overlayState.show" :content="<ImageWithPreviewURL[]>overlayState.images"
-				v-model:currentItem="overlayState.currentImage" @close="overlayClosed" />
 		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
 import ImageFrame from '@/components/chat/messages/media/ImageFrame.vue';
-import FullsizeOverlay from '@/components/chat/messages/media/FullsizeOverlay.vue';
-import { reactive, PropType, computed } from 'vue';
+import { computed } from 'vue';
 import { calcImageCols as calcCols } from '@/utils/images';
 import type { MediaMessage } from '@/stores/messages';
 import type { ImageWithPreviewURL } from '@/components/chat/messages/media/ImageFrame.vue';
 
-const props = defineProps({
-	content: {
-		type: Object as PropType<MediaMessage>,
-		required: true,
-	},
-});
+const props = defineProps<{
+	content: MediaMessage;
+}>();
 
-const overlayState: { show: boolean; currentImage: number, images: ImageWithPreviewURL[] } = reactive({
-	show: false,
-	images: [...props.content.images] as ImageWithPreviewURL[],
-	currentImage: 0,
-});
+const emit = defineEmits<{
+	(e: 'openInOverlay', imgId: ImageWithPreviewURL['id']): void;
+	(e: 'mediaLoaded', media: Pick<ImageWithPreviewURL, 'id' | 'previewURL'>): void;
+}>();
 
-const openInOverlay = (img: MediaMessage['images'][number]) => {
-	overlayState.show = true;
-	overlayState.currentImage = props.content.images.indexOf(img);
-}
-const addImagePreviewToOverlay = ({ id, previewURL }: Pick<ImageWithPreviewURL, 'id' | 'previewURL'>) => {
-	overlayState.images = overlayState.images.map((img) => img.id === id ? { ...img, previewURL } : img)
-};
-const overlayClosed = () => {
-};
 const calcImageCols = computed(() => (imgIdx: number) => calcCols(props.content.images.length, imgIdx));
 </script>
 

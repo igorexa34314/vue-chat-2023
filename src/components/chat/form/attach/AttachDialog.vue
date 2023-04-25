@@ -158,6 +158,10 @@ const deleteAttachItem = (fileId: AttachedContent[number]['id']) => {
 </script>
 
 <style lang="scss" scoped>
+// Custom scroll
+$scroll-width: 0.35rem !important;
+@import "@/assets/styles/scroll";
+
 .attachments {
 	overflow: auto;
 	max-height: 420px;
@@ -169,21 +173,6 @@ const deleteAttachItem = (fileId: AttachedContent[number]['id']) => {
 .attach-dialog :deep(.v-overlay__scrim) {
 	background: #000000;
 	opacity: 55%;
-}
-::-webkit-scrollbar {
-	width: 0.35rem;
-}
-::-webkit-scrollbar-track {
-	border-radius: 0.5rem;
-}
-::-webkit-scrollbar-thumb {
-	background-color: rgba($color: #ffffff, $alpha: .2);
-	border-radius: 0.5rem;
-	transition: all 0.35s ease-in 0s;
-	&:hover {
-		background-color: rgba($color: #ffffff, $alpha: .4);
-		transition: all 0.35s ease-in 0s;
-	}
 }
 .add-attachment {
 	transition: all .1s ease-in 0s;

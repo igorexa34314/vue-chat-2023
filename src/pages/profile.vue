@@ -58,6 +58,7 @@ const submitForm = async ({ avatar, ...formData }: ProfileForm) => {
 </script>
 
 <style lang="scss" scoped>
+
 [v-cloak] {
 	display: none;
 }

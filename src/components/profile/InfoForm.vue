@@ -14,9 +14,9 @@
 
 		<div class="w-50 mt-5">
 			<v-card variant="outlined" max-width="250" class="mb-5" elevation="9">
-				<v-img :lazy-src="defaultAvatar" :src="formState.photoURL || defaultAvatar" alt="Ваш аватар" cover>
+				<v-img :lazy-src="defaultAvatar" :src="formState.photoURL || defaultAvatar" alt="Ваш аватар" cover eager>
 					<template #placeholder>
-						<ImageLoader/>
+						<ImageLoader />
 					</template>
 				</v-img>
 			</v-card>

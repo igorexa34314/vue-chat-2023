@@ -1,0 +1,30 @@
+$scroll-width: 0.55rem !default;
+$scroll-border: 0.5rem !default;
+$scroll-bg: rgba(
+	$color: #ffffff,
+	$alpha: 0.2
+) !default;
+$scroll-hover-bg: rgba(
+	$color: #ffffff,
+	$alpha: 0.4
+) !default;
+
+/* width */
+::-webkit-scrollbar {
+	width: $scroll-width;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+	border-radius: $scroll-border;
+}
+/* Handle */
+::-webkit-scrollbar-thumb {
+	background-color: $scroll-bg;
+	border-radius: 0.5rem;
+	transition: all 0.35s ease-in 0s;
+	&:hover {
+		background-color: $scroll-hover-bg;
+		transition: all 0.35s ease-in 0s;
+	}
+}

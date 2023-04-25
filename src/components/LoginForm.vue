@@ -20,7 +20,7 @@
 		<v-card-actions class="flex-column justify-center">
 			<div class="providers d-flex">
 				<v-btn type="button" @click="loginWithGoogle" variant="plain" stacked density="compact" size="small"> <v-img
-						:src="googleImg" width="36px" alt="Войти через Google" /></v-btn>
+						:src="googleImg" eager width="36px" alt="Войти через Google" /></v-btn>
 			</div>
 			<div class="text-center mt-4">Нет аккаунта? <router-link to="/register">Зарегистрироваться</router-link></div>
 		</v-card-actions>

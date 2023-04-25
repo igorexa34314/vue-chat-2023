@@ -27,15 +27,13 @@ export const useMessagesStore = defineStore('messages', () => {
 		top: null,
 		bottom: null
 	});
-	const clearMessages = () => {
+	const $reset = () => {
 		messages.value = [];
+		lastVisible.top = null;
+		lastVisible.bottom = null;
 	};
 	const addMessage = (msg: Message, direction: 'start' | 'end' = 'end') => {
-		if (direction === 'end') {
-			messages.value.push(msg);
-		} else {
-			messages.value.unshift(msg);
-		}
+		return direction === 'end' ? messages.value.push(msg) : messages.value.unshift(msg);
 	};
 	const deleteMessageById = (messageId: Message['id']) => {
 		messages.value = messages.value.filter(m => m.id === messageId);
@@ -44,18 +42,14 @@ export const useMessagesStore = defineStore('messages', () => {
 		messages.value = messages.value.map(m => (m.id === newMsg.id ? newMsg : m));
 	};
 	const deleteMessages = (count = 10, direction: 'start' | 'end' = 'end') => {
-		if (direction === 'end') {
-			messages.value.splice(-count, count);
-		} else {
-			messages.value.splice(0, count);
-		}
+		return direction === 'end' ? messages.value.splice(-count, count) : messages.value.splice(0, count);
 	};
 
 	return {
 		messages,
 		lastVisible,
 		addMessage,
-		clearMessages,
+		$reset,
 		modifyMessage,
 		deleteMessageById,
 		deleteMessages

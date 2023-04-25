@@ -1,10 +1,10 @@
 <template>
-	<div :class="{ self }" class="message d-flex">
+	<div :class="{ self, 'message_active': active }" class="message d-flex px-4 py-2">
 		<v-avatar size="30px" :image="sender.photoURL || defaultAvatar" :class="self ? 'ml-2' : 'mr-2'"
 			class="sender__avatar" @click="push({ name: 'user-id', params: { id: sender.id } })"
 			:title="sender.displayName" />
 
-		<v-card min-width="120px" max-width="850px" density="compact" class="message__card mb-4"
+		<v-card min-width="120px" max-width="850px" density="compact" class="message__card"
 			:class="self ? 'bg-light-blue-darken-3' : ''" variant="tonal">
 
 			<v-card-title v-if="type === 'text'" class="message__head d-flex flex-row align-center">
@@ -15,7 +15,9 @@
 			<v-card-text class="message__content pb-1"
 				:class="type === 'file' ? 'pl-2 pt-2' : type === 'media' ? 'pl-4 pt-4' : ''">
 
-				<component :is="messageComponent" v-bind="{ content }" :class="{ 'pr-3': type === 'file' }" />
+				<component :is="messageComponent" v-bind="{ content }" :class="{ 'pr-3': type === 'file' }"
+					@openInOverlay="(imgId: ImageWithPreviewURL['id']) => emit('openInOverlay', imgId)"
+					@mediaLoaded="(media: ImageWithPreviewURL) => emit('mediaLoaded', media)" />
 
 				<i18n-d tag="small" :value="created_at" :format="messagesDateFormat(created_at as Date)" scope="global"
 					locale="ru-RU" :class="{ 'mt-2': type !== 'file' }" class="message__time" />
@@ -32,6 +34,7 @@ import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { messagesDateFormat } from '@/utils/filters/messages';
 import { defaultAvatar } from '@/utils/globals';
+import type { ImageWithPreviewURL } from '@/components/chat/messages/media/ImageFrame.vue';
 import type { Message } from '@/stores/messages';
 
 interface MessageItemProps {
@@ -39,19 +42,38 @@ interface MessageItemProps {
 	content: Message['content'];
 	sender: Message['sender'];
 	created_at: Message['created_at'];
-	self?: boolean
+	self?: boolean;
+	active?: boolean;
 };
 
-const messageComponent = computed(() => props.type === 'media' ? MediaMessage : props.type === 'file' ? FileMessage : TextMessage);
-
-const { push } = useRouter();
 const props = withDefaults(defineProps<MessageItemProps>(), {
 	self: false,
+	active: false
 });
+const emit = defineEmits<{
+	(e: 'openInOverlay', imgId: ImageWithPreviewURL['id']): void;
+	(e: 'mediaLoaded', media: ImageWithPreviewURL): void;
+}>();
+const { push } = useRouter();
+const messageComponent = computed(() => props.type === 'media' ? MediaMessage : props.type === 'file' ? FileMessage : TextMessage);
 </script>
 
 <style lang="scss" scoped>
 .message {
+	position: relative;
+	&::before {
+		content: '';
+		position: absolute;
+		display: block;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		transition: all 0.3s ease-in 0s;
+	}
+	&_active::before {
+		background-color: rgba($color: #ffffff, $alpha: 0.2);
+	}
 	&__card {
 		@media(max-width: 720px) {
 			max-height: 320px !important;

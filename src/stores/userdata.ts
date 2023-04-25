@@ -5,7 +5,7 @@ import type { UserData, UserInfo } from '@/types/db/UserdataTable';
 export const useUserdataStore = defineStore('userdata', () => {
 	const userdata = ref<UserData | null>();
 
-	const clearData = () => {
+	const $reset = () => {
 		userdata.value = null;
 	};
 	const setUserData = (data: UserData) => {
@@ -23,8 +23,8 @@ export const useUserdataStore = defineStore('userdata', () => {
 		getUdata,
 		getUInfo,
 		getUChats,
-		clearData,
+		$reset,
 		setUserInfo,
-		setUserData,
+		setUserData
 	};
 });

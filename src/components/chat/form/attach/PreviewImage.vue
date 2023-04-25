@@ -1,7 +1,7 @@
 <template>
 	<v-card class="image-wrapper d-flex" height="100%" :max-height="maxHeight">
 		<v-img :aspect-ratio="imgRatio" ref="imgEl" :lazy-src="previewItem.thumbnail?.url" :src="previewItem.preview"
-			:alt="previewItem.fileData.name" cover>
+			:alt="previewItem.fileData.name" cover eager>
 			<template #placeholder>
 				<ImageLoader />
 			</template>

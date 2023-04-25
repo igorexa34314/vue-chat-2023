@@ -1,6 +1,5 @@
 <template>
 	<v-app-bar color="blue-grey-darken-4" :elevation="7" prominent>
-
 		<v-app-bar-nav-icon variant="text" @click.stop="emit('drawer')"></v-app-bar-nav-icon>
 
 		<v-toolbar-title>Мой чат</v-toolbar-title>
@@ -48,19 +47,18 @@ import { useUserdataStore } from '@/stores/userdata';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { VTextField } from 'vuetify/components';
 
-
 const { push } = useRouter();
-const { clearData } = useUserdataStore();
+const { $reset } = useUserdataStore();
 const { showMessage } = useSnackbarStore();
 
 const emit = defineEmits<{
-	(e: 'drawer'): void,
+	(e: 'drawer'): void;
 }>();
 
 const search = ref<VTextField>();
 const searchState = reactive({
 	enabled: false,
-	text: '',
+	text: ''
 });
 
 const enableSearch = () => {
@@ -72,11 +70,11 @@ const exit = async () => {
 	try {
 		await logout();
 	} catch (e) {
-		showMessage(messages[e as keyof typeof messages] || e as string, 'red-darken-3', 2000);
+		showMessage(messages[e as keyof typeof messages] || (e as string), 'red-darken-3', 2000);
 	}
-	clearData();
+	$reset();
 	push('/login');
-}
+};
 </script>
 
 <style lang="scss" scoped>
