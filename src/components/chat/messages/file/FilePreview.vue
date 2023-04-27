@@ -1,19 +1,19 @@
 <template>
-	<div v-bind="hoverProps" class="file-icon px-1" style="cursor: pointer; width: 80px">
-		<ImageFrame :image="file" max-height="80" width="100%" rounded="true" :loader="{ size: '30px', iconSize: '18px' }"
-			@loaded="(mediaReady: ImageWithPreviewURL) => emit('loaded', mediaReady)" />
+	<div v-bind="hoverProps" class="file-icon mx-1">
+		<ImageFrame :image="file" rounded="true" height="100%" :loader="{ size: '30px', iconSize: '18px' }"
+			@loaded="emit('loaded')" />
 		<Transition name="fade">
-			<div class="preview-hover" v-if="isHovering">
-				<v-btn icon="mdi-eye-outline" size="large" variant="text" class="file-icon-btn" color="white" density="compact"
-					@click="emit('openFile')" title="Open" :flat="false" :ripple="false" />
+			<div class="preview-hover" v-if="isHovering" @click="emit('openFile')">
+				<v-icon :icon="mdiEyeOutline" size="22px" variant="text" class="file-icon-btn" color="white" density="compact"
+					title="Open" flat :ripple="false" />
 			</div>
 		</Transition>
 	</div>
 </template>
 
 <script setup lang="ts">
+import { mdiEyeOutline } from '@mdi/js';
 import ImageFrame from '@/components/chat/messages/media/ImageFrame.vue';
-import type { ImageWithPreviewURL } from '@/components/chat/messages/media/ImageFrame.vue';
 import type { FileMessage } from '@/stores/messages';
 
 const props = defineProps<{
@@ -22,13 +22,17 @@ const props = defineProps<{
 	hoverProps: Record<string, unknown>;
 }>();
 const emit = defineEmits<{
-	(e: 'loaded', media: ImageWithPreviewURL): void;
+	(e: 'loaded'): void;
 	(e: 'openFile'): void;
 }>();
 </script>
 
 <style lang="scss" scoped>
 .file-icon {
+	user-select: none !important;
+	cursor: pointer;
+	width: 80px;
+	height: 60px;
 	position: relative;
 	&-ext, &-btn {
 		margin-left: auto;

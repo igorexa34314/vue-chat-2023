@@ -4,13 +4,13 @@
 		<v-carousel v-model="overlayItem" hide-delimiters hide-delimiter-background height="85vh" show-arrows>
 			<template #prev="{ props }">
 				<div v-if="overlayItem" class="carousel__control carousel__control-prev" @click="props.onClick">
-					<v-icon icon="mdi-arrow-left" size="55px" class="carousel-prev-btn" />
+					<v-icon :icon="mdiArrowLeft" size="55px" class="carousel-prev-btn" />
 				</div>
 			</template>
 			<template #next="{ props }">
 				<div v-if="overlayItem < content.length - 1" class="carousel__control carousel__control-next"
 					@click="props.onClick">
-					<v-icon icon="mdi-arrow-right" size="55px" class="carousel-next-btn" />
+					<v-icon :icon="mdiArrowRight" size="55px" class="carousel-next-btn" />
 				</div>
 			</template>
 			<v-carousel-item v-for="item of content" :key="item.id" cover>
@@ -29,17 +29,18 @@
 		</v-carousel>
 
 		<div class="actions__panel">
-			<v-btn class="zoom-in__btn" :icon="zoomed ? 'mdi-magnify-minus-outline' : 'mdi-magnify-plus-outline'"
-				variant="text" title="Zoom" @click="zoomImage" disabled />
-			<v-btn class="download__btn" icon="mdi-download" variant="text"
+			<v-btn class="zoom-in__btn" :icon="zoomed ? mdiMagnifyMinusOutline : mdiMagnifyPlusOutline" variant="text"
+				title="Zoom" @click="zoomImage" disabled />
+			<v-btn class="download__btn" :icon="mdiDownload" variant="text"
 				:href="content[currentItem || 0].previewURL || content[currentItem || 0].downloadURL"
 				:download="content[currentItem || 0].fullname || 'image.png'" title="Download" />
-			<v-btn class="close__btn" icon="mdi-close" variant="text" @click="closeOverlay" title="Close" />
+			<v-btn class="close__btn" :icon="mdiClose" variant="text" @click="closeOverlay" title="Close" />
 		</div>
 	</v-overlay>
 </template>
 
 <script setup lang="ts">
+import { mdiArrowLeft, mdiArrowRight, mdiMagnifyPlusOutline, mdiMagnifyMinusOutline, mdiDownload, mdiClose } from '@mdi/js';
 import ImageLoader from '@/components/chat/ImageLoader.vue';
 import { ref } from 'vue';
 import { useVModel } from '@vueuse/core';

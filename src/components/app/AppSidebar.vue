@@ -62,14 +62,14 @@ const getUserChatsInfo = computedAsync(async () => {
 <style lang="scss" scoped>
 .user-info {
 	:deep(img) {
-		user-select: none !important;
-		pointer-events: none !important;
+		user-select: text !important;
+		pointer-events: text !important;
 	}
 }
 .chat-list {
 	:deep(img) {
-		user-select: none !important;
-		pointer-events: none !important;
+		user-select: text !important;
+		pointer-events: text !important;
 	}
 }
 </style>

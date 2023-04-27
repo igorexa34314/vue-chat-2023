@@ -18,6 +18,7 @@
 </template>
 
 <script setup lang="ts">
+import { mdiImage, mdiFileDocumentOutline } from '@mdi/js';
 import type { Message } from '@/types/db/MessagesTable';
 
 const props = defineProps<{
@@ -36,8 +37,8 @@ interface AttachMenu {
 }
 
 const attachMenuItems: AttachMenu[] = [
-	{ title: 'Фото или видео', icon: 'mdi-image', attachmentType: 'media', accept: 'image/*, video/*' },
-	{ title: 'Файл', icon: 'mdi-file-document-outline', attachmentType: 'file' },
+	{ title: 'Фото или видео', icon: mdiImage, attachmentType: 'media', accept: 'image/*, video/*' },
+	{ title: 'Файл', icon: mdiFileDocumentOutline, attachmentType: 'file' },
 ];
 const addFiles = (type: AttachMenu['attachmentType'], e: Event) => {
 	const files = (e.target as HTMLInputElement).files;

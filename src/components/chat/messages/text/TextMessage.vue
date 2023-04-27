@@ -14,4 +14,6 @@ const props = defineProps<{
 }>();
 </script>
 
-<style scoped></style>
+<style lang="scss" scoped>
+.text-message {}
+</style>

@@ -3,7 +3,7 @@
 		<v-text-field v-model="password" :type="passFieldState.showPass ? 'text' : 'password'"
 			:rules="rules || validations.password" :label="label" :placeholder="placeholder" :variant="variant" required>
 			<template #append-inner>
-				<v-icon :icon="passFieldState.showPass ? 'mdi-eye' : 'mdi-eye-off'" @mousedown="passFieldState.showPass = true"
+				<v-icon :icon="passFieldState.showPass ? mdiEye : mdiEyeOff" @mousedown="passFieldState.showPass = true"
 					@mouseup="passFieldState.showPass = false" class="mr-2" style="cursor: pointer" />
 			</template>
 		</v-text-field>
@@ -11,7 +11,7 @@
 			:label="repeaterLabel" :placeholder="repeaterPlaceholder" :variant="variant || 'underlined'"
 			:class="repeaterClass + ` mt-4`" required>
 			<template #append-inner>
-				<v-icon :icon="passFieldState.showRepeater ? 'mdi-eye' : 'mdi-eye-off'"
+				<v-icon :icon="passFieldState.showRepeater ? mdiEye : mdiEyeOff"
 					@mousedown="passFieldState.showRepeater = true" @mouseup="passFieldState.showRepeater = false" class="mr-2"
 					style="cursor: pointer" />
 			</template>
@@ -20,6 +20,7 @@
 </template>
 
 <script setup lang="ts">
+import { mdiEye, mdiEyeOff } from '@mdi/js';
 import { reactive } from 'vue';
 import validations from '@/utils/validations';
 import { useVModel } from '@vueuse/core';

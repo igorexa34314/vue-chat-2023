@@ -1,11 +1,12 @@
-import { ref, watchEffect, toRefs, computed, Ref, ComputedRef } from 'vue';
+import { ref, watchEffect, toRefs, computed } from 'vue';
 import { useScroll, useInfiniteScroll, watchPausable } from '@vueuse/core';
 import { useMessagesStore } from '@/stores/messages';
 import { loadMoreChatMessages } from '@/services/message';
+import type { Ref, ComputedRef } from 'vue';
 import type { LastVisibleFbRef } from '@/stores/messages';
 import type { Color } from 'csstype';
 
-export const useChatScroll = (chatId: string, chatEl: Ref<HTMLElement | undefined>, messages: Ref<any> | ComputedRef<any>) => {
+export const useChatScroll = (chatId: string, chatEl: Ref<HTMLElement | undefined>, messages: Ref<Array<any>> | ComputedRef<Array<any>>) => {
 	const messagesStore = useMessagesStore();
 	// Last visible doc refs on top and bottom (needs for infinite loading)
 	const lastVisible = computed<LastVisibleFbRef>(() => messagesStore.lastVisible);
@@ -38,9 +39,11 @@ export const useChatScroll = (chatId: string, chatEl: Ref<HTMLElement | undefine
 
 	// Watchers to scroll bottom when new message add
 	const { pause: pauseMessageWatcher, resume: resumeMessageWatcher } = watchPausable(
-		messages,
-		() => {
-			scrollBottom();
+		() => messages.value.length,
+		(newVal, oldVal) => {
+			if (newVal > oldVal) {
+				scrollBottom();
+			}
 		},
 		{ deep: true, flush: 'post' }
 	);

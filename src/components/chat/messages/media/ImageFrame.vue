@@ -1,9 +1,9 @@
 <template>
    <v-card v-if="image" class="image__wrapper" variant="text"
-      @click="previewURL || image?.downloadURL ? emit('open') : undefined" width="100%" :height="height"
+      @click="image.previewURL || image?.downloadURL ? emit('open') : undefined" width="100%" :height="height"
       :max-height="maxHeight" :rounded="rounded" v-ripple="false">
       <!-- <canvas></canvas> -->
-      <v-img :lazy-src="image.thumbnail" :src="previewURL || image?.downloadURL" :alt="alt || image.fullname"
+      <v-img :lazy-src="image.thumbnail" :src="image.previewURL || image.downloadURL" :alt="alt || image.fullname"
          :width="image.sizes?.w" eager @load="imageLoaded" cover draggable="false">
          <template #placeholder>
             <ImageLoader v-bind="loader" :model-value="getUploadingStateById(image.id)?.progress"
@@ -15,11 +15,11 @@
 
 <script setup lang="ts">
 import ImageLoader from '@/components/chat/ImageLoader.vue';
-import { useMessagesStore } from '@/stores/messages';
-import { onUnmounted, watchEffect, ref } from 'vue';
+import { onUnmounted, watchEffect, toRef } from 'vue';
 import { loadImagebyFullpath } from '@/services/message';
 import { storeToRefs } from 'pinia';
 import { useLoadingStore } from '@/stores/loading';
+import { useMessagesStore } from '@/stores/messages';
 import { VImg, VCard } from 'vuetify/components';
 import type { MediaMessage, FileMessage } from '@/stores/messages';
 
@@ -39,14 +39,16 @@ const props = withDefaults(defineProps<{
 })
 const emit = defineEmits<{
    (e: 'open'): void;
-   (e: 'loaded', image: ImageWithPreviewURL): void;
+   (e: 'loaded'): void;
 }>();
+const { setMediaPreviewURL } = useMessagesStore();
 const { getUploadingStateById } = storeToRefs(useLoadingStore());
-const previewURL = ref('');
-
 watchEffect(async () => {
    try {
-      previewURL.value = await loadImagebyFullpath(props.image as MediaMessage['images'][number]) || '';
+      if (!props.image.previewURL) {
+         const previewURL = await loadImagebyFullpath(props.image as MediaMessage['images'][number]) || '';
+         setMediaPreviewURL(toRef(props, 'image'), previewURL);
+      }
    } catch (e) { }
 });
 const cancelImageLoading = (imgId: string) => {
@@ -54,26 +56,26 @@ const cancelImageLoading = (imgId: string) => {
 };
 
 const imageLoaded = () => {
-   if (previewURL.value) {
-      emit('loaded', { ...props.image, previewURL: previewURL.value });
+   if (props.image.previewURL) {
+      emit('loaded');
    }
 };
 onUnmounted(() => {
-   if (previewURL.value) {
-      URL.revokeObjectURL(previewURL.value);
+   if (props.image.previewURL) {
+      URL.revokeObjectURL(props.image.previewURL);
    }
 });
 </script>
 
 <style lang="scss" scoped>
 .image__wrapper {
+   user-select: none !important;
    display: flex;
    justify-content: center;
    max-width: 100%;
    max-height: 100%;
-
    :deep(img) {
-      user-select: none !important;
+      user-select: text !important;
       pointer-events: none !important;
    }
 }

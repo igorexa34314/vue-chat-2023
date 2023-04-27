@@ -1,5 +1,5 @@
 <template>
-	<div :class="{ self, 'message_active': active }" class="message d-flex px-4 py-2">
+	<div :class="{ self }" class="message d-flex px-6 py-2" @contextmenu.prevent="emit('contextmenu', $event)">
 		<v-avatar size="30px" :image="sender.photoURL || defaultAvatar" :class="self ? 'ml-2' : 'mr-2'"
 			class="sender__avatar" @click="push({ name: 'user-id', params: { id: sender.id } })"
 			:title="sender.displayName" />
@@ -43,7 +43,6 @@ interface MessageItemProps {
 	sender: Message['sender'];
 	created_at: Message['created_at'];
 	self?: boolean;
-	active?: boolean;
 };
 
 const props = withDefaults(defineProps<MessageItemProps>(), {
@@ -53,6 +52,7 @@ const props = withDefaults(defineProps<MessageItemProps>(), {
 const emit = defineEmits<{
 	(e: 'openInOverlay', imgId: ImageWithPreviewURL['id']): void;
 	(e: 'mediaLoaded', media: ImageWithPreviewURL): void;
+	(e: 'contextmenu', event: MouseEvent): void;
 }>();
 const { push } = useRouter();
 const messageComponent = computed(() => props.type === 'media' ? MediaMessage : props.type === 'file' ? FileMessage : TextMessage);
@@ -60,19 +60,25 @@ const messageComponent = computed(() => props.type === 'media' ? MediaMessage : 
 
 <style lang="scss" scoped>
 .message {
+	user-select: text !important;
 	position: relative;
-	&::before {
+	&::after {
 		content: '';
+		visibility: hidden;
 		position: absolute;
-		display: block;
 		top: 0;
-		left: 0;
-		right: 0;
 		bottom: 0;
-		transition: all 0.3s ease-in 0s;
+		left: -50%;
+		right: -25%;
+		transition: all 0.15s ease-in-out 0.2s;
+		z-index: -1;
 	}
-	&_active::before {
-		background-color: rgba($color: #ffffff, $alpha: 0.2);
+	&._context {
+		&::after {
+			visibility: visible;
+			background-color: rgba(255, 255, 255, 0.2);
+			transition: all 0.15s ease-in 0s;
+		}
 	}
 	&__card {
 		@media(max-width: 720px) {
@@ -87,6 +93,14 @@ const messageComponent = computed(() => props.type === 'media' ? MediaMessage : 
 		display: block;
 		text-align: end;
 		font-size: 0.55rem;
+	}
+	::-moz-selection {
+		/* Code for Firefox */
+		background: #1A237E;
+	}
+
+	::selection {
+		background: #1A237E;
 	}
 }
 .sender {

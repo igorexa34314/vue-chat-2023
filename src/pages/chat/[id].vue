@@ -2,30 +2,33 @@
 	<v-container class="container" fluid>
 		<div v-if="userChats && userChats.length && !userChats.some(el => el === $route.params.id)" class="text-h5 pa-5">
 			Такого чата не существует либо вы не состоите в нем</div>
-		<div v-else-if="userChats && userChats.length" style="height: 100%; position: relative;" @dragenter="addAttachment"
-			@dragleave="removeAttachment" class="chat__field">
+		<div v-else-if="userChats && userChats.length" style="height: 100%; position: relative;" class="chat__field">
 			<div v-if="loading"><page-loader /></div>
 			<!-- <div v-else-if="!messages || !messages.length" class="text-h5 pa-4">Сообщений в чате пока нет</div> -->
-			<div v-else-if="messages && messages.length" ref="chatEl" class="chat__content px-6">
-				<div class="messages-field mt-4" draggable="false">
-					<!-- <TransitionGroup :name="enTransition ? 'messages-list' : ''"> -->
-					<MessageItem v-for="m in messages" :key="m.id" :self="uid === m.sender.id" :type="m.type"
-						:content="m.content" :sender="m.sender" :created_at="<Date>m.created_at"
-						@contextmenu.prevent="openCtxMenu(m.id, $event)" :id="`message-${m.id}`" :data-message-id="m.id"
-						draggable="false" class="message-item" @blur="closeCtxMenu" @open-in-overlay="openInOverlay"
-						@media-loaded="addMediaPreviewToOverlay" />
-					<!-- </TransitionGroup> -->
-					<ContextMenu v-model="msgCtxMenu.show" :position="msgCtxMenu.position" />
-					<FullsizeOverlay v-model="overlayState.show" :content="<ImageWithPreviewURL[]>overlayState.images"
+			<div v-else-if="messages && messages.length" ref="chatEl" class="chat__content px-4">
+				<div class="messages-field mt-4">
+					<TransitionGroup :name="enTransition ? 'messages-list' : ''">
+						<MessageItem v-for="m in messages" :key="m.id" :self="uid === m.sender.id" :type="m.type"
+							:content="m.content" :sender="m.sender" :created_at="<Date>m.created_at"
+							:class="{ '_context': msgCtxMenu.activeMessage === m.id }"
+							@contextmenu="(e: MouseEvent) => openCtxMenu(e, { mId: m.id, mType: m.type })" :id="`message-${m.id}`"
+							:data-message-id="m.id" class="message-item" @open-in-overlay="openInOverlay" @dragstart.prevent
+							@drop.prevent draggable="false" />
+					</TransitionGroup>
+					<ContextMenu v-model="msgCtxMenu.show" :content-type="msgCtxMenu.contentType"
+						:position="msgCtxMenu.position" @closed="ctxMenuClosed" @copy-selected="copySelectedText"
+						@copy-image="copyImage" @copy-all="copyTextMessage" @download="downloadFile" @edit="editMessage" />
+					<FullsizeOverlay v-model="overlayState.show" :content="<ImageWithPreviewURL[]>getAllMedia"
 						v-model:currentItem="overlayState.currentImage" @close="overlayClosed" />
 				</div>
 			</div>
 			<Transition name="fixed-btn-fade">
 				<v-btn v-if="chatEl && chatEl.scrollHeight > chatEl.clientHeight && !isScrollOnBottom"
-					class="fixed-button-scrolldown" color="blue-grey-darken-1" icon="mdi-arrow-down" size="large"
+					class="fixed-button-scrolldown" color="blue-grey-darken-1" :icon="mdiArrowDown" size="large"
 					@click="scrollBottom('smooth')" />
 			</Transition>
-			<MessageForm class="message-form py-4 px-6" @submitForm="createMessage" />
+			<MessageForm class="message-form py-4 px-6" ref="msgForm" @create-message="createMessage"
+				@update-message="updateMessage" />
 		</div>
 		<v-dialog v-model="attachDialog" width="auto" ref="dropZone">
 			<v-card minHeight="80vh" minWidth="80vh" class="bg-blue-accent-1 d-flex flex-column align-center justify-center"
@@ -39,6 +42,7 @@
 </template>
 
 <script setup lang="ts">
+import { mdiArrowDown } from '@mdi/js';
 import FullsizeOverlay from '@/components/chat/messages/media/FullsizeOverlay.vue';
 import sbMessages from '@/utils/messages.json';
 import MessageItem from '@/components/chat/messages/MessageItem.vue';
@@ -50,7 +54,7 @@ import { useUserdataStore } from '@/stores/userdata';
 import { useMessagesStore } from '@/stores/messages';
 import { useCurrentUser } from 'vuefire';
 import { getChatInfoById } from '@/services/chat';
-import { createMessage as createDBMessage } from '@/services/message';
+import { createMessage as createDBMessage, updateMessageContent as updateDBMessageContent } from '@/services/message';
 import { ref, reactive, computed, watchEffect, onUnmounted, nextTick } from 'vue';
 import { useMeta } from 'vue-meta';
 import { useRoute } from 'vue-router';
@@ -58,11 +62,13 @@ import { useChatScroll } from '@/composables/useChatScroll';
 import { useDropZone } from '@vueuse/core';
 import { storeToRefs } from 'pinia';
 import { setChatName } from '@/utils/chat';
+import { downloadFile as downloadFileProcess } from '@/utils/message/fileActions';
+import { copyToClipboard as copyImageToClipboard } from '@/utils/message/imageActions';
 import type { Unsubscribe } from '@firebase/database';
-import type { MediaMessage, Message } from '@/stores/messages';
+import type { FileMessage, MediaMessage, Message } from '@/stores/messages';
 import type { ChatInfo } from '@/services/chat';
 import type { TextMessage } from '@/types/db/MessagesTable';
-import type { VMenu, VDialog } from 'vuetify/components';
+import type { VDialog } from 'vuetify/components';
 import type { AttachFormContent } from '@/services/message';
 import type { ImageWithPreviewURL } from '@/components/chat/messages/media/ImageFrame.vue';
 
@@ -70,7 +76,7 @@ const { getUChats: userChats } = storeToRefs(useUserdataStore());
 const route = useRoute();
 const { showMessage } = useSnackbarStore();
 const messagesStore = useMessagesStore();
-const { $reset } = messagesStore;
+const { $reset: resetMsgStore } = messagesStore;
 
 const chatInfo = ref<ChatInfo>();
 const chatEl = ref<HTMLDivElement>();
@@ -107,7 +113,7 @@ const removeAttachment = () => {
 
 // Reset messages when switching chat
 watchEffect(async (onCleanup) => {
-	$reset();
+	resetMsgStore();
 	chatId = route.params.id as string;
 	unsub?.();
 	if (chatId) {
@@ -124,7 +130,7 @@ watchEffect(async (onCleanup) => {
 	}
 	// Unsubscribe from receiving messages realtime firebase
 	onCleanup(() => {
-		$reset();
+		resetMsgStore();
 		unsub?.();
 	});
 });
@@ -142,40 +148,90 @@ const createMessage = async (content: TextMessage | AttachFormContent, type: Mes
 		enTransition.value = false;
 	}
 };
+const updateMessage = async (mId: Message['id'], content: TextMessage | AttachFormContent, type: Message['type'] = 'text') => {
+	try {
+		await updateDBMessageContent(chatId, type, {mId, content });
+	} catch (e) {
+		showMessage(sbMessages[e as keyof typeof sbMessages] || e as string, 'red-darken-3', 2000);
+	}
+};
 
 // Context menu on message right click
 const msgCtxMenu = reactive({
 	show: false,
-	position: { x: 0, y: 0 }
+	contentType: 'text' as Message['type'],
+	position: { x: 0, y: 0 },
+	activeMessage: '' as Message['id']
 });
-const openCtxMenu = (mId: Message['id'], e: MouseEvent) => {
+const openCtxMenu = (e: MouseEvent, { mId, mType }: { mId: Message['id']; mType?: Message['type'] }) => {
+	msgCtxMenu.activeMessage = mId;
 	msgCtxMenu.show = false;
 	msgCtxMenu.position.x = e.clientX;
 	msgCtxMenu.position.y = e.clientY;
-	(e.target as HTMLElement).style.backgroundColor = "rgba(255, 255, 255, 0.2)";
+	msgCtxMenu.contentType = mType || 'text';
 	nextTick(() => msgCtxMenu.show = true);
 };
-const closeCtxMenu = () => console.log('closeCtxMenu');
+const ctxMenuClosed = () => { msgCtxMenu.activeMessage = '' };
 // Unsubscribe from receiving messages realtime firebase
 onUnmounted(() => {
-	$reset();
+	resetMsgStore();
 	unsub?.();
 });
-
+const getAllMedia = computed(() => messages.value.filter(m => m.type !== 'text').flatMap(m => (m.content as MediaMessage).images || (m.content as FileMessage).files?.filter(f => f.previewURL)));
 const overlayState = reactive({
 	show: false,
-	images: [] as ImageWithPreviewURL[],
 	currentImage: 0,
 });
-const addMediaPreviewToOverlay = (media: ImageWithPreviewURL) => {
-	overlayState.images.push(media);
-};
 const openInOverlay = (imgId: ImageWithPreviewURL['id']) => {
-	overlayState.currentImage = overlayState.images.findIndex(img => img.id == imgId);
+	overlayState.currentImage = getAllMedia.value?.findIndex(img => img.id == imgId);
 	overlayState.show = true;
 }
-const overlayClosed = () => {
+const overlayClosed = () => { };
+
+const copySelectedText = async () => {
+	try {
+		await navigator.clipboard.writeText((getSelection()?.toString() || '').trim());
+		showMessage('Copied to clipboard', 'deep-purple-accent-3', 2000);
+	} catch (e) {
+		showMessage('Failed to copy', 'red-darken-4', 2000);
+		console.error(e);
+	}
 };
+const copyTextMessage = async () => {
+	try {
+		const msgText = (messages.value.find(m => m.type === 'text' && m.id === msgCtxMenu.activeMessage)?.content as TextMessage).text.trim();
+		await navigator.clipboard.writeText(msgText);
+		showMessage('Copied to clipboard', 'deep-purple-accent-3', 2000);
+	} catch (e) {
+		showMessage('Failed to copy', 'red-darken-4', 2000);
+		console.error(e);
+	}
+};
+const copyImage = async () => {
+	try {
+		const imageToCopy = (messages.value.find(m => m.id === msgCtxMenu.activeMessage)?.content as MediaMessage).images[0].previewURL;
+		await copyImageToClipboard(imageToCopy);
+		showMessage('Copied to clipboard', 'deep-purple-accent-3', 2000);
+	} catch (e) {
+		showMessage('Failed to copy', 'red-darken-4', 2000);
+		console.error(e);
+	}
+};
+const downloadFile = async () => {
+	try {
+		const fileToDownLoad = (messages.value.find(m => m.id === msgCtxMenu.activeMessage)?.content as MediaMessage).images?.[0] || (messages.value.find(m => m.id === msgCtxMenu.activeMessage)?.content as FileMessage).files?.[0];
+		await downloadFileProcess(fileToDownLoad);
+	} catch (e) {
+		showMessage('Failed to download', 'red-darken-4', 2000);
+		console.error(e);
+	}
+};
+const msgForm = ref<InstanceType<typeof MessageForm>>();
+const editMessage = () => {
+	const messageToEdit = messages.value.find(m => m.id === msgCtxMenu.activeMessage);
+	msgForm.value?.editMessage(msgCtxMenu.activeMessage, msgCtxMenu.contentType, messageToEdit?.content);
+};
+
 </script>
 
 <style lang="scss" scoped>
@@ -194,7 +250,8 @@ $scroll-bg: v-bind(scrollOpacity) !important;
 	top: 0;
 	left: 0;
 	right: 0;
-	overflow: auto;
+	overflow-y: auto;
+	overflow-x: hidden;
 }
 .message-form {
 	margin-left: auto;
@@ -207,7 +264,7 @@ $scroll-bg: v-bind(scrollOpacity) !important;
 }
 .messages-field {
 	margin: 0 auto;
-	max-width: 1080px;
+	max-width: 1280px;
 }
 .messages-list-enter-active,
 .messages-list-leave-active {
@@ -219,12 +276,7 @@ $scroll-bg: v-bind(scrollOpacity) !important;
 	transform: translateX(30px);
 }
 
-.message-item {
-	transition: all 0.25s ease-in 0s;
-	&._context {
-		background-color: rgba(255, 255, 255, 0.2);
-	}
-}
+.message-item {}
 .attach-frame {
 	width: 90%;
 	flex: 1;

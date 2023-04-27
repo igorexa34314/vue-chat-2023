@@ -11,7 +11,7 @@
 	</div>
 
 	<div v-else class="file-icon">
-		<v-icon icon="mdi-file" size="80px" />
+		<v-icon :icon="mdiFile" size="80px" />
 		<span class="file-icon-ext font-weight-black text-brown-darken-4">
 			{{ getFileExt(previewItem.fileData.name).length <= 6 ? getFileExt(previewItem.fileData.name) : '' }}</span>
 	</div>
@@ -20,11 +20,12 @@
 		<p class="text-subtitle-1">{{ previewItem.fileData.name }}</p>
 		<p class="mt-1 text-body-2">{{ formatFileSize(previewItem.fileData.size) }}</p>
 	</div>
-	<v-btn icon="mdi-trash-can-outline" size="default" variant="text" class="delete-file-btn ml-2"
+	<v-btn :icon="mdiTrashCanOutline" size="default" variant="text" class="delete-file-btn ml-2"
 		@click="emit('delete-item', previewItem.id)" />
 </template>
 
 <script setup lang="ts">
+import { mdiFile , mdiTrashCanOutline} from '@mdi/js';
 import ImageLoader from '@/components/chat/ImageLoader.vue';
 import { ref } from 'vue';
 import { formatFileSize, getFileExt } from '@/utils/filters/messages';

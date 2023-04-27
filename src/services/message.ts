@@ -1,5 +1,5 @@
 import { storage, db } from '@/firebase';
-import { arrayRemove, arrayUnion, collection, doc, setDoc, Timestamp, writeBatch, deleteDoc, onSnapshot, getDoc, getDocs } from 'firebase/firestore';
+import { arrayRemove, arrayUnion, collection, doc, setDoc, Timestamp, writeBatch, deleteDoc, onSnapshot, getDoc, getDocs, updateDoc } from 'firebase/firestore';
 import { limit, query, orderBy, startAfter } from 'firebase/firestore';
 import { ref as storageRef, uploadBytesResumable, uploadString, getBlob, getDownloadURL, getBytes, deleteObject } from 'firebase/storage';
 import { getUid } from '@/services/auth';
@@ -9,7 +9,7 @@ import { encode } from 'base64-arraybuffer';
 import { storeToRefs } from 'pinia';
 import { useMessagesStore } from '@/stores/messages';
 import { useLoadingStore } from '@/stores/loading';
-import type { DocumentReference, DocumentData } from 'firebase/firestore';
+import type { DocumentReference, DocumentData, DocumentChange } from 'firebase/firestore';
 import type { UserInfo } from '@/types/db/UserdataTable';
 import type { Message as DBMessage, TextMessage, MediaMessage as MediaDBMessage, FileMessage as FileDBMessage } from '@/types/db/MessagesTable';
 import type { ChatInfo } from '@/services/chat';
@@ -33,25 +33,30 @@ const chatCol = collection(db, 'chat');
 export const fetchChatMessages = async (chatId: ChatInfo['id'], lmt: number = 10) => {
 	try {
 		const messagesStore = useMessagesStore();
-		const { addMessage } = messagesStore;
+		const { addMessage, modifyMessage } = messagesStore;
 		const { lastVisible } = storeToRefs(messagesStore);
 		const messagesCol = collection(doc(chatCol, chatId), 'messages');
 		const q = query(messagesCol, orderBy('created_at', 'desc'), limit(lmt));
 		return onSnapshot(q, async messagesRef => {
-			const initialMessages = [] as DBMessage[];
-			const promises = [] as Promise<Message | undefined>[];
+			const dbMessagesPromises = [] as Promise<{ message: Message | undefined; changeType: DocumentChange['type'] } | undefined>[];
 
 			messagesRef.docChanges().forEach(change => {
 				const { created_at, ...msgData } = change.doc.data() as DBMessage;
-				if (change.type === 'added') {
-					initialMessages.unshift({ ...msgData, created_at: (<Timestamp>created_at).toDate() });
+				if (change.type === 'added' || change.type === 'modified') {
+					dbMessagesPromises.unshift(
+						(async () => ({
+							message: await getFullMessageInfo({ ...msgData, created_at: (<Timestamp>created_at).toDate() }),
+							changeType: change.type
+						}))()
+					);
 				}
 			});
-			initialMessages.forEach(m => {
-				promises.push(getFullMessageInfo(m));
-			});
-			(await Promise.all(promises)).forEach(m => {
-				if (m) addMessage(m, 'end');
+			(await Promise.all(dbMessagesPromises))?.forEach(m => {
+				if (m?.changeType === 'added') {
+					addMessage(m.message as Message, 'end');
+				} else if (m?.changeType === 'modified') {
+					modifyMessage(m.message as Message);
+				}
 			});
 			if (messagesRef.size >= lmt) {
 				lastVisible.value.top = messagesRef.docs[messagesRef.docs.length - 1];
@@ -80,16 +85,13 @@ export const loadMoreChatMessages = async (chatId: ChatInfo['id'], direction: Di
 				const msgBeforeDel = await getDoc(doc(messagesCol, messages.value[direction === 'top' ? messages.value.length - 1 : 0].id));
 				lastVisible.value[direction === 'top' ? 'bottom' : 'top'] = msgBeforeDel as LastVisibleFbRef[Direction];
 			}
-			const initialMessages = [] as DBMessage[];
-			const promises = [] as Promise<Message | undefined>[];
+			const dbMessagesPromises = [] as Promise<Message | undefined>[];
+
 			messagesRef.forEach(doc => {
 				const { created_at, ...msgData } = doc.data() as DBMessage;
-				initialMessages.push({ ...msgData, created_at: (<Timestamp>created_at).toDate() });
+				dbMessagesPromises.push(getFullMessageInfo({ ...msgData, created_at: (<Timestamp>created_at).toDate() }));
 			});
-			initialMessages.forEach(m => {
-				promises.push(getFullMessageInfo(m));
-			});
-			(await Promise.all(promises)).forEach(m => {
+			(await Promise.all(dbMessagesPromises)).forEach(m => {
 				if (m) addMessage(m, direction === 'top' ? 'start' : 'end');
 			});
 			lastVisible.value[direction] = messagesRef.size >= perPage ? messagesRef.docs[messagesRef.docs.length - 1] : null;
@@ -208,12 +210,30 @@ export const createMessage = async (chatId: ChatInfo['id'], type: Message['type'
 		errorHandler(e);
 	}
 };
+export const updateMessageContent = async (chatId: ChatInfo['id'], type: Message['type'], { mId, content }: { mId: Message['id']; content: TextMessage | AttachFormContent }) => {
+	try {
+		console.log(mId);
+		const messageRef = doc(collection(doc(chatCol, chatId), 'messages'), mId);
+		let attachDBContent: MediaDBMessage | FileDBMessage | null = null;
 
-const uploadMedia = async <T extends MediaDBMessage['images']>(
-	chatId: ChatInfo['id'],
-	messageRef: DocumentReference<DocumentData>,
-	images: AttachFormContent['files']
-) => {
+		// Get images thumbs and Doc ref to prospective image upload
+		if (type === 'media') {
+			const { subtitle, files: images } = content as AttachFormContent;
+			attachDBContent = { subtitle, images: await uploadMedia(chatId, messageRef, images) } as MediaDBMessage;
+		} else if (type === 'file') {
+			const { subtitle, files } = content as AttachFormContent;
+			attachDBContent = { subtitle, files: await uploadFiles(chatId, messageRef, files) } as FileDBMessage;
+		}
+		// Add full message data to DB
+		await updateDoc(messageRef, {
+			content: (attachDBContent as MediaDBMessage | FileMessage) || (content as TextMessage)
+		});
+	} catch (e) {
+		errorHandler(e);
+	}
+};
+
+const uploadMedia = async <T extends MediaDBMessage['images']>(chatId: ChatInfo['id'], messageRef: DocumentReference<DocumentData>, images: AttachFormContent['files']) => {
 	try {
 		if (images.every(f => f.fileData instanceof File)) {
 			const docRefPromises = [] as Promise<T[number]>[];
@@ -320,7 +340,7 @@ const createUploadTask = (
 				await batch.commit();
 				finishLoading(fileId);
 			} catch (e) {
-				console.error(e);
+				errorHandler(e);
 			}
 		}
 	);

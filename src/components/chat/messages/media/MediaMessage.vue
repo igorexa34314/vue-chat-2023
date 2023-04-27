@@ -6,8 +6,8 @@
 				<v-col v-for="(img, index) of content.images" :cols="calcImageCols(index)"
 					:class="{ 'image-col': content.images.length > 2 }">
 					<ImageFrame :image="img" :key="img.id" :alt="content.subtitle" @open="emit('openInOverlay', img.id)"
-						@loaded="(mediaReady: ImageWithPreviewURL) => emit('mediaLoaded', mediaReady)"
-						:max-height="content.images.length > 2 ? '280px' : '360px'" :height="img.sizes.h" />
+						@loaded="('mediaLoaded')" :max-height="content.images.length > 2 ? '280px' : '360px'"
+						:height="img.sizes.h" />
 				</v-col>
 			</v-row>
 		</div>
@@ -27,13 +27,16 @@ const props = defineProps<{
 
 const emit = defineEmits<{
 	(e: 'openInOverlay', imgId: ImageWithPreviewURL['id']): void;
-	(e: 'mediaLoaded', media: Pick<ImageWithPreviewURL, 'id' | 'previewURL'>): void;
+	(e: 'mediaLoaded'): void;
 }>();
 
 const calcImageCols = computed(() => (imgIdx: number) => calcCols(props.content.images.length, imgIdx));
 </script>
 
 <style lang="scss" scoped>
+.images-frame {
+	user-select: none !important;
+}
 .image-col {
 	padding: 0.12em !important;
 }

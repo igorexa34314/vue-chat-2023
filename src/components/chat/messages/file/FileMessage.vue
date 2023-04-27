@@ -5,7 +5,7 @@
 			class="d-flex align-center">
 			<v-hover #default="{ isHovering, props: hoverProps }">
 				<component :is="file.thumbnail && file.sizes ? FilePreview : FileExtension"
-					v-bind="{ file, hoverProps, isHovering }" @downloadFile="downloadFile(file)"
+					v-bind="{ file, hoverProps, isHovering, loading: isLoading }" @downloadFile="downloadFile(file)"
 					@openFile="emit('openInOverlay', file.id)"
 					@loaded="(mediaReady: ImageWithPreviewURL) => emit('mediaLoaded', mediaReady)" />
 			</v-hover>
@@ -14,20 +14,18 @@
 				<p class="mt-1 text-body-2">{{ formatFileSize(file.fullsize) }}</p>
 			</div>
 		</div>
-		<a v-if="downloadLink.show" hidden ref="linkElem" :href="downloadLink.url" :download="downloadLink.filename"
-			title="Download"></a>
 	</div>
 </template>
 
 <script setup lang="ts">
 import FileExtension from '@/components/chat/messages/file/FileExtension.vue';
 import FilePreview from '@/components/chat/messages/file/FilePreview.vue';
-import { ref, reactive } from 'vue';
+import { ref } from 'vue';
 import { formatFileSize } from '@/utils/filters/messages';
-import { ref as storageRef, getBlob } from 'firebase/storage';
-import { useFirebaseStorage } from 'vuefire';
+import { downloadFile as downloadFileProcess } from '@/utils/message/fileActions';
 import type { FileMessage } from '@/stores/messages';
 import type { ImageWithPreviewURL } from '@/components/chat/messages/media/ImageFrame.vue';
+
 
 const props = defineProps<{
 	content: FileMessage;
@@ -37,25 +35,20 @@ const emit = defineEmits<{
 	(e: 'openInOverlay', imgId: ImageWithPreviewURL['id']): void;
 	(e: 'mediaLoaded', media: Pick<ImageWithPreviewURL, 'id' | 'previewURL'>): void;
 }>();
-const linkElem = ref<HTMLLinkElement>();
-const downloadLink = reactive({
-	show: false,
-	url: '',
-	filename: '',
-});
+
+const isLoading = ref(false);
 
 const downloadFile = async (file: FileMessage['files'][number]) => {
-	try {
-		downloadLink.show = true;
-		downloadLink.filename = file.fullname;
-		const storage = useFirebaseStorage();
-		const blobFile = await getBlob(storageRef(storage, file.fullpath));
-		downloadLink.url = URL.createObjectURL(blobFile);
-		linkElem.value?.click();
-		downloadLink.show = false;
-		URL.revokeObjectURL(downloadLink.url);
-	} catch (e) {
-		console.error(e);
+	if (!isLoading.value) {
+		try {
+			isLoading.value = true;
+			await downloadFileProcess(file);
+		} catch (e) {
+			console.error(e);
+		}
+		finally {
+			isLoading.value = false;
+		}
 	}
 }
 </script>

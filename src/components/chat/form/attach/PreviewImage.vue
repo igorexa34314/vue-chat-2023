@@ -6,13 +6,14 @@
 				<ImageLoader />
 			</template>
 		</v-img>
-		<v-btn color="white" variant="text" position="absolute" icon="mdi-delete"
+		<v-btn color="white" variant="text" position="absolute" :icon="mdiDelete"
 			class="bg-blue-grey-darken-2 delete-media-btn" @click="emit('delete-item', previewItem.id)" density="comfortable"
 			elevation="5" />
 	</v-card>
 </template>
 
 <script setup lang="ts">
+import { mdiDelete } from '@mdi/js';
 import ImageLoader from '@/components/chat/ImageLoader.vue';
 import { ref } from 'vue';
 import type { AttachedContent } from '@/components/chat/form/attach/AttachDialog.vue';

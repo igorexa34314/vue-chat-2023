@@ -11,22 +11,23 @@
 							<h2 class="mb-2">{{ userdata?.info?.displayName }}</h2>
 							<div class="d-flex align-center mt-2">
 								<span class="text-subtitle-1 mr-2">Пол:</span>
-								<small><v-icon
-										:icon="userdata?.info?.gender === 'unknown' ? 'mdi-help' : userdata?.info?.gender === 'male' ? 'mdi-gender-male' : 'mdi-gender-female'"></v-icon>
+								<small>
+									<v-icon
+										:icon="userdata?.info?.gender === 'unknown' ? mdiHelp : userdata?.info?.gender === 'male' ? mdiGenderMale : mdiGenderFemale" />
 								</small>
 							</div>
 						</div>
 					</v-col>
-					<v-col class="" v-if="route.params.id !== uid">
+					<v-col v-if="route.params.id !== uid">
 						<v-tooltip location="bottom">
 							<template #activator="{ props }">
-								<v-btn v-bind="props" size="x-large" variant="text" icon="mdi-message-text" @click="goToChat" />
+								<v-btn v-bind="props" size="x-large" variant="text" :icon="mdiMessageText" @click="goToChat" />
 							</template>
 							<span class="text-subtitle-2 font-weight-medium">Перейти в сообщения</span>
 						</v-tooltip>
 						<v-tooltip location="bottom">
 							<template #activator="{ props }">
-								<v-btn v-bind="props" size="x-large" variant="text" icon="mdi-account-plus-outline" class="ml-2"
+								<v-btn v-bind="props" size="x-large" variant="text" :icon="mdiAccountPlusOutline" class="ml-2"
 									@click="addToFriend" />
 							</template>
 							<span class="text-subtitle-2 font-weight-medium">Добавить в друзья</span>
@@ -39,6 +40,7 @@
 </template>
 
 <script setup lang="ts">
+import { mdiHelp, mdiGenderMale, mdiGenderFemale, mdiMessageText, mdiAccountPlusOutline } from '@mdi/js';
 import messages from '@/utils/messages.json';
 import { computed } from 'vue';
 import { getUserdataById, addToFriend as addFriend } from '@/services/userdata';
