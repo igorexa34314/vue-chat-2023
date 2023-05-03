@@ -28,16 +28,16 @@
 					@click="scrollBottom('smooth')" />
 			</Transition>
 			<MessageForm class="message-form py-4 px-6" ref="msgForm" @create-message="createMessage"
-				@update-message="updateMessage" />
+				@update-message="updateMessage" @scroll-to-message="highlightMessage" />
 		</div>
-		<v-dialog v-model="attachDialog" width="auto" ref="dropZone">
+		<!-- <v-dialog v-model="attachDialog" width="auto" ref="dropZone">
 			<v-card minHeight="80vh" minWidth="80vh" class="bg-blue-accent-1 d-flex flex-column align-center justify-center"
 				style="position: reactive; left: 25%">
 				<div class="attach-frame text-h4 ma-6 font-weight-bold">
 					Прикрепите файлы
 				</div>
 			</v-card>
-		</v-dialog>
+		</v-dialog> -->
 	</v-container>
 </template>
 
@@ -46,7 +46,7 @@ import { mdiArrowDown } from '@mdi/js';
 import FullsizeOverlay from '@/components/chat/messages/media/FullsizeOverlay.vue';
 import sbMessages from '@/utils/messages.json';
 import MessageItem from '@/components/chat/messages/MessageItem.vue';
-import MessageForm from '@/components/chat/form/MessageForm.vue';
+import MessageForm, { EditMessageData } from '@/components/chat/form/MessageForm.vue';
 import ContextMenu from '@/components/chat/ContextMenu.vue';
 import { fetchChatMessages } from '@/services/message';
 import { useSnackbarStore } from '@/stores/snackbar';
@@ -55,11 +55,12 @@ import { useMessagesStore } from '@/stores/messages';
 import { useCurrentUser } from 'vuefire';
 import { getChatInfoById } from '@/services/chat';
 import { createMessage as createDBMessage, updateMessageContent as updateDBMessageContent } from '@/services/message';
-import { ref, reactive, computed, watchEffect, onUnmounted, nextTick } from 'vue';
+import { ref, watch, reactive, computed, watchEffect, onUnmounted, nextTick } from 'vue';
 import { useMeta } from 'vue-meta';
 import { useRoute } from 'vue-router';
 import { useChatScroll } from '@/composables/useChatScroll';
-import { useDropZone } from '@vueuse/core';
+import { loadMoreChatMessages } from '@/services/message';
+import { useDropZone, watchOnce } from '@vueuse/core';
 import { storeToRefs } from 'pinia';
 import { setChatName } from '@/utils/chat';
 import { downloadFile as downloadFileProcess } from '@/utils/message/fileActions';
@@ -80,7 +81,7 @@ const { $reset: resetMsgStore } = messagesStore;
 
 const chatInfo = ref<ChatInfo>();
 const chatEl = ref<HTMLDivElement>();
-const loading = ref(true);
+const loading = ref(false);
 const messages = computed(() => messagesStore.messages);
 let unsub: Unsubscribe | undefined;
 let chatId = route.params.id as string;
@@ -89,7 +90,12 @@ const uid = useCurrentUser().value?.uid;
 const attachDialog = ref(false);
 const dropZone = ref<VDialog | HTMLElement>();
 
-const { scrollOpacity, isScrollOnBottom, scrollBottom } = useChatScroll(chatId, chatEl, messages);
+// Using chat scroll composable with infinite scroll
+const { isScrolling, scrollOpacity, isScrollOnBottom, scrollBottom } = useChatScroll(chatEl, {
+	onLoadMore: async (direction) => {
+		await loadMoreChatMessages(chatId, direction);
+	}
+});
 
 // const { isOverDropZone } = useDropZone(dropZone.value as HTMLElement, (files) => {
 // 	console.log('droppped', files)
@@ -136,8 +142,7 @@ watchEffect(async (onCleanup) => {
 });
 
 const enTransition = ref(false);
-
-const createMessage = async (content: TextMessage | AttachFormContent, type: Message['type'] = 'text') => {
+const createMessage = async (type: Message['type'] = 'text', content: TextMessage | AttachFormContent,) => {
 	try {
 		enTransition.value = true;
 		await createDBMessage(chatId, type, content);
@@ -148,9 +153,9 @@ const createMessage = async (content: TextMessage | AttachFormContent, type: Mes
 		enTransition.value = false;
 	}
 };
-const updateMessage = async (mId: Message['id'], content: TextMessage | AttachFormContent, type: Message['type'] = 'text') => {
+const updateMessage = async ({ id, type, content }: EditMessageData) => {
 	try {
-		await updateDBMessageContent(chatId, type, {mId, content });
+		await updateDBMessageContent(chatId, { id, type, content });
 	} catch (e) {
 		showMessage(sbMessages[e as keyof typeof sbMessages] || e as string, 'red-darken-3', 2000);
 	}
@@ -169,7 +174,7 @@ const openCtxMenu = (e: MouseEvent, { mId, mType }: { mId: Message['id']; mType?
 	msgCtxMenu.position.x = e.clientX;
 	msgCtxMenu.position.y = e.clientY;
 	msgCtxMenu.contentType = mType || 'text';
-	nextTick(() => msgCtxMenu.show = true);
+	nextTick().then(() => msgCtxMenu.show = true);
 };
 const ctxMenuClosed = () => { msgCtxMenu.activeMessage = '' };
 // Unsubscribe from receiving messages realtime firebase
@@ -229,9 +234,30 @@ const downloadFile = async () => {
 const msgForm = ref<InstanceType<typeof MessageForm>>();
 const editMessage = () => {
 	const messageToEdit = messages.value.find(m => m.id === msgCtxMenu.activeMessage);
-	msgForm.value?.editMessage(msgCtxMenu.activeMessage, msgCtxMenu.contentType, messageToEdit?.content);
+	if (messageToEdit) {
+		msgForm.value?.editMessage(messageToEdit);
+	}
 };
-
+const highlightMessage = (mId: Message['id']) => {
+	if (isScrolling.value) {
+		const stopWatcher = watch(isScrolling, (newVal) => {
+			console.log(newVal);
+			if (!newVal) {
+				msgCtxMenu.activeMessage = mId;
+				setTimeout(() => {
+					stopWatcher();
+					msgCtxMenu.activeMessage = '';
+				}, 250);
+			}
+		});
+	}
+	else {
+		msgCtxMenu.activeMessage = mId;
+		setTimeout(() => {
+			msgCtxMenu.activeMessage = '';
+		}, 250);
+	}
+}
 </script>
 
 <style lang="scss" scoped>

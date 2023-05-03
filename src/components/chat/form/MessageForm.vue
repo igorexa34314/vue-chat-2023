@@ -3,9 +3,10 @@
 		<div class="message-form d-flex flex-row align-end">
 			<div class="message-textarea">
 				<Transition name="reply">
-					<MessageReply v-model="showReply" :content="messageState.text" class="reply-wrapper" />
+					<MessageReply v-model="showReply" :m-type="msgToEditState.type" :content="msgToEditState.content"
+						class="reply-wrapper" @click="scrollIntoMessage" />
 				</Transition>
-				<v-textarea v-model.trim="inputCompVal" variant="solo" hide-details @keyup.enter="createTextMessage"
+				<v-textarea v-model.trim="textareaValue" variant="solo" hide-details @keyup.enter="createTextMessage"
 					placeholder="Ваше сообщение" rows="1" max-rows="12" auto-grow focused @paste="onInputPasted">
 					<template #append-inner>
 						<AttachMenu ref="attachMenuEl" @attach-file="attachFiles">
@@ -19,8 +20,8 @@
 					</template>
 				</v-textarea>
 			</div>
-			<v-btn :icon="isEditing ? mdiCheck : mdiSend" :label="isEditing ? 'Подтвердить' : 'Отправить'" class="ml-3 mb-1"
-				@click="submitHandler" />
+			<v-btn :icon="msgToEditState.isEditing ? mdiCheck : mdiSend"
+				:label="msgToEditState.isEditing ? 'Подтвердить' : 'Отправить'" class="ml-3 mb-1" @click="submitHandler" />
 		</div>
 		<AttachDialog v-model="attachDialogState.show" v-model:subtitleText="messageState.text"
 			:contentType="attachDialogState.contentType" :fileList="messageState.attachedFiles" @submit="createAttachment"
@@ -29,25 +30,28 @@
 </template>
 
 <script setup lang="ts">
-import { mdiAttachment, mdiSend, mdiCheck, mdiPencil, mdiClose } from '@mdi/js';
+import { mdiAttachment, mdiSend, mdiCheck } from '@mdi/js';
 import MessageReply from './MessageReply.vue';
 import AttachMenu from '@/components/chat/form/attach/AttachMenu.vue';
 import AttachDialog from '@/components/chat/form/attach/AttachDialog.vue';
 import { useSnackbarStore } from '@/stores/snackbar';
-import { ref, reactive, computed } from 'vue';
+import { reactive, computed, watchEffect } from 'vue';
 import { uuidv4 } from '@firebase/util';
 import type { AttachFormContent } from '@/services/message';
-import type { Message, TextMessage, MediaMessage, FileMessage } from '@/types/db/MessagesTable';
+import type { Message, MediaMessage, FileMessage } from '@/stores/messages';
+import type { TextMessage } from '@/types/db/MessagesTable';
 import type { AttachDialogProps, AttachedContent } from '@/components/chat/form/attach/AttachDialog.vue';
 
+export type EditMessageData = Pick<Message, 'id' | 'type' | Partial<'content'>>;
 interface messageForm extends TextMessage {
 	attachedFiles: AttachDialogProps['fileList']
 };
 
 const { showMessage } = useSnackbarStore();
 const emit = defineEmits<{
-	(e: 'createMessage', msgData: TextMessage | AttachFormContent, msgType: Message['type']): void
-	(e: 'updateMessage', mId: Message['id'], msgData: TextMessage | AttachFormContent, msgType: Message['type']): void
+	(e: 'createMessage', msgType: Message['type'], msgContent: TextMessage | AttachFormContent): void;
+	(e: 'updateMessage', mData: EditMessageData): void;
+	(e: 'scrollToMessage', mId: Message['id']): void;
 }>();
 const messageState: messageForm = reactive({
 	text: '' as TextMessage['text'] | MediaMessage['subtitle'] | FileMessage['subtitle'],
@@ -59,12 +63,13 @@ const attachDialogState = reactive({
 	contentType: 'file' as AttachDialogProps['contentType'],
 });
 
-const inputCompVal = computed({
+const textareaValue = computed({
 	get: () => !attachDialogState.show ? messageState.text : '',
 	set: (val: string) => messageState.text = val,
 });
+
 const submitHandler = () => {
-	if (isEditing.value) {
+	if (msgToEditState.isEditing) {
 		updateMessage();
 	}
 	else {
@@ -73,19 +78,20 @@ const submitHandler = () => {
 }
 const createTextMessage = () => {
 	if (messageState.text) {
-		emit('createMessage', {
+		emit('createMessage', 'text', {
 			text: messageState.text
-		} as TextMessage, 'text');
+		} as TextMessage);
 		messageState.text = '';
 	}
 };
 const createAttachment = (type: AttachDialogProps['contentType'], attachData: AttachedContent) => {
-	emit('createMessage', {
+	emit('createMessage', type, {
 		subtitle: messageState.text,
 		files: attachData
-	} as AttachFormContent, type);
+	} as AttachFormContent);
 	messageState.text = '';
 	messageState.attachedFiles = [];
+	msgToEditState.isEditing = false;
 };
 
 const attachFiles = async (type: Exclude<Message['type'], 'text'>, fileList: FileList, subtitleText?: string) => {
@@ -121,30 +127,41 @@ const onInputPasted = (e: ClipboardEvent) => {
 		attachFiles('media', attachedFiles, messageState.text);
 	}
 };
-const isEditing = ref(false);
-const editMessage = (mId: Message['id'], mType: Message['type'], content: Message['content']) => {
-	isEditing.value = true;
-	msgId.value = mId;
-	if (mType === 'text') {
-		messageState.text = (content as TextMessage).text;
-	}
-	else {
-		messageState.text = (content as MediaMessage | FileMessage).subtitle;
-	}
-};
-const msgId = ref<Message['id']>('');
-const updateMessage = () => {
-	if (messageState.text && msgId.value) {
-		emit('updateMessage', msgId.value, {
-			text: messageState.text
-		} as TextMessage, 'text');
-		isEditing.value = false;
+const msgToEditState = reactive({
+	isEditing: false,
+	id: '' as Message['id'],
+	type: '' as Message['type'],
+	content: null as Message['content'] | null,
+});
+watchEffect(() => {
+	if (!msgToEditState.isEditing) {
+		msgToEditState.id = '';
+		msgToEditState.content = null;
 		messageState.text = '';
+	}
+});
+const scrollIntoMessage = () => {
+	const msg = document.querySelector(`[data-message-id="${msgToEditState.id}"]`);
+	msg?.scrollIntoView({ behavior: 'smooth' });
+	emit('scrollToMessage', msgToEditState.id);
+};
+const editMessage = ({ id, type, content }: EditMessageData) => {
+	msgToEditState.id = id;
+	msgToEditState.type = type;
+	msgToEditState.content = content;
+	messageState.text = (content as TextMessage).text || (content as MediaMessage | FileMessage).subtitle;
+	msgToEditState.isEditing = true;
+};
+const updateMessage = () => {
+	if (messageState.text && msgToEditState.id) {
+		const { id, type } = msgToEditState;
+		emit('updateMessage', { id, type, content: { text: messageState.text } });
+		msgToEditState.isEditing = false;
 	}
 };
 const showReply = computed({
-	get: () => isEditing.value,
-	set: (val: boolean) => isEditing.value = val,
+	get: () => msgToEditState.isEditing,
+	set: (val: boolean) => msgToEditState.isEditing = val,
 });
 const closeDialog = () => {
 	messageState.attachedFiles = [];
@@ -165,7 +182,7 @@ defineExpose({
 	right: 0;
 	top: 0;
 	transform: translateY(-95%);
-	z-index: 50;
+	z-index: 0;
 }
 .attach-btn {
 	position: relative;
@@ -181,11 +198,12 @@ defineExpose({
 }
 .reply-enter-active,
 .reply-leave-active {
-	transition: all 0.3s ease;
+	transition: all 0.2s ease-in;
 }
 
 .reply-enter-from,
 .reply-leave-to {
+	top: 50%;
 	opacity: 0;
 }
 </style>

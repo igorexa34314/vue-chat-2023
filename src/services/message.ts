@@ -14,6 +14,7 @@ import type { UserInfo } from '@/types/db/UserdataTable';
 import type { Message as DBMessage, TextMessage, MediaMessage as MediaDBMessage, FileMessage as FileDBMessage } from '@/types/db/MessagesTable';
 import type { ChatInfo } from '@/services/chat';
 import type { Message, MediaMessage, FileMessage, LastVisibleFbRef, Direction } from '@/stores/messages';
+import { EditMessageData } from '@/components/chat/form/MessageForm.vue';
 
 export interface AttachFormContent {
 	subtitle: MediaDBMessage['subtitle'] | FileMessage['subtitle'];
@@ -82,7 +83,7 @@ export const loadMoreChatMessages = async (chatId: ChatInfo['id'], direction: Di
 			}
 			if (messages.value.length > 40) {
 				deleteMessages(perPage, direction === 'top' ? 'end' : 'start');
-				const msgBeforeDel = await getDoc(doc(messagesCol, messages.value[direction === 'top' ? messages.value.length - 1 : 0].id));
+				const msgBeforeDel = await getDoc(doc(messagesCol, messages.value.at(direction === 'top' ? -1 : 0)?.id));
 				lastVisible.value[direction === 'top' ? 'bottom' : 'top'] = msgBeforeDel as LastVisibleFbRef[Direction];
 			}
 			const dbMessagesPromises = [] as Promise<Message | undefined>[];
@@ -210,24 +211,12 @@ export const createMessage = async (chatId: ChatInfo['id'], type: Message['type'
 		errorHandler(e);
 	}
 };
-export const updateMessageContent = async (chatId: ChatInfo['id'], type: Message['type'], { mId, content }: { mId: Message['id']; content: TextMessage | AttachFormContent }) => {
+export const updateMessageContent = async (chatId: ChatInfo['id'], { id: mId, type: mType, content }: EditMessageData) => {
 	try {
-		console.log(mId);
 		const messageRef = doc(collection(doc(chatCol, chatId), 'messages'), mId);
-		let attachDBContent: MediaDBMessage | FileDBMessage | null = null;
-
-		// Get images thumbs and Doc ref to prospective image upload
-		if (type === 'media') {
-			const { subtitle, files: images } = content as AttachFormContent;
-			attachDBContent = { subtitle, images: await uploadMedia(chatId, messageRef, images) } as MediaDBMessage;
-		} else if (type === 'file') {
-			const { subtitle, files } = content as AttachFormContent;
-			attachDBContent = { subtitle, files: await uploadFiles(chatId, messageRef, files) } as FileDBMessage;
-		}
-		// Add full message data to DB
-		await updateDoc(messageRef, {
-			content: (attachDBContent as MediaDBMessage | FileMessage) || (content as TextMessage)
-		});
+		// Rewrite text content data to DB
+		const textContent = { ['content.' + (mType === 'text' ? 'text' : 'subtitle')]: (content as TextMessage).text };
+		await updateDoc(messageRef, textContent);
 	} catch (e) {
 		errorHandler(e);
 	}

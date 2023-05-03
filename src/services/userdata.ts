@@ -41,7 +41,7 @@ export const createUser = async ({ uid, email, displayName, phoneNumber, photoUR
 export const updateUserAvatar = async (avatar: File | File[]) => {
 	try {
 		if (avatar instanceof File) {
-			const avatarRef = storageRef(storage, `userdata/${await getUid()}/avatar/${uuidv4() + '.' + avatar.name.split('.')[avatar.name.split('.').length - 1]}`);
+			const avatarRef = storageRef(storage, `userdata/${await getUid()}/avatar/${uuidv4() + '.' + avatar.name.split('.').at(-1)}`);
 			await uploadBytes(avatarRef, avatar, {
 				contentType: avatar.type
 			});

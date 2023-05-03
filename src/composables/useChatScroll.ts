@@ -1,23 +1,22 @@
 import { ref, watchEffect, toRefs, computed } from 'vue';
 import { useScroll, useInfiniteScroll, watchPausable } from '@vueuse/core';
 import { useMessagesStore } from '@/stores/messages';
-import { loadMoreChatMessages } from '@/services/message';
-import type { Ref, ComputedRef } from 'vue';
-import type { LastVisibleFbRef } from '@/stores/messages';
+import type { Ref } from 'vue';
 import type { Color } from 'csstype';
 
-export const useChatScroll = (chatId: string, chatEl: Ref<HTMLElement | undefined>, messages: Ref<Array<any>> | ComputedRef<Array<any>>) => {
+export const useChatScroll = (chatEl: Ref<HTMLElement | undefined>, { onLoadMore }: { onLoadMore?: (direction: 'top' | 'bottom') => void }) => {
 	const messagesStore = useMessagesStore();
-	// Last visible doc refs on top and bottom (needs for infinite loading)
-	const lastVisible = computed<LastVisibleFbRef>(() => messagesStore.lastVisible);
 
-	const { arrivedState, isScrolling } = useScroll(chatEl, {
-		offset: { bottom: 50 }
-	});
-	const scrollOpacity = ref<Color>('transparent');
-	const { bottom } = toRefs(arrivedState);
+	// Last visible doc refs on top and bottom (needs for infinite loading)
+	const lastVisible = computed(() => messagesStore.lastVisible);
+	// Messages store state
+	const messages = computed(() => messagesStore.messages);
 
 	// Hiding scroll when inactive
+	const { arrivedState, isScrolling } = useScroll(chatEl, { offset: { bottom: 50 } });
+	const { bottom } = toRefs(arrivedState);
+	const scrollOpacity = ref<Color>('transparent');
+
 	watchEffect(onCleanup => {
 		if (isScrolling.value) {
 			scrollOpacity.value = 'rgba(255, 255, 255, 0.2)';
@@ -48,33 +47,27 @@ export const useChatScroll = (chatId: string, chatEl: Ref<HTMLElement | undefine
 		{ deep: true, flush: 'post' }
 	);
 
-	// Inf. scroll on top
-	useInfiniteScroll(
-		chatEl,
-		async () => {
-			if (lastVisible.value.top) {
-				pauseMessageWatcher();
-				await loadMoreChatMessages(chatId, 'top');
-				resumeMessageWatcher();
-			}
-		},
-		{ distance: 10, direction: 'top', preserveScrollPosition: true }
-	);
-
-	// Inf. scroll on bottom
-	useInfiniteScroll(
-		chatEl,
-		async () => {
-			if (lastVisible.value.bottom) {
-				pauseMessageWatcher();
-				await loadMoreChatMessages(chatId, 'bottom');
-				resumeMessageWatcher();
-			}
-		},
-		{ distance: 10, direction: 'bottom', preserveScrollPosition: false }
-	);
+	// Inf. scroll on top and bottom
+	const applyInfScroll = (direction: 'both' | 'top' | 'bottom') => {
+		const sides = direction === 'both' ? Object.keys(lastVisible.value) : direction;
+		for (const dir of sides) {
+			useInfiniteScroll(
+				chatEl,
+				async () => {
+					if (lastVisible.value[dir as keyof typeof lastVisible.value]) {
+						pauseMessageWatcher();
+						await onLoadMore?.(dir as keyof typeof lastVisible.value);
+						resumeMessageWatcher();
+					}
+				},
+				{ distance: 10, direction: dir as keyof typeof lastVisible.value, preserveScrollPosition: dir === 'top' }
+			);
+		}
+	};
+	applyInfScroll('both');
 
 	return {
+		isScrolling,
 		scrollOpacity,
 		isScrollOnBottom: bottom,
 		scrollBottom

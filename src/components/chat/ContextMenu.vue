@@ -16,7 +16,7 @@
 <script setup lang="ts">
 //@ts-nocheck
 import SvgIcon from '@jamescoyle/vue-icon';
-import { mdiReplyOutline, mdiPencil, mdiPinOutline, mdiContentCopy, mdiImage, mdiDownload, mdiCheckCircleOutline, mdiDeleteOutline, mdiLinkVariant } from '@mdi/js';
+import { mdiReplyOutline, mdiPencil, mdiPinOutline, mdiContentCopy, mdiImage, mdiDownload, mdiCheckCircleOutline, mdiShareOutline, mdiDeleteOutline, mdiLinkVariant } from '@mdi/js';
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useVModel } from '@vueuse/core';
 import { ContextMenu, ContextMenuItem } from '@imengyu/vue3-context-menu';
@@ -65,7 +65,7 @@ onMounted(() => {
 });
 const showMenu = useVModel(props, 'modelValue', emit);
 const contextMenuItems = computed(() => ([
-	{ title: 'Переслать', value: 'forward', icon: mdiReplyOutline },
+	{ title: 'Ответить', value: 'reply', icon: mdiReplyOutline },
 	{ title: 'Изменить', value: 'edit', icon: mdiPencil },
 	{ title: 'Закрепить', value: 'pin', icon: mdiPinOutline },
 	selectedText.value ? { title: 'Скопировать выделенный текст', value: 'copySelected', icon: mdiContentCopy } :
@@ -75,6 +75,7 @@ const contextMenuItems = computed(() => ([
 				{ title: 'Скопировать изображение', value: 'copyImage', icon: mdiImage } :
 				{ title: 'Скопировать ссылку', value: 'copyLink', icon: mdiLinkVariant },
 	props.contentType !== 'text' ? { title: 'Скачать', value: 'download', icon: mdiDownload } : false,
+	{ title: 'Переслать', value: 'forward', icon: mdiShareOutline },
 	{ title: 'Выбрать', value: 'select', icon: mdiCheckCircleOutline },
 	{ title: 'Удалить', value: 'delete', icon: mdiDeleteOutline, colorClass: 'text-red-darken-4' },
 ].filter(Boolean)));
