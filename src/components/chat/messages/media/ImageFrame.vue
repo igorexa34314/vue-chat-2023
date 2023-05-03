@@ -16,17 +16,18 @@
 <script setup lang="ts">
 import ImageLoader from '@/components/chat/ImageLoader.vue';
 import { onUnmounted, watchEffect, toRef } from 'vue';
-import { loadImagebyFullpath } from '@/services/message';
+import { loadPreviewbyFullpath } from '@/services/message';
 import { storeToRefs } from 'pinia';
 import { useLoadingStore } from '@/stores/loading';
 import { useMessagesStore } from '@/stores/messages';
 import { VImg, VCard } from 'vuetify/components';
-import type { MediaMessage, FileMessage } from '@/stores/messages';
+import { MessageAttachment } from '@/types/db/MessagesTable';
+import { Message, MessageContentWithPreview } from '@/stores/messages';
 
-export type ImageWithPreviewURL = { previewURL: string } & (MediaMessage['images'][number] | FileMessage['files'][number]);
+// export type ImageWithPreviewURL = { previewURL: string } & (MediaMessage['images'][number] | FileMessage['files'][number]);
 
 const props = withDefaults(defineProps<{
-   image: MediaMessage['images'][number] | FileMessage['files'][number];
+   image: Message['content']['attachments'];
    maxHeight?: string | number | VCard['maxHeight'];
    height?: string | number | VCard['height'];
    rounded?: string | number | boolean | VCard['rounded'];
@@ -46,7 +47,7 @@ const { getUploadingStateById } = storeToRefs(useLoadingStore());
 watchEffect(async () => {
    try {
       if (!props.image.previewURL) {
-         const previewURL = await loadImagebyFullpath(props.image as MediaMessage['images'][number]) || '';
+         const previewURL = await loadPreviewbyFullpath(props.image.raw as MessageAttachment) || '';
          setMediaPreviewURL(toRef(props, 'image'), previewURL);
       }
    } catch (e) { }

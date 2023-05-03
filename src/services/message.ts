@@ -11,21 +11,21 @@ import { useMessagesStore } from '@/stores/messages';
 import { useLoadingStore } from '@/stores/loading';
 import type { DocumentReference, DocumentData, DocumentChange } from 'firebase/firestore';
 import type { UserInfo } from '@/types/db/UserdataTable';
-import type { Message as DBMessage, TextMessage, MediaMessage as MediaDBMessage, FileMessage as FileDBMessage } from '@/types/db/MessagesTable';
+import type { Message as DBMessage, MessageAttachment, MessageContent } from '@/types/db/MessagesTable';
 import type { ChatInfo } from '@/services/chat';
-import type { Message, MediaMessage, FileMessage, LastVisibleFbRef, Direction } from '@/stores/messages';
+import type { Message, LastVisibleFbRef, Direction } from '@/stores/messages';
 import { EditMessageData } from '@/components/chat/form/MessageForm.vue';
 
 export interface AttachFormContent {
-	subtitle: MediaDBMessage['subtitle'] | FileMessage['subtitle'];
-	files: {
+	text: MessageContent['text'];
+	attachments: {
 		id: string;
 		fileData: File;
 		thumbnail?: {
 			url: string;
-			size: number;
+			fullsize: Required<MessageAttachment>['thumbnail']['fullsize'];
 		};
-		sizes?: MediaDBMessage['images'][number]['sizes'];
+		sizes?: MessageAttachment['raw']['sizes'];
 	}[];
 }
 
@@ -114,28 +114,10 @@ export const getFullMessageInfo = async (DbMessage: DBMessage) => {
 	try {
 		let { sender_id, content, ...m } = DbMessage;
 		const sender = await getMessageSenderInfo(sender_id);
-		if (m.type === 'media') {
-			const messageMediaThumb = [] as Promise<{ [id: string]: string }>[];
-			const { subtitle, images } = content as MediaDBMessage;
-			images.forEach(img => {
-				messageMediaThumb.push(
-					(async () => {
-						return {
-							[img.id]: (await getMessageThumb(img)) as string
-						} as { [id: string]: string };
-					})()
-				);
-			});
-			const thumbURLs = Object.assign({}, ...(await Promise.all(messageMediaThumb)));
-			const imagesWithThumb = (images as unknown as MediaMessage['images']).map(img => {
-				img.thumbnail = thumbURLs[img.id];
-				return img;
-			});
-			return { ...m, sender, content: { subtitle, images: imagesWithThumb } } as Message;
-		} else if (m.type === 'file') {
-			const { subtitle, files } = content as FileDBMessage;
+		if (m.type !== 'text') {
+			const { text, attachments } = content as MessageContent;
 			const messageFileThumb = [] as Promise<{ [id: string]: string }>[];
-			files.forEach(file => {
+			attachments?.forEach(file => {
 				if (file.type.startsWith('image/'))
 					messageFileThumb.push(
 						(async () => {
@@ -146,11 +128,11 @@ export const getFullMessageInfo = async (DbMessage: DBMessage) => {
 					);
 			});
 			const thumbURLs = Object.assign({}, ...(await Promise.all(messageFileThumb)));
-			const filesWithThumb = (files as FileMessage['files']).map(file => {
+			const filesWithThumb = attachments?.map(file => {
 				if (thumbURLs[file.id]) file.thumbnail = thumbURLs[file.id];
 				return file;
 			});
-			return { ...m, sender, content: { subtitle, files: filesWithThumb } } as Message;
+			return { ...m, sender, content: { text, files: filesWithThumb } } as Message;
 		}
 		return { ...m, sender, content } as Message;
 	} catch (e) {
@@ -158,12 +140,11 @@ export const getFullMessageInfo = async (DbMessage: DBMessage) => {
 	}
 };
 
-export const getMessageThumb = async (file: MediaDBMessage['images'][number] | FileDBMessage['files'][number]) => {
+export const getMessageThumb = async (file: MessageAttachment) => {
 	const thumb = file.thumbnail;
-	if (thumb?.fullpath && thumb?.fullpath) {
+	if (thumb?.fullpath) {
 		try {
-			const thumbpath = `${thumb.fullpath.split('/').slice(0, -1).join('/')}/${file.id}_thumb.${thumb.fullname.split('.').slice(1).join('.')}`;
-			const blobFile = await getBytes(storageRef(storage, thumbpath));
+			const blobFile = await getBytes(storageRef(storage, thumb.fullpath));
 			if (blobFile) {
 				return `data:${file.type};base64,${encode(blobFile)}`;
 			}
@@ -173,10 +154,10 @@ export const getMessageThumb = async (file: MediaDBMessage['images'][number] | F
 	}
 };
 
-export const loadImagebyFullpath = async (image: MediaMessage['images'][number]) => {
+export const loadPreviewbyFullpath = async (file: MessageAttachment) => {
 	try {
-		if (image.fullpath) {
-			const blobFile = await getBlob(storageRef(storage, image.fullpath));
+		if (file.raw.fullpath) {
+			const blobFile = await getBlob(storageRef(storage, file.raw.fullpath));
 			if (blobFile) {
 				return URL.createObjectURL(blobFile);
 			}
@@ -186,24 +167,21 @@ export const loadImagebyFullpath = async (image: MediaMessage['images'][number])
 	}
 };
 
-export const createMessage = async (chatId: ChatInfo['id'], type: Message['type'], content: TextMessage | AttachFormContent) => {
+export const createMessage = async (chatId: ChatInfo['id'], type: Message['type'], content: AttachFormContent | { text: string }) => {
 	try {
 		const messageRef = doc(collection(doc(chatCol, chatId), 'messages'));
-		let attachDBContent: MediaDBMessage | FileDBMessage | null = null;
+		let attachDBContent: MessageAttachment | null = null;
 
 		// Get images thumbs and Doc ref to prospective image upload
-		if (type === 'media') {
-			const { subtitle, files: images } = content as AttachFormContent;
-			attachDBContent = { subtitle, images: await uploadMedia(chatId, messageRef, images) } as MediaDBMessage;
-		} else if (type === 'file') {
-			const { subtitle, files } = content as AttachFormContent;
-			attachDBContent = { subtitle, files: await uploadFiles(chatId, messageRef, files) } as FileDBMessage;
+		const { text, attachments } = content as unknown as AttachFormContent;
+		if (attachments && attachments.length) {
+			attachDBContent = { text, attachments: await uploadAttachments(chatId, messageRef, attachments) } as unknown as MessageAttachment;
 		}
 		// Add full message data to DB
 		await setDoc(messageRef, {
 			id: messageRef.id,
 			type,
-			content: (attachDBContent as MediaDBMessage | FileMessage) || (content as TextMessage),
+			content: attachDBContent || { text },
 			created_at: Timestamp.now(),
 			sender_id: await getUid()
 		});
@@ -215,52 +193,14 @@ export const updateMessageContent = async (chatId: ChatInfo['id'], { id: mId, ty
 	try {
 		const messageRef = doc(collection(doc(chatCol, chatId), 'messages'), mId);
 		// Rewrite text content data to DB
-		const textContent = { ['content.' + (mType === 'text' ? 'text' : 'subtitle')]: (content as TextMessage).text };
+		const textContent = { ['content.' + (mType === 'text' ? 'text' : 'subtitle')]: content.text };
 		await updateDoc(messageRef, textContent);
 	} catch (e) {
 		errorHandler(e);
 	}
 };
 
-const uploadMedia = async <T extends MediaDBMessage['images']>(chatId: ChatInfo['id'], messageRef: DocumentReference<DocumentData>, images: AttachFormContent['files']) => {
-	try {
-		if (images.every(f => f.fileData instanceof File)) {
-			const docRefPromises = [] as Promise<T[number]>[];
-			for (const img of images) {
-				docRefPromises.push(
-					(async () => {
-						const { fileData, id, thumbnail, ...data } = img;
-						const thumbData = (await uploadThumb(chatId, messageRef.id, img)) as T[number]['thumbnail'];
-
-						const mediaContent = {
-							id,
-							type: fileData.type,
-							fullname: fileData.name,
-							fullsize: fileData.size,
-							thumbnail: thumbData,
-							...data
-						} as T[number];
-
-						createUploadTask(chatId, messageRef, 'media', img, mediaContent);
-
-						return mediaContent;
-					})()
-				);
-			}
-			return await Promise.all(docRefPromises);
-		}
-	} catch (e) {
-		errorHandler(e);
-	}
-};
-
-const createUploadTask = (
-	chatId: ChatInfo['id'],
-	messageRef: DocumentReference<DocumentData>,
-	messageType: 'file' | 'media',
-	file: AttachFormContent['files'][number],
-	DBcontentToUpdate: MediaDBMessage['images'][number] | FileDBMessage['files'][number]
-) => {
+const createUploadTask = (chatId: ChatInfo['id'], messageRef: DocumentReference<DocumentData>, file: AttachFormContent['attachments'][number], DBcontentToUpdate: Partial<MessageAttachment>) => {
 	const { setUploading, updateLoading, finishLoading } = useLoadingStore();
 	const { fileData, id: fileId } = file;
 	const fileRef = storageRef(storage, `chat/${chatId}/messageData/${messageRef.id}/${fileId + '.' + fileData.name.split('.').slice(1).join('.')}`);
@@ -274,7 +214,6 @@ const createUploadTask = (
 			// Observe state change events such as progress, pause, and resume
 			// Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
 			const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-			console.log('Upload is ' + progress + '% done');
 			updateLoading(fileId, progress);
 			switch (snapshot.state) {
 				case 'paused':
@@ -312,19 +251,20 @@ const createUploadTask = (
 				// Handle successful uploads on complete
 				const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
 				const batch = writeBatch(db);
-				const fieldToUpdate = `content.${messageType === 'media' ? 'images' : 'files'}`;
 				batch.update(messageRef, {
-					[fieldToUpdate]: arrayRemove(DBcontentToUpdate)
+					'content.attachments': arrayRemove(DBcontentToUpdate)
 				});
 				batch.update(messageRef, {
-					[fieldToUpdate]: arrayUnion({
+					'content.attachments': arrayUnion({
 						...DBcontentToUpdate,
-						...{
+						raw: {
 							bucket: uploadTask.snapshot.ref.bucket,
 							fullpath: uploadTask.snapshot.ref.fullPath,
+							sizes: file.sizes,
+							fullsize: fileData.size,
 							downloadURL
 						}
-					})
+					} as MessageAttachment)
 				});
 				await batch.commit();
 				finishLoading(fileId);
@@ -335,20 +275,16 @@ const createUploadTask = (
 	);
 };
 
-const uploadThumb = async <T extends MediaDBMessage['images'][number]['thumbnail'] | FileDBMessage['files'][number]['thumbnail']>(
-	chatId: ChatInfo['id'],
-	messageId: Message['id'],
-	image: AttachFormContent['files'][number]
-) => {
+const uploadThumb = async <T extends MessageAttachment['thumbnail']>(chatId: ChatInfo['id'], messageId: Message['id'], attach: AttachFormContent['attachments'][number]) => {
 	try {
-		if (image.thumbnail) {
-			const { fileData, id, thumbnail } = image;
+		if (attach.thumbnail) {
+			const { fileData, id, thumbnail } = attach;
 			const thumbRef = storageRef(storage, `chat/${chatId}/messageData/${messageId}/${id + '_thumb.' + fileData.name.split('.').slice(1).join('.')}`);
 			await uploadString(thumbRef, thumbnail.url, 'data_url');
 			return {
-				fullname: thumbRef.name,
+				bucket: thumbRef.bucket,
 				fullpath: thumbRef.fullPath,
-				size: thumbnail.size
+				fullsize: thumbnail.fullsize
 			} as T;
 		}
 	} catch (e) {
@@ -356,35 +292,32 @@ const uploadThumb = async <T extends MediaDBMessage['images'][number]['thumbnail
 	}
 };
 
-const uploadFiles = async <T extends FileDBMessage['files']>(chatId: ChatInfo['id'], messageRef: DocumentReference<DocumentData>, files: AttachFormContent['files']) => {
+const uploadAttachments = async <T extends MessageAttachment>(chatId: ChatInfo['id'], messageRef: DocumentReference<DocumentData>, attach: AttachFormContent['attachments']) => {
 	try {
-		if (files.every(f => f.fileData instanceof File)) {
-			const docRefPromises = [] as Promise<T[number]>[];
-			for (const file of files) {
+		if (attach.every(file => file.fileData instanceof File)) {
+			const docRefPromises = [] as Promise<Omit<T, 'raw'>>[];
+			for (const file of attach) {
 				docRefPromises.push(
 					(async () => {
-						const { fileData, id, thumbnail, sizes, ...data } = file;
-						let fileContent = {
+						const { fileData, id, thumbnail, sizes } = file;
+						let attachContent = {
 							id,
 							type: fileData.type,
-							fullname: fileData.name,
-							fullsize: fileData.size,
-							...data
-						} as T[number];
+							fullname: fileData.name
+						} as Omit<T, 'raw'>;
 						if (file.fileData.type.startsWith('image/') && sizes && thumbnail) {
-							const thumbData = (await uploadThumb(chatId, messageRef.id, file)) as T[number]['thumbnail'];
-							fileContent = {
-								...fileContent,
-								sizes,
+							const thumbData = (await uploadThumb(chatId, messageRef.id, file)) as T['thumbnail'];
+							attachContent = {
+								...attachContent,
 								thumbnail: thumbData
-							} as T[number];
+							} as Omit<T, 'raw'>;
 						}
-						createUploadTask(chatId, messageRef, 'file', file, fileContent);
-						return fileContent;
+						createUploadTask(chatId, messageRef, file, attachContent);
+						return attachContent;
 					})()
 				);
 			}
-			return await Promise.all(docRefPromises);
+			return (await Promise.all(docRefPromises)) as Awaited<T>;
 		}
 	} catch (e) {
 		errorHandler(e);

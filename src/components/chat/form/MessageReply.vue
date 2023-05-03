@@ -26,15 +26,13 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { Message } from '@/stores/messages';
 import { mdiPencil, mdiClose } from '@mdi/js';
-import type { TextMessage } from '@/types/db/MessagesTable';
-import type { MediaMessage, FileMessage } from '@/stores/messages';
+import type { Message } from '@/stores/messages';
 
 const props = defineProps<{
 	modelValue: boolean;
 	mType: Message['type']
-	content: Message['content'] | null;
+	content?: Message['content'];
 }>();
 const emit = defineEmits<{
 	(e: 'update:modelValue', val: boolean): void;
@@ -42,13 +40,13 @@ const emit = defineEmits<{
 }>();
 const getTextFromEditMsg = computed(() => {
 	return props.mType === 'text' ?
-		(props.content as TextMessage).text :
+		props.content?.text :
 		!getImagesFromEditMsg.value || !getImagesFromEditMsg.value.length ?
-			(props.content as FileMessage).files.at(-1)?.fullname :
+			props.content?.attachments.at(-1)?.fullname :
 			(getImagesFromEditMsg.value.length === 1 ? 'Фотография' : 'Альбом') +
-			', ' + (props.content as MediaMessage | FileMessage).subtitle;
+			', ' + props.content?.text;
 });
-const getImagesFromEditMsg = computed(() => ((props.content as MediaMessage).images || (props.content as FileMessage).files)?.filter(item => item.previewURL).map(img => img.previewURL));
+const getImagesFromEditMsg = computed(() => props.content?.attachments?.filter(item => item.raw.previewURL).map(img => img.raw.previewURL));
 const cancelReply = () => {
 	emit('update:modelValue', false);
 	emit('cancel');

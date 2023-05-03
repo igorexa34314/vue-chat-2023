@@ -65,7 +65,7 @@ export type AttachedContent = (AttachDialogProps['fileList'][number] & { sizes?:
 export interface AttachDialogProps {
 	modelValue?: boolean;
 	subtitleText: string;
-	contentType: 'media' | 'file';
+	contentType: Exclude<Message['type'], 'text'>;
 	fileList: { id: string; fileData: File }[]
 }
 const props = withDefaults(defineProps<AttachDialogProps>(), {
