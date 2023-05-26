@@ -8,13 +8,13 @@ import { getAnalytics } from 'firebase/analytics';
 
 // Initialize Firebase
 export const firebaseApp = initializeApp({
-	apiKey: import.meta.env.VITE_FIREBASE_APIKEY,
-	authDomain: 'my-vue-chat-e3718.firebaseapp.com',
-	projectId: 'my-vue-chat-e3718',
-	messagingSenderId: '324405358221',
-	appId: '1:324405358221:web:057a560cc0306372b67cc4',
-	measurementId: 'G-4SFVY2F5RS',
-	storageBucket: 'gs://my-vue-chat-e3718.appspot.com'
+	apiKey: import.meta.env.VITE_FB_API_KEY,
+	authDomain: import.meta.env.VITE_FB_AUTH_DOMAIN,
+	projectId: import.meta.env.VITE_FB_PROJECT_ID,
+	messagingSenderId: import.meta.env.VITE_FB_MESSAGING_SENDER_ID,
+	appId: import.meta.env.VITE_FB_APP_ID,
+	measurementId: import.meta.env.VITE_FB_MEASUREMENT_ID,
+	storageBucket: import.meta.env.VITE_FB_STORAGE_BUCKET
 });
 
 // Initialize Cloud Firestore and get a reference to the service
