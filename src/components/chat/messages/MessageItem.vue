@@ -16,8 +16,7 @@
 				:class="type === 'file' ? 'pl-2 pt-2' : type === 'media' ? 'pl-4 pt-4' : ''">
 
 				<component :is="messageComponent" v-bind="{ content }" :class="{ 'pr-3': type === 'file' }"
-					@openInOverlay="(imgId: ImageWithPreviewURL['id']) => emit('openInOverlay', imgId)"
-					@mediaLoaded="(media: ImageWithPreviewURL) => emit('mediaLoaded', media)" />
+					@openInOverlay="(imgId: ImageWithPreviewURL['id']) => emit('openInOverlay', imgId)" />
 
 				<i18n-d tag="small" :value="created_at" :format="messagesDateFormat(created_at as Date)" scope="global"
 					locale="ru-RU" :class="{ 'mt-2': type !== 'file' }" class="message__time" />
@@ -34,8 +33,8 @@ import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { messagesDateFormat } from '@/utils/filters/messages';
 import { defaultAvatar } from '@/utils/globals';
-import type { ImageWithPreviewURL } from '@/components/chat/messages/media/ImageFrame.vue';
-import type { Message } from '@/stores/messages';
+import { ImageWithPreviewURL } from '@/components/chat/messages/media/ImageFrame.vue';
+import { Message } from '@/stores/messages';
 
 interface MessageItemProps {
 	type: Message['type'];
@@ -51,7 +50,6 @@ const props = withDefaults(defineProps<MessageItemProps>(), {
 });
 const emit = defineEmits<{
 	(e: 'openInOverlay', imgId: ImageWithPreviewURL['id']): void;
-	(e: 'mediaLoaded', media: ImageWithPreviewURL): void;
 	(e: 'contextmenu', event: MouseEvent): void;
 }>();
 const { push } = useRouter();

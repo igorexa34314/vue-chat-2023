@@ -20,7 +20,7 @@
 </template>
 
 <script setup lang="ts">
-import InfoForm from '@/components/profile/InfoForm.vue';
+import InfoForm, { ProfileForm } from '@/components/profile/InfoForm.vue';
 import messages from '@/utils/messages.json';
 import { storeToRefs } from 'pinia';
 import { updateUserdata, updateUserAvatar } from '@/services/userdata';
@@ -29,7 +29,6 @@ import { ref, inject } from 'vue';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { useMeta } from 'vue-meta';
 import { globalLoadingKey } from '@/injection-keys';
-import type { ProfileForm } from '@/components/profile/InfoForm.vue';
 
 useMeta({ title: 'Мой профиль' });
 

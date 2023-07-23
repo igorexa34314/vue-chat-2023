@@ -1,5 +1,5 @@
 import { getCurrentUser } from 'vuefire';
-import type { RouteLocationNormalized, NavigationGuardNext } from 'vue-router';
+import { RouteLocationNormalized, NavigationGuardNext } from 'vue-router';
 
 export const checkAuth = async (to: RouteLocationNormalized) => {
 	if (to.meta.requiresAuth) {

@@ -1,3 +1,3 @@
-import type { InjectionKey, Ref } from 'vue';
+import { InjectionKey, Ref } from 'vue';
 
 export const globalLoadingKey: InjectionKey<Ref<boolean>> = Symbol('loading');

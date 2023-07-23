@@ -1,10 +1,10 @@
 <template>
    <v-card v-if="image" class="image__wrapper" variant="text"
-      @click="image.previewURL || image?.downloadURL ? emit('open') : undefined" width="100%" :height="height"
+      @click="image.raw?.previewURL || image.raw?.downloadURL ? emit('open') : undefined" width="100%" :height="height"
       :max-height="maxHeight" :rounded="rounded" v-ripple="false">
       <!-- <canvas></canvas> -->
-      <v-img :lazy-src="image.thumbnail" :src="image.previewURL || image.downloadURL" :alt="alt || image.fullname"
-         :width="image.sizes?.w" eager @load="imageLoaded" cover draggable="false">
+      <v-img :lazy-src="image.thumbnail" :src="image.raw?.previewURL || image.raw?.downloadURL"
+         :alt="alt || image.fullname" :width="image.raw.sizes?.w" eager @load="imageLoaded" cover draggable="false">
          <template #placeholder>
             <ImageLoader v-bind="loader" :model-value="getUploadingStateById(image.id)?.progress"
                @cancel="cancelImageLoading(image?.id as string)" />
@@ -21,13 +21,12 @@ import { storeToRefs } from 'pinia';
 import { useLoadingStore } from '@/stores/loading';
 import { useMessagesStore } from '@/stores/messages';
 import { VImg, VCard } from 'vuetify/components';
-import { MessageAttachment } from '@/types/db/MessagesTable';
-import { Message, MessageContentWithPreview } from '@/stores/messages';
+import { MessageContentWithPreview } from '@/stores/messages';
 
-// export type ImageWithPreviewURL = { previewURL: string } & (MediaMessage['images'][number] | FileMessage['files'][number]);
+export type ImageWithPreviewURL = MessageContentWithPreview['attachments'][number];
 
 const props = withDefaults(defineProps<{
-   image: Message['content']['attachments'];
+   image: ImageWithPreviewURL;
    maxHeight?: string | number | VCard['maxHeight'];
    height?: string | number | VCard['height'];
    rounded?: string | number | boolean | VCard['rounded'];
@@ -42,13 +41,13 @@ const emit = defineEmits<{
    (e: 'open'): void;
    (e: 'loaded'): void;
 }>();
-const { setMediaPreviewURL } = useMessagesStore();
+const { setAttachPreviewURL } = useMessagesStore();
 const { getUploadingStateById } = storeToRefs(useLoadingStore());
 watchEffect(async () => {
    try {
-      if (!props.image.previewURL) {
-         const previewURL = await loadPreviewbyFullpath(props.image.raw as MessageAttachment) || '';
-         setMediaPreviewURL(toRef(props, 'image'), previewURL);
+      if (!props.image.raw.previewURL) {
+         const previewURL = await loadPreviewbyFullpath(props.image.raw);
+         setAttachPreviewURL(toRef(props, 'image'), previewURL as string);
       }
    } catch (e) { }
 });
@@ -57,13 +56,13 @@ const cancelImageLoading = (imgId: string) => {
 };
 
 const imageLoaded = () => {
-   if (props.image.previewURL) {
+   if (props.image.raw.previewURL) {
       emit('loaded');
    }
 };
 onUnmounted(() => {
-   if (props.image.previewURL) {
-      URL.revokeObjectURL(props.image.previewURL);
+   if (props.image.raw.previewURL) {
+      URL.revokeObjectURL(props.image.raw.previewURL);
    }
 });
 </script>

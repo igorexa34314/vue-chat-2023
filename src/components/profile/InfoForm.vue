@@ -38,8 +38,8 @@ import birthdayPicker from '@/components/UI/birthdayPicker.vue';
 import validations from '@/utils/validations';
 import { ref } from 'vue';
 import { defaultAvatar } from '@/utils/globals';
-import type { UserInfo } from '@/types/db/UserdataTable';
-import type { VForm } from 'vuetify/components';
+import { UserInfo } from '@/types/db/UserdataTable';
+import { VForm } from 'vuetify/components';
 
 export interface ProfileForm extends Omit<UserInfo, 'created_at' | 'uid' | 'providerId'> {
 	avatar?: File[];

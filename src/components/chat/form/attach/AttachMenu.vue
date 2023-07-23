@@ -19,7 +19,7 @@
 
 <script setup lang="ts">
 import { mdiImage, mdiFileDocumentOutline } from '@mdi/js';
-import type { Message } from '@/types/db/MessagesTable';
+import { Message } from '@/types/db/MessagesTable';
 
 const props = defineProps<{
 	class?: string;

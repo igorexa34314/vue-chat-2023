@@ -1,5 +1,5 @@
-import type { User } from 'firebase/auth';
-import type { Timestamp } from 'firebase/firestore';
+import { User } from 'firebase/auth';
+import { Timestamp } from 'firebase/firestore';
 
 export interface Message {
 	id: string;

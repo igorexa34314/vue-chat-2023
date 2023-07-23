@@ -3,7 +3,7 @@ import { getStorage, ref, getDownloadURL } from 'firebase/storage';
 import { getCurrentUser } from 'vuefire';
 import { createUser } from '@/services/userdata';
 import { fbErrorHandler } from '@/services/errorHandler';
-import type { User as FirebaseUser } from 'firebase/auth';
+import { User as FirebaseUser } from 'firebase/auth';
 
 interface UserCredentials {
 	email: string;

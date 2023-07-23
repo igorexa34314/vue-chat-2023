@@ -17,10 +17,10 @@
 import ImageLoader from '@/components/chat/ImageLoader.vue';
 import { mdiFile, mdiDownload } from '@mdi/js';
 import { getFileExt } from '@/utils/filters/messages';
-import type { FileMessage } from '@/stores/messages';
+import { Message } from '@/stores/messages';
 
 const props = withDefaults(defineProps<{
-	file: FileMessage['files'][number];
+	file: Message['content']['attachments'][number];
 	isHovering?: boolean;
 	hoverProps?: Record<string, unknown>;
 	loading?: boolean;

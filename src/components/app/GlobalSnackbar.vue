@@ -13,8 +13,7 @@
 <script setup lang="ts">
 import { mdiClose } from '@mdi/js';
 import { reactive } from 'vue';
-import { useSnackbarStore } from '@/stores/snackbar';
-import type { SnackbarOptions } from '@/stores/snackbar';
+import { useSnackbarStore, SnackbarOptions } from '@/stores/snackbar';
 
 const { $onAction } = useSnackbarStore();
 

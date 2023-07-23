@@ -1,13 +1,13 @@
 <template>
 	<div class="media-message mb-3">
-		<p v-if="content.subtitle.length" class="message__subtitle mb-3">{{ content.subtitle }}</p>
+		<p v-if="content.text.length" class="message__subtitle mb-3">{{ content.text }}</p>
 		<div class="images-frame">
 			<v-row dense align-content="stretch" no-gutters>
-				<v-col v-for="(img, index) of content.images" :cols="calcImageCols(index)"
-					:class="{ 'image-col': content.images.length > 2 }">
-					<ImageFrame :image="img" :key="img.id" :alt="content.subtitle" @open="emit('openInOverlay', img.id)"
-						@loaded="('mediaLoaded')" :max-height="content.images.length > 2 ? '280px' : '360px'"
-						:height="img.sizes.h" />
+				<v-col v-for="(img, index) of content.attachments" :cols="calcImageCols(index)"
+					:class="{ 'image-col': content.attachments.length > 2 }">
+					<ImageFrame :image="img" :key="img.id" :alt="content.text" @open="emit('openInOverlay', img.id)"
+						@loaded="('mediaLoaded')" :max-height="content.attachments.length > 2 ? '280px' : '360px'"
+						:height="img.raw.sizes?.h" />
 				</v-col>
 			</v-row>
 		</div>
@@ -18,11 +18,11 @@
 import ImageFrame from '@/components/chat/messages/media/ImageFrame.vue';
 import { computed } from 'vue';
 import { calcImageCols as calcCols } from '@/utils/images';
-import type { MediaMessage } from '@/stores/messages';
-import type { ImageWithPreviewURL } from '@/components/chat/messages/media/ImageFrame.vue';
+import { Message } from '@/stores/messages';
+import { ImageWithPreviewURL } from '@/components/chat/messages/media/ImageFrame.vue';
 
 const props = defineProps<{
-	content: MediaMessage;
+	content: Message['content'];
 }>();
 
 const emit = defineEmits<{
@@ -30,7 +30,7 @@ const emit = defineEmits<{
 	(e: 'mediaLoaded'): void;
 }>();
 
-const calcImageCols = computed(() => (imgIdx: number) => calcCols(props.content.images.length, imgIdx));
+const calcImageCols = computed(() => (imgIdx: number) => calcCols(props.content.attachments.length, imgIdx));
 </script>
 
 <style lang="scss" scoped>

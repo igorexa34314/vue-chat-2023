@@ -16,9 +16,9 @@
 			<v-carousel-item v-for="item of content" :key="item.id" cover>
 				<div class="carousel-image-element" style="max-width: 75vw;">
 					<v-card class="fullsize-image__wrapper d-flex align-center justify-center" variant="text"
-						:width="item.sizes?.w" :height="item.sizes?.h" max-height="100%" max-width="100%"
+						:width="item.raw.sizes?.w" :height="item.raw.sizes?.h" max-height="100%" max-width="100%"
 						:style="{ transform: `scale(${zoomed ? '2' : '1'})` }">
-						<v-img :src="item.previewURL" :alt="alt || item.fullname" :width="item.sizes?.w">
+						<v-img :src="item.raw.previewURL" :alt="alt || item.fullname" :width="item.raw.sizes?.w">
 							<template #placeholder>
 								<ImageLoader />
 							</template>
@@ -32,7 +32,7 @@
 			<v-btn class="zoom-in__btn" :icon="zoomed ? mdiMagnifyMinusOutline : mdiMagnifyPlusOutline" variant="text"
 				title="Zoom" @click="zoomImage" disabled />
 			<v-btn class="download__btn" :icon="mdiDownload" variant="text"
-				:href="content[currentItem || 0].previewURL || content[currentItem || 0].downloadURL"
+				:href="content[currentItem || 0].raw.previewURL || content[currentItem || 0].raw.downloadURL"
 				:download="content[currentItem || 0].fullname || 'image.png'" title="Download" />
 			<v-btn class="close__btn" :icon="mdiClose" variant="text" @click="closeOverlay" title="Close" />
 		</div>
@@ -44,7 +44,7 @@ import { mdiArrowLeft, mdiArrowRight, mdiMagnifyPlusOutline, mdiMagnifyMinusOutl
 import ImageLoader from '@/components/chat/ImageLoader.vue';
 import { ref } from 'vue';
 import { useVModel } from '@vueuse/core';
-import type { ImageWithPreviewURL } from '@/components/chat/messages/media/ImageFrame.vue';
+import { ImageWithPreviewURL } from '@/components/chat/messages/media/ImageFrame.vue';
 
 interface OverlayProps {
 	modelValue?: boolean;

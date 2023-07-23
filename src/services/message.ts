@@ -7,13 +7,12 @@ import { getUserdataById } from '@/services/userdata';
 import { fbErrorHandler as errorHandler } from '@/services/errorHandler';
 import { encode } from 'base64-arraybuffer';
 import { storeToRefs } from 'pinia';
-import { useMessagesStore } from '@/stores/messages';
+import { useMessagesStore, Message, LastVisibleFbRef, Direction } from '@/stores/messages';
 import { useLoadingStore } from '@/stores/loading';
-import type { DocumentReference, DocumentData, DocumentChange } from 'firebase/firestore';
-import type { UserInfo } from '@/types/db/UserdataTable';
-import type { Message as DBMessage, MessageAttachment, MessageContent } from '@/types/db/MessagesTable';
-import type { ChatInfo } from '@/services/chat';
-import type { Message, LastVisibleFbRef, Direction } from '@/stores/messages';
+import { DocumentReference, DocumentData, DocumentChange } from 'firebase/firestore';
+import { UserInfo } from '@/types/db/UserdataTable';
+import { Message as DBMessage, MessageAttachment, MessageContent } from '@/types/db/MessagesTable';
+import { ChatInfo } from '@/services/chat';
 import { EditMessageData } from '@/components/chat/form/MessageForm.vue';
 
 export interface AttachFormContent {
@@ -114,7 +113,7 @@ export const getFullMessageInfo = async (DbMessage: DBMessage) => {
 	try {
 		let { sender_id, content, ...m } = DbMessage;
 		const sender = await getMessageSenderInfo(sender_id);
-		if (m.type !== 'text') {
+		if (m.type !== 'text' && content.attachments?.length) {
 			const { text, attachments } = content as MessageContent;
 			const messageFileThumb = [] as Promise<{ [id: string]: string }>[];
 			attachments?.forEach(file => {
@@ -128,13 +127,13 @@ export const getFullMessageInfo = async (DbMessage: DBMessage) => {
 					);
 			});
 			const thumbURLs = Object.assign({}, ...(await Promise.all(messageFileThumb)));
-			const filesWithThumb = attachments?.map(file => {
+			const attachWithThumb = attachments?.map(file => {
 				if (thumbURLs[file.id]) file.thumbnail = thumbURLs[file.id];
 				return file;
-			});
-			return { ...m, sender, content: { text, files: filesWithThumb } } as Message;
+			}) as unknown as Message['content']['attachments'];
+			return { ...m, sender, content: { text, attachments: attachWithThumb } } as Message;
 		}
-		return { ...m, sender, content } as Message;
+		return { ...m, sender, content: { text: content.text } } as Message;
 	} catch (e) {
 		errorHandler(e);
 	}
@@ -154,10 +153,10 @@ export const getMessageThumb = async (file: MessageAttachment) => {
 	}
 };
 
-export const loadPreviewbyFullpath = async (file: MessageAttachment) => {
+export const loadPreviewbyFullpath = async (rawFile: MessageAttachment['raw']) => {
 	try {
-		if (file.raw.fullpath) {
-			const blobFile = await getBlob(storageRef(storage, file.raw.fullpath));
+		if (rawFile.fullpath) {
+			const blobFile = await getBlob(storageRef(storage, rawFile.fullpath));
 			if (blobFile) {
 				return URL.createObjectURL(blobFile);
 			}
@@ -167,16 +166,17 @@ export const loadPreviewbyFullpath = async (file: MessageAttachment) => {
 	}
 };
 
-export const createMessage = async (chatId: ChatInfo['id'], type: Message['type'], content: AttachFormContent | { text: string }) => {
+export const createMessage = async (chatId: ChatInfo['id'], type: Message['type'], content: Partial<AttachFormContent>) => {
 	try {
 		const messageRef = doc(collection(doc(chatCol, chatId), 'messages'));
 		let attachDBContent: MessageAttachment | null = null;
 
 		// Get images thumbs and Doc ref to prospective image upload
-		const { text, attachments } = content as unknown as AttachFormContent;
+		const { text, attachments } = content as AttachFormContent;
 		if (attachments && attachments.length) {
 			attachDBContent = { text, attachments: await uploadAttachments(chatId, messageRef, attachments) } as unknown as MessageAttachment;
 		}
+		console.log(attachDBContent);
 		// Add full message data to DB
 		await setDoc(messageRef, {
 			id: messageRef.id,
@@ -295,7 +295,7 @@ const uploadThumb = async <T extends MessageAttachment['thumbnail']>(chatId: Cha
 const uploadAttachments = async <T extends MessageAttachment>(chatId: ChatInfo['id'], messageRef: DocumentReference<DocumentData>, attach: AttachFormContent['attachments']) => {
 	try {
 		if (attach.every(file => file.fileData instanceof File)) {
-			const docRefPromises = [] as Promise<Omit<T, 'raw'>>[];
+			const docRefPromises = [] as Promise<Partial<T>>[];
 			for (const file of attach) {
 				docRefPromises.push(
 					(async () => {
@@ -303,14 +303,15 @@ const uploadAttachments = async <T extends MessageAttachment>(chatId: ChatInfo['
 						let attachContent = {
 							id,
 							type: fileData.type,
-							fullname: fileData.name
-						} as Omit<T, 'raw'>;
+							fullname: fileData.name,
+							raw: { sizes, fullsize: fileData.size }
+						} as Partial<T>;
 						if (file.fileData.type.startsWith('image/') && sizes && thumbnail) {
 							const thumbData = (await uploadThumb(chatId, messageRef.id, file)) as T['thumbnail'];
 							attachContent = {
 								...attachContent,
 								thumbnail: thumbData
-							} as Omit<T, 'raw'>;
+							} as Partial<T>;
 						}
 						createUploadTask(chatId, messageRef, file, attachContent);
 						return attachContent;

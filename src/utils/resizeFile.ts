@@ -6,7 +6,7 @@ interface ThumbSizeOptions {
 
 export interface ThumbResult {
 	url: string;
-	size?: number;
+	fullsize?: number;
 }
 
 export const getFileThumbAndSizes = <T extends { id: string; fileData: File }>(
@@ -57,7 +57,7 @@ export const getFileThumbAndSizes = <T extends { id: string; fileData: File }>(
 						};
 					canvas.toBlob(
 						blob => {
-							result.size = blob?.size;
+							result.fullsize = blob?.size;
 							res({ ...file, preview, thumbnail: result, sizes: { w: image.naturalWidth, h: image.naturalHeight } } as T & {
 								sizes: { w: number; h: number };
 								thumbnail: ThumbResult;

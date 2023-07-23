@@ -1,9 +1,8 @@
 import { defineStore } from 'pinia';
-import { ref, reactive } from 'vue';
-import type { Ref } from 'vue';
-import type { UserInfo } from '@/types/db/UserdataTable';
-import type { DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
-import type { Message as DBMessage, MessageAttachment, MessageContent } from '@/types/db/MessagesTable';
+import { ref, reactive, Ref } from 'vue';
+import { UserInfo } from '@/types/db/UserdataTable';
+import { DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
+import { Message as DBMessage, MessageAttachment, MessageContent } from '@/types/db/MessagesTable';
 
 export interface MessageContentWithPreview extends Omit<MessageContent, 'attachments'> {
 	attachments: (Omit<MessageAttachment, 'thumbnail' | 'raw'> & { thumbnail: string; raw: MessageAttachment['raw'] & { previewURL?: string } })[];
@@ -40,9 +39,9 @@ export const useMessagesStore = defineStore('messages', () => {
 	const deleteMessages = (count = 10, direction: 'start' | 'end' = 'end') => {
 		return direction === 'end' ? messages.value.splice(-count, count) : messages.value.splice(0, count);
 	};
-	const setAttachPreviewURL = (attachRefInstance: Ref<MessageAttachment['raw'] & { previewURL?: string }>, previewURL: string) => {
+	const setAttachPreviewURL = (attachRefInstance: Ref<MessageContentWithPreview['attachments'][number]>, previewURL: string) => {
 		if (previewURL) {
-			attachRefInstance.value.previewURL = previewURL;
+			attachRefInstance.value.raw.previewURL = previewURL;
 		}
 	};
 	return {

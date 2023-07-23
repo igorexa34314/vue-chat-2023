@@ -12,12 +12,12 @@
 </template>
 
 <script setup lang="ts">
-import { mdiEyeOutline } from '@mdi/js';
 import ImageFrame from '@/components/chat/messages/media/ImageFrame.vue';
-import type { FileMessage } from '@/stores/messages';
+import { mdiEyeOutline } from '@mdi/js';
+import { Message } from '@/stores/messages';
 
 const props = defineProps<{
-	file: FileMessage['files'][number];
+	file: Message['content']['attachments'][number];
 	isHovering: Boolean;
 	hoverProps: Record<string, unknown>;
 }>();

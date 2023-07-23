@@ -44,7 +44,7 @@ import { registerWithEmail, signInWithGoogle } from '@/services/auth';
 import { useRouter } from 'vue-router';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { googleImg } from '@/utils/globals';
-import type { VForm } from 'vuetify/components';
+import { VForm } from 'vuetify/components';
 
 const { push } = useRouter();
 const { showMessage } = useSnackbarStore();

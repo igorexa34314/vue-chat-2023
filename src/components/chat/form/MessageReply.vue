@@ -27,12 +27,12 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { mdiPencil, mdiClose } from '@mdi/js';
-import type { Message } from '@/stores/messages';
+import { Message } from '@/stores/messages';
 
 const props = defineProps<{
 	modelValue: boolean;
 	mType: Message['type']
-	content?: Message['content'];
+	content: Message['content'] | null;
 }>();
 const emit = defineEmits<{
 	(e: 'update:modelValue', val: boolean): void;

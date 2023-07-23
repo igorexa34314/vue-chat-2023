@@ -1,8 +1,7 @@
-import { ref, watchEffect, toRefs, computed } from 'vue';
+import { ref, watchEffect, toRefs, computed,Ref } from 'vue';
 import { useScroll, useInfiniteScroll, watchPausable } from '@vueuse/core';
 import { useMessagesStore } from '@/stores/messages';
-import type { Ref } from 'vue';
-import type { Color } from 'csstype';
+import { Color } from 'csstype';
 
 export const useChatScroll = (chatEl: Ref<HTMLElement | undefined>, { onLoadMore }: { onLoadMore?: (direction: 'top' | 'bottom') => void }) => {
 	const messagesStore = useMessagesStore();

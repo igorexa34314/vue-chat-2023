@@ -1,17 +1,33 @@
 import { storage, db } from '@/firebase';
 import { useUserdataStore } from '@/stores/userdata';
-import { getDoc, setDoc, onSnapshot, doc, updateDoc, arrayUnion, Timestamp, collection } from 'firebase/firestore';
+import {
+	getDoc,
+	setDoc,
+	onSnapshot,
+	doc,
+	updateDoc,
+	arrayUnion,
+	Timestamp,
+	collection
+} from 'firebase/firestore';
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { getUid } from '@/services/auth';
 import { createSelfChat } from '@/services/chat';
-import { uuidv4 } from '@firebase/util';
+import { v4 as uuidv4 } from 'uuid';
 import { fbErrorHandler as errorHandler } from '@/services/errorHandler';
-import type { UserData, UserInfo } from '@/types/db/UserdataTable';
+import { UserData, UserInfo } from '@/types/db/UserdataTable';
 
 const usersCol = collection(db, 'userdata');
 export const getUserRef = (uid: UserInfo['uid'] | undefined) => doc(usersCol, uid);
 
-export const createUser = async ({ uid, email, displayName, phoneNumber, photoURL, metadata }: Omit<UserInfo, 'created_at'>) => {
+export const createUser = async ({
+	uid,
+	email,
+	displayName,
+	phoneNumber,
+	photoURL,
+	metadata
+}: Omit<UserInfo, 'created_at'>) => {
 	try {
 		const userRef = getUserRef(uid);
 		const user = await getDoc(userRef);
@@ -41,7 +57,10 @@ export const createUser = async ({ uid, email, displayName, phoneNumber, photoUR
 export const updateUserAvatar = async (avatar: File | File[]) => {
 	try {
 		if (avatar instanceof File) {
-			const avatarRef = storageRef(storage, `userdata/${await getUid()}/avatar/${uuidv4() + '.' + avatar.name.split('.').at(-1)}`);
+			const avatarRef = storageRef(
+				storage,
+				`userdata/${await getUid()}/avatar/${uuidv4() + '.' + avatar.name.split('.').at(-1)}`
+			);
 			await uploadBytes(avatarRef, avatar, {
 				contentType: avatar.type
 			});
@@ -56,7 +75,12 @@ export const updateUserAvatar = async (avatar: File | File[]) => {
 };
 export const updateUserdata = async (newData: Partial<UserInfo>) => {
 	try {
-		const infoField = Object.assign({}, ...(Object.keys(newData) as (keyof Partial<UserInfo>)[]).map(key => ({ [`info.${key}`]: newData[key] })));
+		const infoField = Object.assign(
+			{},
+			...(Object.keys(newData) as (keyof Partial<UserInfo>)[]).map(key => ({
+				[`info.${key}`]: newData[key]
+			}))
+		);
 		await updateDoc(getUserRef(await getUid()), infoField);
 	} catch (e) {
 		errorHandler(e);

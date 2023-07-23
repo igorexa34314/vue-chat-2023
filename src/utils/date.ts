@@ -1,4 +1,4 @@
-import type { DateTimeFormatOptions } from '@intlify/core-base';
+import { DateTimeFormatOptions } from '@intlify/core-base';
 
 export const monthsForLocale = (localeName = 'en-US', monthFormat: DateTimeFormatOptions['month'] = 'long') => {
 	const format = new Intl.DateTimeFormat(localeName, { month: monthFormat }).format;

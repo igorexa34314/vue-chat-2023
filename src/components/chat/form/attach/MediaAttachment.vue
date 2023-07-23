@@ -18,7 +18,7 @@
 import PreviewImage from '@/components/chat/form/attach/PreviewImage.vue';
 import { ref, computed } from 'vue';
 import { calcImageCols as calcCols } from '@/utils/images';
-import type { AttachedContent } from '@/components/chat/form/attach/AttachDialog.vue';
+import { AttachedContent } from '@/components/chat/form/attach/AttachDialog.vue';
 
 const props = defineProps<{
 	files: AttachedContent

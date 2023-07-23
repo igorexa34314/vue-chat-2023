@@ -16,8 +16,8 @@
 import { mdiDelete } from '@mdi/js';
 import ImageLoader from '@/components/chat/ImageLoader.vue';
 import { ref } from 'vue';
-import type { AttachedContent } from '@/components/chat/form/attach/AttachDialog.vue';
-import type { VImg } from 'vuetify/components';
+import { AttachedContent } from '@/components/chat/form/attach/AttachDialog.vue';
+import { VImg } from 'vuetify/components';
 
 const props = withDefaults(defineProps<{
 	previewItem: AttachedContent[number]

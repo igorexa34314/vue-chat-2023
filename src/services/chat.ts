@@ -2,8 +2,8 @@ import { getUid } from '@/services/auth';
 import { getFirestore, collection, doc, setDoc, updateDoc, arrayUnion, query, where, getDoc, getDocs, Timestamp } from 'firebase/firestore';
 import { getUserRef, getUserdataById } from '@/services/userdata';
 import { fbErrorHandler as errorHandler } from '@/services/errorHandler';
-import type { UserData, UserInfo } from '@/types/db/UserdataTable';
-import type { ChatInfo as DBChatTable } from '@/types/db/ChatTable';
+import { UserData, UserInfo } from '@/types/db/UserdataTable';
+import { ChatInfo as DBChatTable } from '@/types/db/ChatTable';
 
 export interface ChatInfo extends Omit<DBChatTable, 'members'> {
 	members: Pick<UserInfo, 'uid' | 'displayName' | 'photoURL'>[];

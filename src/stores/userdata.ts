@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import type { UserData, UserInfo } from '@/types/db/UserdataTable';
+import { UserData, UserInfo } from '@/types/db/UserdataTable';
 
 export const useUserdataStore = defineStore('userdata', () => {
 	const userdata = ref<UserData | null>();
@@ -12,7 +12,7 @@ export const useUserdataStore = defineStore('userdata', () => {
 		userdata.value = data;
 	};
 	const setUserInfo = (info: UserInfo) => {
-		userdata.value!.info = info;
+		userdata.value = { ...userdata.value, info };
 	};
 	const getUdata = computed(() => userdata.value);
 	const getUInfo = computed(() => userdata.value?.info);

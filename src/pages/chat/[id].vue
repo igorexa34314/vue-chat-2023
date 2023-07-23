@@ -48,30 +48,26 @@ import sbMessages from '@/utils/messages.json';
 import MessageItem from '@/components/chat/messages/MessageItem.vue';
 import MessageForm, { EditMessageData } from '@/components/chat/form/MessageForm.vue';
 import ContextMenu from '@/components/chat/ContextMenu.vue';
-import { fetchChatMessages } from '@/services/message';
+import { fetchChatMessages, AttachFormContent } from '@/services/message';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { useUserdataStore } from '@/stores/userdata';
-import { useMessagesStore } from '@/stores/messages';
+import { useMessagesStore, Message } from '@/stores/messages';
 import { useCurrentUser } from 'vuefire';
-import { getChatInfoById } from '@/services/chat';
+import { getChatInfoById, ChatInfo } from '@/services/chat';
 import { createMessage as createDBMessage, updateMessageContent as updateDBMessageContent } from '@/services/message';
 import { ref, watch, reactive, computed, watchEffect, onUnmounted, nextTick } from 'vue';
 import { useMeta } from 'vue-meta';
 import { useRoute } from 'vue-router';
 import { useChatScroll } from '@/composables/useChatScroll';
 import { loadMoreChatMessages } from '@/services/message';
-import { useDropZone, watchOnce } from '@vueuse/core';
+import { useDropZone } from '@vueuse/core';
 import { storeToRefs } from 'pinia';
 import { setChatName } from '@/utils/chat';
 import { downloadFile as downloadFileProcess } from '@/utils/message/fileActions';
 import { copyToClipboard as copyImageToClipboard } from '@/utils/message/imageActions';
-import type { Unsubscribe } from '@firebase/database';
-import type { FileMessage, MediaMessage, Message } from '@/stores/messages';
-import type { ChatInfo } from '@/services/chat';
-import type { TextMessage } from '@/types/db/MessagesTable';
-import type { VDialog } from 'vuetify/components';
-import type { AttachFormContent } from '@/services/message';
-import type { ImageWithPreviewURL } from '@/components/chat/messages/media/ImageFrame.vue';
+import { Unsubscribe } from '@firebase/database';
+import { VDialog } from 'vuetify/components';
+import { ImageWithPreviewURL } from '@/components/chat/messages/media/ImageFrame.vue';
 
 const { getUChats: userChats } = storeToRefs(useUserdataStore());
 const route = useRoute();
@@ -142,7 +138,7 @@ watchEffect(async (onCleanup) => {
 });
 
 const enTransition = ref(false);
-const createMessage = async (type: Message['type'] = 'text', content: TextMessage | AttachFormContent,) => {
+const createMessage = async (type: Message['type'] = 'text', content: Partial<AttachFormContent>) => {
 	try {
 		enTransition.value = true;
 		await createDBMessage(chatId, type, content);
@@ -182,7 +178,7 @@ onUnmounted(() => {
 	resetMsgStore();
 	unsub?.();
 });
-const getAllMedia = computed(() => messages.value.filter(m => m.type !== 'text').flatMap(m => (m.content as MediaMessage).images || (m.content as FileMessage).files?.filter(f => f.previewURL)));
+const getAllMedia = computed(() => messages.value.filter(m => m.type !== 'text').flatMap(m => m.content.attachments.filter(f => f.raw?.previewURL)));
 const overlayState = reactive({
 	show: false,
 	currentImage: 0,
@@ -204,7 +200,7 @@ const copySelectedText = async () => {
 };
 const copyTextMessage = async () => {
 	try {
-		const msgText = (messages.value.find(m => m.type === 'text' && m.id === msgCtxMenu.activeMessage)?.content as TextMessage).text.trim();
+		const msgText = messages.value.find(m => m.type === 'text' && m.id === msgCtxMenu.activeMessage)?.content.text.trim() || '';
 		await navigator.clipboard.writeText(msgText);
 		showMessage('Copied to clipboard', 'deep-purple-accent-3', 2000);
 	} catch (e) {
@@ -214,7 +210,7 @@ const copyTextMessage = async () => {
 };
 const copyImage = async () => {
 	try {
-		const imageToCopy = (messages.value.find(m => m.id === msgCtxMenu.activeMessage)?.content as MediaMessage).images[0].previewURL;
+		const imageToCopy = messages.value.find(m => m.id === msgCtxMenu.activeMessage)?.content.attachments[0].raw.previewURL || '';
 		await copyImageToClipboard(imageToCopy);
 		showMessage('Copied to clipboard', 'deep-purple-accent-3', 2000);
 	} catch (e) {
@@ -224,8 +220,10 @@ const copyImage = async () => {
 };
 const downloadFile = async () => {
 	try {
-		const fileToDownLoad = (messages.value.find(m => m.id === msgCtxMenu.activeMessage)?.content as MediaMessage).images?.[0] || (messages.value.find(m => m.id === msgCtxMenu.activeMessage)?.content as FileMessage).files?.[0];
-		await downloadFileProcess(fileToDownLoad);
+		const fileToDownLoad = messages.value.find(m => m.id === msgCtxMenu.activeMessage)?.content.attachments[0];
+		if (fileToDownLoad) { 
+			await downloadFileProcess(fileToDownLoad);
+		}
 	} catch (e) {
 		showMessage('Failed to download', 'red-darken-4', 2000);
 		console.error(e);

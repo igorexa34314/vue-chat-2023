@@ -58,14 +58,14 @@ import { ref, computed, watchEffect, Ref } from "vue";
 import { useVModel } from '@vueuse/core';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { getFileThumbAndSizes } from '@/utils/resizeFile';
-import type { Message } from '@/types/db/MessagesTable';
-import type { ThumbResult } from '@/utils/resizeFile';
+import { Message } from '@/types/db/MessagesTable';
+import { ThumbResult } from '@/utils/resizeFile';
 
 export type AttachedContent = (AttachDialogProps['fileList'][number] & { sizes?: { w: number, h: number }, thumbnail?: ThumbResult, preview?: string })[];
 export interface AttachDialogProps {
 	modelValue?: boolean;
 	subtitleText: string;
-	contentType: Exclude<Message['type'], 'text'>;
+	contentType: 'media' | 'file';
 	fileList: { id: string; fileData: File }[]
 }
 const props = withDefaults(defineProps<AttachDialogProps>(), {

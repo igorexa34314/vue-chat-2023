@@ -16,13 +16,13 @@
 <script setup lang="ts">
 //@ts-nocheck
 import SvgIcon from '@jamescoyle/vue-icon';
-import { mdiReplyOutline, mdiPencil, mdiPinOutline, mdiContentCopy, mdiImage, mdiDownload, mdiCheckCircleOutline, mdiShareOutline, mdiDeleteOutline, mdiLinkVariant } from '@mdi/js';
 import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { mdiReplyOutline, mdiPencil, mdiPinOutline, mdiContentCopy, mdiImage, mdiDownload, mdiCheckCircleOutline, mdiShareOutline, mdiDeleteOutline, mdiLinkVariant } from '@mdi/js';
 import { useVModel } from '@vueuse/core';
 import { ContextMenu, ContextMenuItem } from '@imengyu/vue3-context-menu';
+import { MenuOptions } from '@imengyu/vue3-context-menu/lib/ContextMenuDefine';
+import { Message } from '@/stores/messages';
 import '@imengyu/vue3-context-menu/lib/vue3-context-menu.css';
-import type { MenuOptions } from '@imengyu/vue3-context-menu/lib/ContextMenuDefine';
-import type { Message } from '@/stores/messages';
 
 const props = withDefaults(defineProps<{
 	modelValue?: boolean;

@@ -7,7 +7,7 @@
 <script setup lang="ts">
 import PreviewFile from '@/components/chat/form/attach/PreviewFile.vue';
 import { ref, computed } from 'vue';
-import type { AttachedContent } from '@/components/chat/form/attach/AttachDialog.vue';
+import { AttachedContent } from '@/components/chat/form/attach/AttachDialog.vue';
 
 const props = defineProps<{
 	files: AttachedContent

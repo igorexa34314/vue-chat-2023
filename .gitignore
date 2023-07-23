@@ -7,7 +7,6 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-firebase/
 .nuxt
 node_modules
 dist
@@ -25,3 +24,16 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Yarn
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+#Firebase
+firebase/
+.firebase/

@@ -29,8 +29,8 @@ import { mdiFile , mdiTrashCanOutline} from '@mdi/js';
 import ImageLoader from '@/components/chat/ImageLoader.vue';
 import { ref } from 'vue';
 import { formatFileSize, getFileExt } from '@/utils/filters/messages';
-import type { AttachedContent } from '@/components/chat/form/attach/AttachDialog.vue';
-import type { VImg } from 'vuetify/components';
+import { VImg } from 'vuetify/components';
+import { AttachedContent } from '@/components/chat/form/attach/AttachDialog.vue';
 
 const props = withDefaults(defineProps<{
 	previewItem: AttachedContent[number];

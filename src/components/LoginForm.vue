@@ -36,7 +36,7 @@ import { useRouter } from 'vue-router';
 import { loginWithEmail, signInWithGoogle } from '@/services/auth';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { googleImg } from '@/utils/globals';
-import type { VForm } from 'vuetify/components';
+import  { VForm } from 'vuetify/components';
 
 
 const { push } = useRouter();

@@ -27,13 +27,12 @@
 import messages from '@/utils/messages.json';
 import { ref } from 'vue';
 import { computedAsync, useVModel } from '@vueuse/core';
-import { getChatInfoById } from '@/services/chat';
+import { getChatInfoById, ChatInfo } from '@/services/chat';
 import { storeToRefs } from 'pinia';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { useUserdataStore } from '@/stores/userdata';
 import { setChatName, setChatAvatar } from '@/utils/chat';
 import { defaultAvatar } from '@/utils/globals';
-import type { ChatInfo } from '@/services/chat';
 
 const { showMessage } = useSnackbarStore();
 const { getUChats: userChats, getUInfo: userInfo } = storeToRefs(useUserdataStore());

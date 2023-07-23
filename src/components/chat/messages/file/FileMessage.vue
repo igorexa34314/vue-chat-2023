@@ -1,17 +1,16 @@
 <template>
-	<div v-if="content.files.length" class="file-message__wrapper">
-		<p v-if="content.subtitle.length" class="message__subtitle mb-3">{{ content.subtitle }}</p>
-		<div v-for="(file, index) in content.files" :key="file.id" :class="{ 'mb-1': index !== (content.files.length - 1) }"
-			class="d-flex align-center">
+	<div v-if="content.attachments.length" class="file-message__wrapper">
+		<p v-if="content.text.length" class="message__subtitle mb-3">{{ content.text }}</p>
+		<div v-for="(file, index) in content.attachments" :key="file.id"
+			:class="{ 'mb-1': index !== (content.attachments.length - 1) }" class="d-flex align-center">
 			<v-hover #default="{ isHovering, props: hoverProps }">
-				<component :is="file.thumbnail && file.sizes ? FilePreview : FileExtension"
+				<component :is="file.thumbnail && file.raw.sizes ? FilePreview : FileExtension"
 					v-bind="{ file, hoverProps, isHovering, loading: isLoading }" @downloadFile="downloadFile(file)"
-					@openFile="emit('openInOverlay', file.id)"
-					@loaded="(mediaReady: ImageWithPreviewURL) => emit('mediaLoaded', mediaReady)" />
+					@openFile="emit('openInOverlay', file.id)" />
 			</v-hover>
 			<div class="file-details ml-2 text-subtitle-1 font-weight-medium">
 				<p class="text-subtitle-1" :title="file.fullname">{{ file.fullname }}</p>
-				<p class="mt-1 text-body-2">{{ formatFileSize(file.fullsize) }}</p>
+				<p class="mt-1 text-body-2">{{ formatFileSize(file.raw.fullsize) }}</p>
 			</div>
 		</div>
 	</div>
@@ -23,22 +22,22 @@ import FilePreview from '@/components/chat/messages/file/FilePreview.vue';
 import { ref } from 'vue';
 import { formatFileSize } from '@/utils/filters/messages';
 import { downloadFile as downloadFileProcess } from '@/utils/message/fileActions';
-import type { FileMessage } from '@/stores/messages';
-import type { ImageWithPreviewURL } from '@/components/chat/messages/media/ImageFrame.vue';
+import { Message } from '@/stores/messages';
+import { ImageWithPreviewURL } from '@/components/chat/messages/media/ImageFrame.vue';
 
 
 const props = defineProps<{
-	content: FileMessage;
+	content: Message['content'];
 }>();
 
 const emit = defineEmits<{
 	(e: 'openInOverlay', imgId: ImageWithPreviewURL['id']): void;
-	(e: 'mediaLoaded', media: Pick<ImageWithPreviewURL, 'id' | 'previewURL'>): void;
+	// (e: 'mediaLoaded', media: { id: ImageWithPreviewURL['id']; previewURL: ImageWithPreviewURL['raw']['previewURL'] }): void;
 }>();
 
 const isLoading = ref(false);
 
-const downloadFile = async (file: FileMessage['files'][number]) => {
+const downloadFile = async (file: Message['content']['attachments'][number]) => {
 	if (!isLoading.value) {
 		try {
 			isLoading.value = true;

@@ -33,14 +33,13 @@
 import { mdiAttachment, mdiSend, mdiCheck } from '@mdi/js';
 import MessageReply from './MessageReply.vue';
 import AttachMenu from '@/components/chat/form/attach/AttachMenu.vue';
-import AttachDialog from '@/components/chat/form/attach/AttachDialog.vue';
+import AttachDialog, { AttachDialogProps, AttachedContent } from '@/components/chat/form/attach/AttachDialog.vue';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { reactive, computed, watchEffect } from 'vue';
-import { uuidv4 } from '@firebase/util';
-import type { AttachFormContent } from '@/services/message';
-import type { Message } from '@/stores/messages';
-import type { MessageContent } from '@/types/db/MessagesTable';
-import type { AttachDialogProps, AttachedContent } from '@/components/chat/form/attach/AttachDialog.vue';
+import { v4 as uuidv4 } from 'uuid';
+import { AttachFormContent } from '@/services/message';
+import { Message } from '@/stores/messages';
+import { MessageContent } from '@/types/db/MessagesTable';
 
 export type EditMessageData = Pick<Message, 'id' | 'type' | Partial<'content'>>;
 interface messageForm extends Omit<MessageContent, 'attachments'> {
@@ -49,7 +48,7 @@ interface messageForm extends Omit<MessageContent, 'attachments'> {
 
 const { showMessage } = useSnackbarStore();
 const emit = defineEmits<{
-	(e: 'createMessage', msgType: Message['type'], msgContent: MessageContent | AttachFormContent): void;
+	(e: 'createMessage', msgType: Message['type'], msgContent: Partial<AttachFormContent>): void;
 	(e: 'updateMessage', mData: EditMessageData): void;
 	(e: 'scrollToMessage', mId: Message['id']): void;
 }>();
