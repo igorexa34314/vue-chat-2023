@@ -1,8 +1,8 @@
 import { createI18n } from 'vue-i18n';
 
 export default createI18n({
-	locale: 'ua',
-	fallbackLocale: 'en',
+	locale: 'uk-UA',
+	fallbackLocale: 'en-US',
 	datetimeFormats: {
 		'en-US': {
 			short: {
@@ -22,7 +22,7 @@ export default createI18n({
 		'ru-RU': {
 			messageLarge: {
 				month: '2-digit',
-				day: 'numeric',
+				day: '2-digit',
 				year: 'numeric',
 				hour: 'numeric',
 				minute: 'numeric'
@@ -41,7 +41,7 @@ export default createI18n({
 		'uk-UA': {
 			messageLarge: {
 				month: '2-digit',
-				day: 'numeric',
+				day: '2-digit',
 				year: 'numeric',
 				hour: 'numeric',
 				minute: 'numeric'

@@ -1,20 +1,37 @@
-import { ref, watchEffect, toRefs, computed,Ref } from 'vue';
-import { useScroll, useInfiniteScroll, watchPausable } from '@vueuse/core';
-import { useMessagesStore } from '@/stores/messages';
-import { Color } from 'csstype';
+import { ref, watchEffect, toRef, computed, Ref, toRefs, nextTick } from 'vue';
+import { useScroll, watchPausable } from '@vueuse/core';
+import { useMessagesStore, Direction } from '@/stores/messages';
+import { VInfiniteScroll } from 'vuetify/lib/labs/components.mjs';
 
-export const useChatScroll = (chatEl: Ref<HTMLElement | undefined>, { onLoadMore }: { onLoadMore?: (direction: 'top' | 'bottom') => void }) => {
+export const useChatScroll = (
+	vuetifyScroll: Ref<VInfiniteScroll | undefined>,
+	onLoadMore: (direction: Direction) => void | Promise<void>
+) => {
 	const messagesStore = useMessagesStore();
-
+	const scrollEl = toRef(() => vuetifyScroll.value?.$el as HTMLElement | undefined);
 	// Last visible doc refs on top and bottom (needs for infinite loading)
 	const lastVisible = computed(() => messagesStore.lastVisible);
+
 	// Messages store state
 	const messages = computed(() => messagesStore.messages);
 
 	// Hiding scroll when inactive
-	const { arrivedState, isScrolling } = useScroll(chatEl, { offset: { bottom: 50 } });
+	const { arrivedState, isScrolling } = useScroll(scrollEl, {
+		offset: { bottom: 10, top: 10 },
+		behavior: 'smooth'
+	});
 	const { bottom } = toRefs(arrivedState);
-	const scrollOpacity = ref<Color>('transparent');
+	const scrollOpacity = ref<string>('transparent');
+
+	const scrollSide = computed(() =>
+		lastVisible.value.top && lastVisible.value.bottom
+			? 'both'
+			: lastVisible.value.top
+			? 'start'
+			: lastVisible.value.bottom
+			? 'end'
+			: undefined
+	);
 
 	watchEffect(onCleanup => {
 		if (isScrolling.value) {
@@ -27,9 +44,9 @@ export const useChatScroll = (chatEl: Ref<HTMLElement | undefined>, { onLoadMore
 
 	// Scroll bottom with smooth or auto mode
 	const scrollBottom = (behavior: ScrollBehavior = 'auto') => {
-		if (chatEl.value && chatEl.value?.scrollHeight > chatEl.value?.clientHeight) {
-			chatEl.value.scrollTo({
-				top: chatEl.value.scrollHeight,
+		if (scrollEl.value && scrollEl.value.scrollHeight > scrollEl.value.clientHeight) {
+			scrollEl.value.scrollTo({
+				top: scrollEl.value.scrollHeight,
 				behavior
 			});
 		}
@@ -38,37 +55,34 @@ export const useChatScroll = (chatEl: Ref<HTMLElement | undefined>, { onLoadMore
 	// Watchers to scroll bottom when new message add
 	const { pause: pauseMessageWatcher, resume: resumeMessageWatcher } = watchPausable(
 		() => messages.value.length,
-		(newVal, oldVal) => {
+		async (newVal, oldVal) => {
 			if (newVal > oldVal) {
-				scrollBottom();
+				await nextTick();
+				scrollBottom('instant');
 			}
 		},
-		{ deep: true, flush: 'post' }
+		{ deep: true }
 	);
 
 	// Inf. scroll on top and bottom
-	const applyInfScroll = (direction: 'both' | 'top' | 'bottom') => {
-		const sides = direction === 'both' ? Object.keys(lastVisible.value) : direction;
-		for (const dir of sides) {
-			useInfiniteScroll(
-				chatEl,
-				async () => {
-					if (lastVisible.value[dir as keyof typeof lastVisible.value]) {
-						pauseMessageWatcher();
-						await onLoadMore?.(dir as keyof typeof lastVisible.value);
-						resumeMessageWatcher();
-					}
-				},
-				{ distance: 10, direction: dir as keyof typeof lastVisible.value, preserveScrollPosition: dir === 'top' }
-			);
-		}
+	const onLoad: VInfiniteScroll['onLoad'] = async ({ side, done }) => {
+		const direction: Direction = side === 'start' ? 'top' : 'bottom';
+		if (lastVisible.value[direction]) {
+			pauseMessageWatcher();
+			scrollEl.value?.removeEventListener('mouseup', e => {});
+			await onLoadMore?.(direction);
+			scrollEl.value?.addEventListener('mouseup', e => {});
+			resumeMessageWatcher();
+			done('ok');
+		} else done('empty');
 	};
-	applyInfScroll('both');
 
 	return {
 		isScrolling,
 		scrollOpacity,
 		isScrollOnBottom: bottom,
+		onLoad,
+		scrollSide,
 		scrollBottom
 	};
 };

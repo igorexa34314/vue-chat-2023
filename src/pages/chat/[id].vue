@@ -5,8 +5,10 @@
 		<div v-else-if="userChats && userChats.length" style="height: 100%; position: relative;" class="chat__field">
 			<div v-if="loading"><page-loader /></div>
 			<!-- <div v-else-if="!messages || !messages.length" class="text-h5 pa-4">Сообщений в чате пока нет</div> -->
-			<div v-else-if="messages && messages.length" ref="chatEl" class="chat__content px-4">
-				<div class="messages-field mt-4">
+
+			<v-infinite-scroll v-else-if="messages && messages.length" :side="scrollSide" @load="onLoad" ref="srollEl"
+				tag="div" class="chat__content px-4">
+				<div class="messages-field">
 					<TransitionGroup :name="enTransition ? 'messages-list' : ''">
 						<MessageItem v-for="m in messages" :key="m.id" :self="uid === m.sender.id" :type="m.type"
 							:content="m.content" :sender="m.sender" :created_at="<Date>m.created_at"
@@ -15,18 +17,26 @@
 							:data-message-id="m.id" class="message-item" @open-in-overlay="openInOverlay" @dragstart.prevent
 							@drop.prevent draggable="false" />
 					</TransitionGroup>
+
 					<ContextMenu v-model="msgCtxMenu.show" :content-type="msgCtxMenu.contentType"
 						:position="msgCtxMenu.position" @closed="ctxMenuClosed" @copy-selected="copySelectedText"
 						@copy-image="copyImage" @copy-all="copyTextMessage" @download="downloadFile" @edit="editMessage" />
+
 					<FullsizeOverlay v-model="overlayState.show" :content="<ImageWithPreviewURL[]>getAllMedia"
 						v-model:currentItem="overlayState.currentImage" @close="overlayClosed" />
 				</div>
-			</div>
+
+				<template #empty></template>
+				<template #loading></template>
+				<template #error></template>
+			</v-infinite-scroll>
+
 			<Transition name="fixed-btn-fade">
-				<v-btn v-if="chatEl && chatEl.scrollHeight > chatEl.clientHeight && !isScrollOnBottom"
+				<v-btn v-if="srollEl && srollEl?.$el.scrollHeight > srollEl?.$el.clientHeight && !isScrollOnBottom"
 					class="fixed-button-scrolldown" color="blue-grey-darken-1" :icon="mdiArrowDown" size="large"
 					@click="scrollBottom('smooth')" />
 			</Transition>
+
 			<MessageForm class="message-form py-4 px-6" ref="msgForm" @create-message="createMessage"
 				@update-message="updateMessage" @scroll-to-message="highlightMessage" />
 		</div>
@@ -65,9 +75,10 @@ import { storeToRefs } from 'pinia';
 import { setChatName } from '@/utils/chat';
 import { downloadFile as downloadFileProcess } from '@/utils/message/fileActions';
 import { copyToClipboard as copyImageToClipboard } from '@/utils/message/imageActions';
-import { Unsubscribe } from '@firebase/database';
+import { Unsubscribe } from 'firebase/firestore';
 import { VDialog } from 'vuetify/components';
 import { ImageWithPreviewURL } from '@/components/chat/messages/media/ImageFrame.vue';
+import { VInfiniteScroll } from 'vuetify/labs/VInfiniteScroll';
 
 const { getUChats: userChats } = storeToRefs(useUserdataStore());
 const route = useRoute();
@@ -76,7 +87,7 @@ const messagesStore = useMessagesStore();
 const { $reset: resetMsgStore } = messagesStore;
 
 const chatInfo = ref<ChatInfo>();
-const chatEl = ref<HTMLDivElement>();
+const srollEl = ref<VInfiniteScroll>();
 const loading = ref(false);
 const messages = computed(() => messagesStore.messages);
 let unsub: Unsubscribe | undefined;
@@ -87,10 +98,8 @@ const attachDialog = ref(false);
 const dropZone = ref<VDialog | HTMLElement>();
 
 // Using chat scroll composable with infinite scroll
-const { isScrolling, scrollOpacity, isScrollOnBottom, scrollBottom } = useChatScroll(chatEl, {
-	onLoadMore: async (direction) => {
-		await loadMoreChatMessages(chatId, direction);
-	}
+const { isScrolling, scrollOpacity, isScrollOnBottom, scrollBottom, onLoad, scrollSide } = useChatScroll(srollEl, async (direction) => {
+	await loadMoreChatMessages(chatId, direction);
 });
 
 // const { isOverDropZone } = useDropZone(dropZone.value as HTMLElement, (files) => {
@@ -221,7 +230,7 @@ const copyImage = async () => {
 const downloadFile = async () => {
 	try {
 		const fileToDownLoad = messages.value.find(m => m.id === msgCtxMenu.activeMessage)?.content.attachments[0];
-		if (fileToDownLoad) { 
+		if (fileToDownLoad) {
 			await downloadFileProcess(fileToDownLoad);
 		}
 	} catch (e) {
@@ -287,8 +296,9 @@ $scroll-bg: v-bind(scrollOpacity) !important;
 	bottom: 0;
 }
 .messages-field {
+	width: 100%;
 	margin: 0 auto;
-	max-width: 1280px;
+	max-width: 1080px;
 }
 .messages-list-enter-active,
 .messages-list-leave-active {

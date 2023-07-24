@@ -1,10 +1,10 @@
 <template>
 	<context-menu v-model:show="showMenu" @close="emit('closed')"
 		:options="{ x: +position?.x, y: +position?.y, maxWidth: +maxWidth, zIndex: +zIndex, theme, xOffset: offset[0], yOffset: offset[1] }">
-		<context-menu-item v-for="item of contextMenuItems" :key="item.value" @click="emit(item.value)"
+		<context-menu-item v-for="item of contextMenuItems" :key="item.value" @click="emit(item.value as any)"
 			style="cursor: pointer;">
 			<template #icon>
-				<svg-icon type="mdi" :path="item.icon" :class="item.colorClass || ''" />
+				<v-icon :icon="item.icon" :class="item.colorClass || ''" />
 			</template>
 			<template #label>
 				<div class="ml-4" :class="item.colorClass || ''">{{ item.title }}</div>
@@ -14,8 +14,6 @@
 </template>
 
 <script setup lang="ts">
-//@ts-nocheck
-import SvgIcon from '@jamescoyle/vue-icon';
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { mdiReplyOutline, mdiPencil, mdiPinOutline, mdiContentCopy, mdiImage, mdiDownload, mdiCheckCircleOutline, mdiShareOutline, mdiDeleteOutline, mdiLinkVariant } from '@mdi/js';
 import { useVModel } from '@vueuse/core';
@@ -58,7 +56,7 @@ const emit = defineEmits<{
 }>();
 const selectedText = ref('');
 const getSelectionText = () => {
-	selectedText.value = getSelection?.().toString() || '';
+	selectedText.value = getSelection()?.toString() || '';
 };
 onMounted(() => {
 	document.addEventListener('selectionchange', getSelectionText);
@@ -78,7 +76,7 @@ const contextMenuItems = computed(() => ([
 	{ title: 'Переслать', value: 'forward', icon: mdiShareOutline },
 	{ title: 'Выбрать', value: 'select', icon: mdiCheckCircleOutline },
 	{ title: 'Удалить', value: 'delete', icon: mdiDeleteOutline, colorClass: 'text-red-darken-4' },
-].filter(Boolean)));
+].filter(Boolean)) as { title: string, value: string, icon: string, colorClass?: string }[]);
 onUnmounted(() => {
 	document.removeEventListener('selectionchange', getSelectionText);
 });

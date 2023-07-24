@@ -1,7 +1,28 @@
 import { storage, db } from '@/firebase';
-import { arrayRemove, arrayUnion, collection, doc, setDoc, Timestamp, writeBatch, deleteDoc, onSnapshot, getDoc, getDocs, updateDoc } from 'firebase/firestore';
+import {
+	arrayRemove,
+	arrayUnion,
+	collection,
+	doc,
+	setDoc,
+	Timestamp,
+	writeBatch,
+	deleteDoc,
+	onSnapshot,
+	getDoc,
+	getDocs,
+	updateDoc
+} from 'firebase/firestore';
 import { limit, query, orderBy, startAfter } from 'firebase/firestore';
-import { ref as storageRef, uploadBytesResumable, uploadString, getBlob, getDownloadURL, getBytes, deleteObject } from 'firebase/storage';
+import {
+	ref as storageRef,
+	uploadBytesResumable,
+	uploadString,
+	getBlob,
+	getDownloadURL,
+	getBytes,
+	deleteObject
+} from 'firebase/storage';
 import { getUid } from '@/services/auth';
 import { getUserdataById } from '@/services/userdata';
 import { fbErrorHandler as errorHandler } from '@/services/errorHandler';
@@ -38,14 +59,19 @@ export const fetchChatMessages = async (chatId: ChatInfo['id'], lmt: number = 10
 		const messagesCol = collection(doc(chatCol, chatId), 'messages');
 		const q = query(messagesCol, orderBy('created_at', 'desc'), limit(lmt));
 		return onSnapshot(q, async messagesRef => {
-			const dbMessagesPromises = [] as Promise<{ message: Message | undefined; changeType: DocumentChange['type'] } | undefined>[];
+			const dbMessagesPromises = [] as Promise<
+				{ message: Message | undefined; changeType: DocumentChange['type'] } | undefined
+			>[];
 
 			messagesRef.docChanges().forEach(change => {
 				const { created_at, ...msgData } = change.doc.data() as DBMessage;
 				if (change.type === 'added' || change.type === 'modified') {
 					dbMessagesPromises.unshift(
 						(async () => ({
-							message: await getFullMessageInfo({ ...msgData, created_at: (<Timestamp>created_at).toDate() }),
+							message: await getFullMessageInfo({
+								...msgData,
+								created_at: (<Timestamp>created_at).toDate()
+							}),
 							changeType: change.type
 						}))()
 					);
@@ -67,34 +93,46 @@ export const fetchChatMessages = async (chatId: ChatInfo['id'], lmt: number = 10
 	}
 };
 
-export const loadMoreChatMessages = async (chatId: ChatInfo['id'], direction: Direction, perPage: number = 10) => {
+export const loadMoreChatMessages = async (
+	chatId: ChatInfo['id'],
+	direction: Direction,
+	perPage: number = 10
+) => {
 	try {
 		const messagesStore = useMessagesStore();
 		const { addMessage, deleteMessages } = messagesStore;
 		const { messages, lastVisible } = storeToRefs(messagesStore);
 		if (lastVisible.value[direction]) {
 			const messagesCol = collection(doc(chatCol, chatId), 'messages');
-			const q = query(messagesCol, orderBy('created_at', direction === 'top' ? 'desc' : 'asc'), startAfter(lastVisible.value[direction]), limit(perPage));
+			const q = query(
+				messagesCol,
+				orderBy('created_at', direction === 'top' ? 'desc' : 'asc'),
+				startAfter(lastVisible.value[direction]),
+				limit(perPage)
+			);
 			const messagesRef = await getDocs(q);
 			if (messagesRef.empty) {
 				lastVisible.value[direction] = null;
 				return;
 			}
-			if (messages.value.length > 40) {
-				deleteMessages(perPage, direction === 'top' ? 'end' : 'start');
-				const msgBeforeDel = await getDoc(doc(messagesCol, messages.value.at(direction === 'top' ? -1 : 0)?.id));
-				lastVisible.value[direction === 'top' ? 'bottom' : 'top'] = msgBeforeDel as LastVisibleFbRef[Direction];
-			}
+			// if (messages.value.length > 40) {
+			// 	deleteMessages(perPage, direction === 'top' ? 'end' : 'start');
+			// 	const msgBeforeDel = await getDoc(doc(messagesCol, messages.value.at(direction === 'top' ? -1 : 0)?.id));
+			// 	lastVisible.value[direction === 'top' ? 'bottom' : 'top'] = msgBeforeDel as LastVisibleFbRef[Direction];
+			// }
 			const dbMessagesPromises = [] as Promise<Message | undefined>[];
 
 			messagesRef.forEach(doc => {
 				const { created_at, ...msgData } = doc.data() as DBMessage;
-				dbMessagesPromises.push(getFullMessageInfo({ ...msgData, created_at: (<Timestamp>created_at).toDate() }));
+				dbMessagesPromises.push(
+					getFullMessageInfo({ ...msgData, created_at: (<Timestamp>created_at).toDate() })
+				);
 			});
 			(await Promise.all(dbMessagesPromises)).forEach(m => {
 				if (m) addMessage(m, direction === 'top' ? 'start' : 'end');
 			});
-			lastVisible.value[direction] = messagesRef.size >= perPage ? messagesRef.docs[messagesRef.docs.length - 1] : null;
+			lastVisible.value[direction] =
+				messagesRef.size >= perPage ? messagesRef.docs[messagesRef.docs.length - 1] : null;
 		}
 	} catch (e) {
 		errorHandler(e);
@@ -166,7 +204,11 @@ export const loadPreviewbyFullpath = async (rawFile: MessageAttachment['raw']) =
 	}
 };
 
-export const createMessage = async (chatId: ChatInfo['id'], type: Message['type'], content: Partial<AttachFormContent>) => {
+export const createMessage = async (
+	chatId: ChatInfo['id'],
+	type: Message['type'],
+	content: Partial<AttachFormContent>
+) => {
 	try {
 		const messageRef = doc(collection(doc(chatCol, chatId), 'messages'));
 		let attachDBContent: MessageAttachment | null = null;
@@ -174,7 +216,10 @@ export const createMessage = async (chatId: ChatInfo['id'], type: Message['type'
 		// Get images thumbs and Doc ref to prospective image upload
 		const { text, attachments } = content as AttachFormContent;
 		if (attachments && attachments.length) {
-			attachDBContent = { text, attachments: await uploadAttachments(chatId, messageRef, attachments) } as unknown as MessageAttachment;
+			attachDBContent = {
+				text,
+				attachments: await uploadAttachments(chatId, messageRef, attachments)
+			} as unknown as MessageAttachment;
 		}
 		console.log(attachDBContent);
 		// Add full message data to DB
@@ -189,7 +234,10 @@ export const createMessage = async (chatId: ChatInfo['id'], type: Message['type'
 		errorHandler(e);
 	}
 };
-export const updateMessageContent = async (chatId: ChatInfo['id'], { id: mId, type: mType, content }: EditMessageData) => {
+export const updateMessageContent = async (
+	chatId: ChatInfo['id'],
+	{ id: mId, type: mType, content }: EditMessageData
+) => {
 	try {
 		const messageRef = doc(collection(doc(chatCol, chatId), 'messages'), mId);
 		// Rewrite text content data to DB
@@ -200,10 +248,20 @@ export const updateMessageContent = async (chatId: ChatInfo['id'], { id: mId, ty
 	}
 };
 
-const createUploadTask = (chatId: ChatInfo['id'], messageRef: DocumentReference<DocumentData>, file: AttachFormContent['attachments'][number], DBcontentToUpdate: Partial<MessageAttachment>) => {
+const createUploadTask = (
+	chatId: ChatInfo['id'],
+	messageRef: DocumentReference<DocumentData>,
+	file: AttachFormContent['attachments'][number],
+	DBcontentToUpdate: Partial<MessageAttachment>
+) => {
 	const { setUploading, updateLoading, finishLoading } = useLoadingStore();
 	const { fileData, id: fileId } = file;
-	const fileRef = storageRef(storage, `chat/${chatId}/messageData/${messageRef.id}/${fileId + '.' + fileData.name.split('.').slice(1).join('.')}`);
+	const fileRef = storageRef(
+		storage,
+		`chat/${chatId}/messageData/${messageRef.id}/${
+			fileId + '.' + fileData.name.split('.').slice(1).join('.')
+		}`
+	);
 	const uploadTask = uploadBytesResumable(fileRef, fileData, {
 		contentType: fileData.type
 	});
@@ -275,11 +333,20 @@ const createUploadTask = (chatId: ChatInfo['id'], messageRef: DocumentReference<
 	);
 };
 
-const uploadThumb = async <T extends MessageAttachment['thumbnail']>(chatId: ChatInfo['id'], messageId: Message['id'], attach: AttachFormContent['attachments'][number]) => {
+const uploadThumb = async <T extends MessageAttachment['thumbnail']>(
+	chatId: ChatInfo['id'],
+	messageId: Message['id'],
+	attach: AttachFormContent['attachments'][number]
+) => {
 	try {
 		if (attach.thumbnail) {
 			const { fileData, id, thumbnail } = attach;
-			const thumbRef = storageRef(storage, `chat/${chatId}/messageData/${messageId}/${id + '_thumb.' + fileData.name.split('.').slice(1).join('.')}`);
+			const thumbRef = storageRef(
+				storage,
+				`chat/${chatId}/messageData/${messageId}/${
+					id + '_thumb.' + fileData.name.split('.').slice(1).join('.')
+				}`
+			);
 			await uploadString(thumbRef, thumbnail.url, 'data_url');
 			return {
 				bucket: thumbRef.bucket,
@@ -292,7 +359,11 @@ const uploadThumb = async <T extends MessageAttachment['thumbnail']>(chatId: Cha
 	}
 };
 
-const uploadAttachments = async <T extends MessageAttachment>(chatId: ChatInfo['id'], messageRef: DocumentReference<DocumentData>, attach: AttachFormContent['attachments']) => {
+const uploadAttachments = async <T extends MessageAttachment>(
+	chatId: ChatInfo['id'],
+	messageRef: DocumentReference<DocumentData>,
+	attach: AttachFormContent['attachments']
+) => {
 	try {
 		if (attach.every(file => file.fileData instanceof File)) {
 			const docRefPromises = [] as Promise<Partial<T>>[];
@@ -307,7 +378,11 @@ const uploadAttachments = async <T extends MessageAttachment>(chatId: ChatInfo['
 							raw: { sizes, fullsize: fileData.size }
 						} as Partial<T>;
 						if (file.fileData.type.startsWith('image/') && sizes && thumbnail) {
-							const thumbData = (await uploadThumb(chatId, messageRef.id, file)) as T['thumbnail'];
+							const thumbData = (await uploadThumb(
+								chatId,
+								messageRef.id,
+								file
+							)) as T['thumbnail'];
 							attachContent = {
 								...attachContent,
 								thumbnail: thumbData

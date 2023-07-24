@@ -881,13 +881,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jamescoyle/vue-icon@npm:^0.1.2":
-  version: 0.1.2
-  resolution: "@jamescoyle/vue-icon@npm:0.1.2"
-  checksum: cb797dd9f6937512f81df83fdf85f703213c19f7d1b3c95a7a56c32cd58486bff1687f1a91f664bfaf21d851c266f688735765e50dc40a9b44ac1a1c5cc33184
-  languageName: node
-  linkType: hard
-
 "@jridgewell/sourcemap-codec@npm:^1.4.13":
   version: 1.4.15
   resolution: "@jridgewell/sourcemap-codec@npm:1.4.15"
@@ -3982,7 +3975,6 @@ __metadata:
   dependencies:
     "@imengyu/vue3-context-menu": ^1.3.3
     "@intlify/unplugin-vue-i18n": ^0.12.2
-    "@jamescoyle/vue-icon": ^0.1.2
     "@mdi/js": ^7.2.96
     "@types/intl": ^1.2.0
     "@types/node": ^20.4.4
