@@ -1,14 +1,14 @@
 <template>
 	<div :class="{ self }" class="message d-flex px-6 py-2" @contextmenu.prevent="emit('contextmenu', $event)">
 		<v-avatar size="30px" :image="sender.photoURL || defaultAvatar" :class="self ? 'ml-2' : 'mr-2'"
-			class="sender__avatar" @click="push({ name: 'user-id', params: { id: sender.id } })"
+			class="sender__avatar" @click="push({ name: 'user-userId', params: { userId: sender.id } })"
 			:title="sender.displayName" />
 
 		<v-card min-width="120px" max-width="850px" density="compact" class="message__card"
 			:class="self ? 'bg-light-blue-darken-3' : ''" variant="tonal">
 
 			<v-card-title v-if="type === 'text'" class="message__head d-flex flex-row align-center">
-				<small class="sender__name" @click="push({ name: 'user-id', params: { id: sender.id } })">
+				<small class="sender__name" @click="push({ name: 'user-userId', params: { userId: sender.id } })">
 					{{ sender.displayName }}</small>
 			</v-card-title>
 

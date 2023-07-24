@@ -1,11 +1,12 @@
 {
 	"name": "vue-chat-2023",
+	"description": "My first chat based on Vue 3 and Firebase SDK",
 	"private": true,
-	"version": "1.0.0",
+	"version": "0.0.0",
 	"type": "module",
 	"scripts": {
 		"dev": "vite",
-		"build": "vue-tsc && vite build",
+		"build": "vue-tsc && vite build && cp dist/index.html dist/404.html",
 		"preview": "vite preview"
 	},
 	"dependencies": {
@@ -38,5 +39,9 @@
 		"vite-plugin-vuetify": "^1.0.2",
 		"vue-tsc": "^1.8.6"
 	},
-	"packageManager": "yarn@3.6.1"
+	"packageManager": "yarn@3.6.1",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/igorexa34314/vue-chat-2023.git"
+	}
 }

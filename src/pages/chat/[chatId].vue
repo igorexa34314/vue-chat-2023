@@ -1,6 +1,6 @@
 <template>
 	<v-container class="container" fluid>
-		<div v-if="userChats && userChats.length && !userChats.some(el => el === $route.params.id)" class="text-h5 pa-5">
+		<div v-if="userChats && userChats.length && !userChats.some(el => el === chatId)" class="text-h5 pa-5">
 			Такого чата не существует либо вы не состоите в нем</div>
 		<div v-else-if="userChats && userChats.length" style="height: 100%; position: relative;" class="chat__field">
 			<div v-if="loading"><page-loader /></div>
@@ -65,7 +65,7 @@ import { useMessagesStore, Message } from '@/stores/messages';
 import { useCurrentUser } from 'vuefire';
 import { getChatInfoById, ChatInfo } from '@/services/chat';
 import { createMessage as createDBMessage, updateMessageContent as updateDBMessageContent } from '@/services/message';
-import { ref, watch, reactive, computed, watchEffect, onUnmounted, nextTick } from 'vue';
+import { ref, watch, reactive, computed, onUnmounted, nextTick, watchEffect, toRef } from 'vue';
 import { useMeta } from 'vue-meta';
 import { useRoute } from 'vue-router';
 import { useChatScroll } from '@/composables/useChatScroll';
@@ -91,7 +91,7 @@ const srollEl = ref<VInfiniteScroll>();
 const loading = ref(false);
 const messages = computed(() => messagesStore.messages);
 let unsub: Unsubscribe | undefined;
-let chatId = route.params.id as string;
+const chatId = toRef(() => route.params.chatId as string);
 const uid = useCurrentUser().value?.uid;
 
 const attachDialog = ref(false);
@@ -99,7 +99,7 @@ const dropZone = ref<VDialog | HTMLElement>();
 
 // Using chat scroll composable with infinite scroll
 const { isScrolling, scrollOpacity, isScrollOnBottom, scrollBottom, onLoad, scrollSide } = useChatScroll(srollEl, async (direction) => {
-	await loadMoreChatMessages(chatId, direction);
+	await loadMoreChatMessages(chatId.value, direction);
 });
 
 // const { isOverDropZone } = useDropZone(dropZone.value as HTMLElement, (files) => {
@@ -124,14 +124,13 @@ const removeAttachment = () => {
 
 // Reset messages when switching chat
 watchEffect(async (onCleanup) => {
-	resetMsgStore();
-	chatId = route.params.id as string;
 	unsub?.();
-	if (chatId) {
+	resetMsgStore();
+	if (chatId.value) {
 		try {
 			loading.value = true;
-			chatInfo.value = await getChatInfoById(chatId);
-			unsub = await fetchChatMessages(chatId);
+			chatInfo.value = await getChatInfoById(chatId.value);
+			unsub = await fetchChatMessages(chatId.value);
 		} catch (e) {
 			console.error(e);
 		}
@@ -141,8 +140,8 @@ watchEffect(async (onCleanup) => {
 	}
 	// Unsubscribe from receiving messages realtime firebase
 	onCleanup(() => {
-		resetMsgStore();
 		unsub?.();
+		resetMsgStore();
 	});
 });
 
@@ -150,7 +149,7 @@ const enTransition = ref(false);
 const createMessage = async (type: Message['type'] = 'text', content: Partial<AttachFormContent>) => {
 	try {
 		enTransition.value = true;
-		await createDBMessage(chatId, type, content);
+		await createDBMessage(chatId.value, type, content);
 	} catch (e) {
 		showMessage(sbMessages[e as keyof typeof sbMessages] || e as string, 'red-darken-3', 2000);
 	}
@@ -160,7 +159,7 @@ const createMessage = async (type: Message['type'] = 'text', content: Partial<At
 };
 const updateMessage = async ({ id, type, content }: EditMessageData) => {
 	try {
-		await updateDBMessageContent(chatId, { id, type, content });
+		await updateDBMessageContent(chatId.value, { id, type, content });
 	} catch (e) {
 		showMessage(sbMessages[e as keyof typeof sbMessages] || e as string, 'red-darken-3', 2000);
 	}
@@ -184,8 +183,8 @@ const openCtxMenu = (e: MouseEvent, { mId, mType }: { mId: Message['id']; mType?
 const ctxMenuClosed = () => { msgCtxMenu.activeMessage = '' };
 // Unsubscribe from receiving messages realtime firebase
 onUnmounted(() => {
-	resetMsgStore();
 	unsub?.();
+	resetMsgStore();
 });
 const getAllMedia = computed(() => messages.value.filter(m => m.type !== 'text').flatMap(m => m.content.attachments.filter(f => f.raw?.previewURL)));
 const overlayState = reactive({
@@ -335,8 +334,3 @@ $scroll-bg: v-bind(scrollOpacity) !important;
 	opacity: 0;
 }
 </style>
-
-<route lang="yaml">
-meta:
-  requiresAuth: true 
-</route>

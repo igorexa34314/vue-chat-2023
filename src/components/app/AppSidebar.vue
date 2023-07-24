@@ -17,8 +17,8 @@
 		</div>
 		<v-list v-else density="comfortable" class="chat-list mt-3">
 			<v-list-item v-for="chat of getUserChatsInfo" :key="chat.id" :title="setChatName(chat)"
-				:prepend-avatar="setChatAvatar(chat)" :to="{ name: 'chat-id', params: { id: chat.id } }" class="py-3 mb-3"
-				draggable="false" />
+				:prepend-avatar="setChatAvatar(chat)" :to="{ name: 'chat-chatId', params: { chatId: chat.id } }"
+				class="py-3 mb-3" draggable="false" />
 		</v-list>
 	</v-navigation-drawer>
 </template>

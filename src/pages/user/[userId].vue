@@ -18,7 +18,7 @@
 							</div>
 						</div>
 					</v-col>
-					<v-col v-if="route.params.id !== uid">
+					<v-col v-if="userId !== uid">
 						<v-tooltip location="bottom">
 							<template #activator="{ props }">
 								<v-btn v-bind="props" size="x-large" variant="text" :icon="mdiMessageText" @click="goToChat" />
@@ -42,7 +42,7 @@
 <script setup lang="ts">
 import { mdiHelp, mdiGenderMale, mdiGenderFemale, mdiMessageText, mdiAccountPlusOutline } from '@mdi/js';
 import messages from '@/utils/messages.json';
-import { computed } from 'vue';
+import { computed, toRef } from 'vue';
 import { getUserdataById, addToFriend as addFriend } from '@/services/userdata';
 import { useRoute, useRouter } from 'vue-router';
 import { getUid } from '@/services/auth';
@@ -55,7 +55,8 @@ const { showMessage } = useSnackbarStore();
 const route = useRoute();
 const { push } = useRouter();
 
-const userdata = await getUserdataById(route.params.id as string);
+const userId = toRef(route.params.userId as string);
+const userdata = await getUserdataById(userId.value);
 const uid = await getUid();
 
 //Dynamic page title
@@ -68,17 +69,15 @@ useMeta(computed(() => {
 
 const goToChat = async () => {
 	try {
-		const chatId = await joinPrivateChat(route.params.id as string);
-		push({ name: 'chat-id', params: { id: chatId } });
+		const chatId = await joinPrivateChat(userId.value);
+		push({ name: 'chat-chatId', params: { chatId } });
 	} catch (e) {
 		showMessage(messages[e as keyof typeof messages] || e as string, 'red-darken-3', 2000);
 	}
 };
 const addToFriend = async () => {
-	if (route.params.id) {
-		await addFriend(route.params.id as string);
+	if (userId.value) {
+		await addFriend(userId.value);
 	}
 }
 </script>
-
-<style lang="scss" scoped></style>

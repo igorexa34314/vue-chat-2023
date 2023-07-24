@@ -12,6 +12,7 @@ export default ({ mode }) => {
 	process.env = { ...process.env, ...loadEnv(mode, process.cwd()) };
 
 	return defineConfig({
+		appType: 'mpa', // disable history fallback
 		base: process.env.VITE_BASE || '/',
 		server: {
 			port: +process.env.VITE_PORT || 3000
@@ -24,7 +25,17 @@ export default ({ mode }) => {
 		plugins: [
 			vue({ template: { transformAssetUrls } }),
 			Pages({
-				exclude: ['**/components/*.vue']
+				dirs: 'src/pages',
+				exclude: ['**/components/*.vue'],
+				extendRoute(route) {
+					if (route.path === '/login' || route.path === '/register') {
+						return route;
+					}
+					return {
+						...route,
+						meta: { auth: true }
+					};
+				}
 			}),
 			Layouts({
 				layoutsDirs: 'src/layouts',

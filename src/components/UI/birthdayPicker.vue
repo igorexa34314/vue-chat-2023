@@ -8,8 +8,16 @@
 
 <script setup lang="ts">
 import { reactive, computed, watch } from 'vue';
-import { monthsForLocale } from '@/utils/date';
 import { VSelect } from 'vuetify/components';
+import { useI18n, DateTimeOptions } from 'vue-i18n';
+
+
+const monthsForLocales = (monthFormat: DateTimeOptions['month'] = 'long') => {
+	const { d } = useI18n({ inheritLocale: true, useScope: 'global' });
+	return [...Array(12).keys()].map(m =>
+		d(new Date(Date.UTC(2022, ++m % 12)), { month: monthFormat })
+	);
+};
 
 const props = withDefaults(defineProps<{
 	modelValue?: Date;
@@ -29,10 +37,11 @@ const emit = defineEmits<{
 }>();
 
 const datePickerDateItems = computed(() => ([
-	{ type: 'month', title: 'Месяц', items: monthsForLocale('ru-RU', 'long').map((title, i) => ({ title, value: ++i })), order: props.order === 'dd-mmm-yyyy' ? 2 : 1 },
+	{ type: 'month', title: 'Месяц', items: monthsForLocales('long').map((title, i) => ({ title, value: ++i })), order: props.order === 'dd-mmm-yyyy' ? 2 : 1 },
 	{ type: 'day', title: 'День', items: Array.from({ length: 31 }, (v, i) => ++i), order: props.order === 'dd-mmm-yyyy' ? 1 : 2 },
 	{ type: 'year', title: 'Год', items: Array.from({ length: new Date().getFullYear() - +props.fromYear }, (v, i) => (+props.fromYear - 1) + i).reverse(), order: 3 },
 ]));
+
 const datePickerState = reactive({
 	month: props.modelValue.getMonth() + 1,
 	day: props.modelValue.getDate(),

@@ -221,7 +221,6 @@ export const createMessage = async (
 				attachments: await uploadAttachments(chatId, messageRef, attachments)
 			} as unknown as MessageAttachment;
 		}
-		console.log(attachDBContent);
 		// Add full message data to DB
 		await setDoc(messageRef, {
 			id: messageRef.id,
