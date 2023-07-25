@@ -4,7 +4,7 @@
 			<div class="message-textarea">
 				<Transition name="reply">
 					<MessageReply v-model="showReply" :m-type="msgToEditState.type" :content="msgToEditState.content"
-						class="reply-wrapper" @click="scrollIntoMessage" />
+						class="reply-wrapper" @go-to-message="emit('scrollToMessage', msgToEditState.id)" />
 				</Transition>
 				<v-textarea v-model.trim="textareaValue" variant="solo" hide-details @keyup.enter="createMessage('text')"
 					placeholder="Ваше сообщение" rows="1" max-rows="12" auto-grow focused @paste="onInputPasted">
@@ -133,11 +133,7 @@ watchEffect(() => {
 		messageState.text = '';
 	}
 });
-const scrollIntoMessage = () => {
-	const msg = document.querySelector(`[data-message-id="${msgToEditState.id}"]`);
-	msg?.scrollIntoView({ behavior: 'smooth' });
-	emit('scrollToMessage', msgToEditState.id);
-};
+
 const editMessage = ({ id, type, content }: EditMessageData) => {
 	msgToEditState.id = id;
 	msgToEditState.type = type;

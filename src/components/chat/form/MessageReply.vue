@@ -2,10 +2,10 @@
 	<div class="reply-wrapper" v-if="modelValue">
 		<v-alert variant="flat" color="grey-darken-4">
 			<template #prepend>
-				<v-icon :icon="mdiPencil" />
+				<v-icon :icon="mdiPencil" @click="emit('goToMessage')" />
 			</template>
 			<template #text>
-				<div class="reply-original d-flex align-center">
+				<div class="reply-original d-flex align-center" @click="emit('goToMessage')">
 					<div class="reply-original-media" v-if="getImagesFromEditMsg && getImagesFromEditMsg.length">
 						<v-img :src="getImagesFromEditMsg.at(-1)" aspect-ratio="1" width="48px" />
 					</div>
@@ -35,6 +35,7 @@ const props = defineProps<{
 	content: Message['content'] | null;
 }>();
 const emit = defineEmits<{
+	(e: 'goToMessage'): void;
 	(e: 'update:modelValue', val: boolean): void;
 	(e: 'cancel'): void;
 }>();

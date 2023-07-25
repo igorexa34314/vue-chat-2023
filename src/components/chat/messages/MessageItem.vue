@@ -22,6 +22,8 @@
 					locale="ru-RU" :class="{ 'mt-2': type !== 'file' }" class="message__time" />
 			</v-card-text>
 		</v-card>
+
+		<span class="highlighter"></span>
 	</div>
 </template>
 
@@ -60,22 +62,22 @@ const messageComponent = computed(() => props.type === 'media' ? MediaMessage : 
 .message {
 	user-select: text !important;
 	position: relative;
-	&::after {
-		content: '';
+	& > :deep(.highlighter) {
+		background-color: rgb(255, 255, 255);
+		opacity: 0;
+		display: block;
 		visibility: hidden;
 		position: absolute;
 		top: 0;
 		bottom: 0;
 		left: -50%;
 		right: -25%;
-		transition: all 0.15s ease-in-out 0.2s;
 		z-index: -1;
 	}
 	&._context {
-		&::after {
+		& > :deep(.highlighter) {
 			visibility: visible;
-			background-color: rgba(255, 255, 255, 0.2);
-			transition: all 0.15s ease-in 0s;
+			opacity: 0.2;
 		}
 	}
 	&__card {

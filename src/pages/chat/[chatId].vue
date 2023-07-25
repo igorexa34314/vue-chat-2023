@@ -6,15 +6,15 @@
 			<div v-if="loading"><page-loader /></div>
 			<!-- <div v-else-if="!messages || !messages.length" class="text-h5 pa-4">Сообщений в чате пока нет</div> -->
 
-			<v-infinite-scroll v-else-if="messages && messages.length" :side="scrollSide" @load="onLoad" ref="srollEl"
-				tag="div" class="chat__content px-4">
+			<v-infinite-scroll v-else-if="messages && messages.length" :side="scrollSide || 'start'" @load="onLoad"
+				ref="srollEl" tag="div" class="chat__content px-4 d-flex flex-column">
 				<div class="messages-field">
 					<TransitionGroup :name="enTransition ? 'messages-list' : ''">
 						<MessageItem v-for="m in messages" :key="m.id" :self="uid === m.sender.id" :type="m.type"
 							:content="m.content" :sender="m.sender" :created_at="<Date>m.created_at"
 							:class="{ '_context': msgCtxMenu.activeMessage === m.id }"
 							@contextmenu="(e: MouseEvent) => openCtxMenu(e, { mId: m.id, mType: m.type })" :id="`message-${m.id}`"
-							:data-message-id="m.id" class="message-item" @open-in-overlay="openInOverlay" @dragstart.prevent
+							:data-message="m.id" class="message-item" @open-in-overlay="openInOverlay" @dragstart.prevent
 							@drop.prevent draggable="false" />
 					</TransitionGroup>
 
@@ -37,8 +37,8 @@
 					@click="scrollBottom('smooth')" />
 			</Transition>
 
-			<MessageForm class="message-form py-4 px-6" ref="msgForm" @create-message="createMessage"
-				@update-message="updateMessage" @scroll-to-message="highlightMessage" />
+			<MessageForm class="message-form pb-4 pt-2 px-6" ref="msgForm" @create-message="createMessage"
+				@update-message="updateMessage" @scroll-to-message="scrollToAndHighlightMessage" />
 		</div>
 		<!-- <v-dialog v-model="attachDialog" width="auto" ref="dropZone">
 			<v-card minHeight="80vh" minWidth="80vh" class="bg-blue-accent-1 d-flex flex-column align-center justify-center"
@@ -65,7 +65,7 @@ import { useMessagesStore, Message } from '@/stores/messages';
 import { useCurrentUser } from 'vuefire';
 import { getChatInfoById, ChatInfo } from '@/services/chat';
 import { createMessage as createDBMessage, updateMessageContent as updateDBMessageContent } from '@/services/message';
-import { ref, watch, reactive, computed, onUnmounted, nextTick, watchEffect, toRef } from 'vue';
+import { ref, reactive, computed, onUnmounted, nextTick, watchEffect, toRef } from 'vue';
 import { useMeta } from 'vue-meta';
 import { useRoute } from 'vue-router';
 import { useChatScroll } from '@/composables/useChatScroll';
@@ -79,6 +79,9 @@ import { Unsubscribe } from 'firebase/firestore';
 import { VDialog } from 'vuetify/components';
 import { ImageWithPreviewURL } from '@/components/chat/messages/media/ImageFrame.vue';
 import { VInfiniteScroll } from 'vuetify/labs/VInfiniteScroll';
+import { CSSRulePlugin, ScrollToPlugin, gsap } from 'gsap/all';
+
+gsap.registerPlugin(CSSRulePlugin, ScrollToPlugin);
 
 const { getUChats: userChats } = storeToRefs(useUserdataStore());
 const route = useRoute();
@@ -98,7 +101,7 @@ const attachDialog = ref(false);
 const dropZone = ref<VDialog | HTMLElement>();
 
 // Using chat scroll composable with infinite scroll
-const { isScrolling, scrollOpacity, isScrollOnBottom, scrollBottom, onLoad, scrollSide } = useChatScroll(srollEl, async (direction) => {
+const { isScrolling, scrollOpacity, isScrollOnBottom, scrollBottom, onLoad, scrollSide } = useChatScroll(toRef(() => srollEl.value?.$el), async (direction) => {
 	await loadMoreChatMessages(chatId.value, direction);
 });
 
@@ -244,25 +247,30 @@ const editMessage = () => {
 		msgForm.value?.editMessage(messageToEdit);
 	}
 };
-const highlightMessage = (mId: Message['id']) => {
-	if (isScrolling.value) {
-		const stopWatcher = watch(isScrolling, (newVal) => {
-			console.log(newVal);
-			if (!newVal) {
-				msgCtxMenu.activeMessage = mId;
-				setTimeout(() => {
-					stopWatcher();
-					msgCtxMenu.activeMessage = '';
-				}, 250);
-			}
-		});
-	}
-	else {
-		msgCtxMenu.activeMessage = mId;
-		setTimeout(() => {
-			msgCtxMenu.activeMessage = '';
-		}, 250);
-	}
+let timeline: gsap.core.Timeline | undefined;
+const messageHighlightAnimation = (mId: string, highlighter: HTMLElement[]) => {
+	const tl = gsap.timeline({ delay: 0 });
+	return tl
+		.to(srollEl.value?.$el, {
+			scrollTo: { y: `#message-${mId}`, autoKill: true }, duration: 0.4, ease: 'power2',
+		})
+		.fromTo(highlighter, {
+			css: {
+				autoAlpha: 0.2
+			},
+		}, {
+			css: {
+				autoAlpha: 0
+			},
+			ease: 'power0',
+			duration: 2.5,
+		}, '<');
+}
+const scrollToAndHighlightMessage = (mId: Message['id']) => {
+
+	const highlighter = gsap.utils.selector(`#message-${mId}`)('span.highlighter');
+	const existingTweens = gsap.getTweensOf([srollEl.value?.$el, highlighter]);
+	const animation = messageHighlightAnimation(mId, highlighter);
 }
 </script>
 
@@ -278,12 +286,15 @@ $scroll-bg: v-bind(scrollOpacity) !important;
 .chat__field {}
 .chat__content {
 	position: absolute;
-	bottom: 82px;
+	bottom: 80px;
 	top: 0;
 	left: 0;
 	right: 0;
 	overflow-y: auto;
 	overflow-x: hidden;
+	& > :first-child {
+		margin-top: auto !important;
+	}
 }
 .message-form {
 	margin-left: auto;
@@ -298,6 +309,12 @@ $scroll-bg: v-bind(scrollOpacity) !important;
 	width: 100%;
 	margin: 0 auto;
 	max-width: 1080px;
+	& > :last-child {
+		padding-bottom: 0 !important;
+	}
+	& > :first-child {
+		padding-top: 0 !important;
+	}
 }
 .messages-list-enter-active,
 .messages-list-leave-active {

@@ -1,14 +1,17 @@
-import { ref, watchEffect, toRef, computed, Ref, toRefs, nextTick } from 'vue';
+import { ref, watchEffect, computed, Ref, toRefs, nextTick } from 'vue';
 import { useScroll, watchPausable } from '@vueuse/core';
 import { useMessagesStore, Direction } from '@/stores/messages';
-import { VInfiniteScroll } from 'vuetify/lib/labs/components.mjs';
+import { VInfiniteScroll } from 'vuetify/labs/VInfiniteScroll';
+import { gsap } from 'gsap';
+import { ScrollToPlugin } from 'gsap/ScrollToPlugin';
+
+gsap.registerPlugin(ScrollToPlugin);
 
 export const useChatScroll = (
-	vuetifyScroll: Ref<VInfiniteScroll | undefined>,
+	scrollEl: Ref<HTMLElement | undefined>,
 	onLoadMore: (direction: Direction) => void | Promise<void>
 ) => {
 	const messagesStore = useMessagesStore();
-	const scrollEl = toRef(() => vuetifyScroll.value?.$el as HTMLElement | undefined);
 	// Last visible doc refs on top and bottom (needs for infinite loading)
 	const lastVisible = computed(() => messagesStore.lastVisible);
 
@@ -44,11 +47,19 @@ export const useChatScroll = (
 
 	// Scroll bottom with smooth or auto mode
 	const scrollBottom = (behavior: ScrollBehavior = 'auto') => {
-		if (scrollEl.value && scrollEl.value.scrollHeight > scrollEl.value.clientHeight) {
-			scrollEl.value.scrollTo({
-				top: scrollEl.value.scrollHeight,
-				behavior
-			});
+		if (scrollEl.value && scrollEl.value?.scrollHeight > scrollEl.value?.clientHeight) {
+			if (behavior !== 'smooth') {
+				scrollEl.value?.scrollTo({
+					top: scrollEl.value?.scrollHeight,
+					behavior
+				});
+			} else {
+				gsap.to(scrollEl.value, {
+					scrollTo: { y: 'max' },
+					duration: 1,
+					ease: 'power2.out'
+				});
+			}
 		}
 	};
 
