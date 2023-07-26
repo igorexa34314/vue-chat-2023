@@ -74,12 +74,6 @@ const messageComponent = computed(() => props.type === 'media' ? MediaMessage : 
 		right: -25%;
 		z-index: -1;
 	}
-	&._context {
-		& > :deep(.highlighter) {
-			visibility: visible;
-			opacity: 0.2;
-		}
-	}
 	&__card {
 		@media(max-width: 720px) {
 			max-height: 320px !important;

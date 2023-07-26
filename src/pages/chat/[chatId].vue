@@ -12,9 +12,8 @@
 					<TransitionGroup :name="enTransition ? 'messages-list' : ''">
 						<MessageItem v-for="m in messages" :key="m.id" :self="uid === m.sender.id" :type="m.type"
 							:content="m.content" :sender="m.sender" :created_at="<Date>m.created_at"
-							:class="{ '_context': msgCtxMenu.activeMessage === m.id }"
 							@contextmenu="(e: MouseEvent) => openCtxMenu(e, { mId: m.id, mType: m.type })" :id="`message-${m.id}`"
-							:data-message="m.id" class="message-item" @open-in-overlay="openInOverlay" @dragstart.prevent
+							:data-message-id="m.id" class="message-item" @open-in-overlay="openInOverlay" @dragstart.prevent
 							@drop.prevent draggable="false" />
 					</TransitionGroup>
 
@@ -79,9 +78,9 @@ import { Unsubscribe } from 'firebase/firestore';
 import { VDialog } from 'vuetify/components';
 import { ImageWithPreviewURL } from '@/components/chat/messages/media/ImageFrame.vue';
 import { VInfiniteScroll } from 'vuetify/labs/VInfiniteScroll';
-import { CSSRulePlugin, ScrollToPlugin, gsap } from 'gsap/all';
+import { ScrollToPlugin, gsap } from 'gsap/all';
 
-gsap.registerPlugin(CSSRulePlugin, ScrollToPlugin);
+gsap.registerPlugin(ScrollToPlugin);
 
 const { getUChats: userChats } = storeToRefs(useUserdataStore());
 const route = useRoute();
@@ -177,13 +176,22 @@ const msgCtxMenu = reactive({
 });
 const openCtxMenu = (e: MouseEvent, { mId, mType }: { mId: Message['id']; mType?: Message['type'] }) => {
 	msgCtxMenu.activeMessage = mId;
+	const highlighter = gsap.utils.selector(`#message-${msgCtxMenu.activeMessage}`)('span.highlighter');
+	gsap.set(highlighter, {
+		autoAlpha: 0.2,
+	});
 	msgCtxMenu.show = false;
 	msgCtxMenu.position.x = e.clientX;
 	msgCtxMenu.position.y = e.clientY;
 	msgCtxMenu.contentType = mType || 'text';
 	nextTick().then(() => msgCtxMenu.show = true);
 };
-const ctxMenuClosed = () => { msgCtxMenu.activeMessage = '' };
+const ctxMenuClosed = () => {
+	const highlighter = gsap.utils.selector(`#message-${msgCtxMenu.activeMessage}`)('span.highlighter');
+	gsap.set(highlighter, {
+		autoAlpha: 0,
+	});
+};
 // Unsubscribe from receiving messages realtime firebase
 onUnmounted(() => {
 	unsub?.();
@@ -247,30 +255,19 @@ const editMessage = () => {
 		msgForm.value?.editMessage(messageToEdit);
 	}
 };
-let timeline: gsap.core.Timeline | undefined;
-const messageHighlightAnimation = (mId: string, highlighter: HTMLElement[]) => {
-	const tl = gsap.timeline({ delay: 0 });
-	return tl
+const scrollToAndHighlightMessage = (mId: Message['id']) => {
+	const highlighter = gsap.utils.selector(`#message-${mId}`)('span.highlighter');
+	gsap.timeline({ delay: 0 })
 		.to(srollEl.value?.$el, {
 			scrollTo: { y: `#message-${mId}`, autoKill: true }, duration: 0.4, ease: 'power2',
 		})
 		.fromTo(highlighter, {
-			css: {
-				autoAlpha: 0.2
-			},
+			autoAlpha: 0.2
 		}, {
-			css: {
-				autoAlpha: 0
-			},
+			autoAlpha: 0,
 			ease: 'power0',
 			duration: 2.5,
 		}, '<');
-}
-const scrollToAndHighlightMessage = (mId: Message['id']) => {
-
-	const highlighter = gsap.utils.selector(`#message-${mId}`)('span.highlighter');
-	const existingTweens = gsap.getTweensOf([srollEl.value?.$el, highlighter]);
-	const animation = messageHighlightAnimation(mId, highlighter);
 }
 </script>
 
