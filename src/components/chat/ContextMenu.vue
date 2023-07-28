@@ -75,7 +75,7 @@ const contextMenuItems = computed(() => ([
 	props.contentType !== 'text' ? { title: 'Скачать', value: 'download', icon: mdiDownload } : false,
 	{ title: 'Переслать', value: 'forward', icon: mdiShareOutline },
 	{ title: 'Выбрать', value: 'select', icon: mdiCheckCircleOutline },
-	{ title: 'Удалить', value: 'delete', icon: mdiDeleteOutline, colorClass: 'text-red-darken-4' },
+	{ title: 'Удалить', value: 'delete', icon: mdiDeleteOutline, colorClass: 'text-deep-orange-accent-3' },
 ].filter(Boolean)) as { title: string, value: string, icon: string, colorClass?: string }[]);
 onUnmounted(() => {
 	document.removeEventListener('selectionchange', getSelectionText);

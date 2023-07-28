@@ -1,43 +1,43 @@
 <template>
-	<v-container class="container" fluid>
+	<v-container class="container d-flex flex-column" fluid>
 		<div v-if="userChats && userChats.length && !userChats.some(el => el === chatId)" class="text-h5 pa-5">
 			Такого чата не существует либо вы не состоите в нем</div>
-		<div v-else-if="userChats && userChats.length" style="height: 100%; position: relative;" class="chat__field">
-			<div v-if="loading"><page-loader /></div>
+		<div v-else-if="userChats && userChats.length" class="chat__field d-flex flex-column flex-grow">
 			<!-- <div v-else-if="!messages || !messages.length" class="text-h5 pa-4">Сообщений в чате пока нет</div> -->
+			<div class="chat__content">
+				<div v-if="loading"><page-loader /></div>
+				<v-infinite-scroll v-else-if="messages && messages.length" :side="scrollSide || 'start'" @load="onLoad"
+					ref="srollEl" tag="div" class="scrollable d-flex px-4">
+					<div class="messages-field d-flex flex-column justify-end">
+						<TransitionGroup :name="enTransition ? 'messages-list' : ''">
+							<MessageItem v-for="m in messages" :key="m.id" :self="uid === m.sender.id" :type="m.type"
+								:content="m.content" :sender="m.sender" :created_at="<Date>m.created_at"
+								@contextmenu="(e: MouseEvent) => openCtxMenu(e, { mId: m.id, mType: m.type })"
+								:id="`message-${m.id}`" :data-message-id="m.id" class="message-item"
+								@open-in-overlay="openInOverlay" @dragstart.prevent @drop.prevent draggable="false" />
+						</TransitionGroup>
 
-			<v-infinite-scroll v-else-if="messages && messages.length" :side="scrollSide || 'start'" @load="onLoad"
-				ref="srollEl" tag="div" class="chat__content px-4 d-flex flex-column">
-				<div class="messages-field">
-					<TransitionGroup :name="enTransition ? 'messages-list' : ''">
-						<MessageItem v-for="m in messages" :key="m.id" :self="uid === m.sender.id" :type="m.type"
-							:content="m.content" :sender="m.sender" :created_at="<Date>m.created_at"
-							@contextmenu="(e: MouseEvent) => openCtxMenu(e, { mId: m.id, mType: m.type })" :id="`message-${m.id}`"
-							:data-message-id="m.id" class="message-item" @open-in-overlay="openInOverlay" @dragstart.prevent
-							@drop.prevent draggable="false" />
-					</TransitionGroup>
+						<ContextMenu v-model="msgCtxMenu.show" :content-type="msgCtxMenu.contentType"
+							:position="msgCtxMenu.position" @closed="ctxMenuClosed" @copy-selected="copySelectedText"
+							@copy-image="copyImage" @copy-all="copyTextMessage" @download="downloadFile" @edit="editMessage" />
 
-					<ContextMenu v-model="msgCtxMenu.show" :content-type="msgCtxMenu.contentType"
-						:position="msgCtxMenu.position" @closed="ctxMenuClosed" @copy-selected="copySelectedText"
-						@copy-image="copyImage" @copy-all="copyTextMessage" @download="downloadFile" @edit="editMessage" />
+						<FullsizeOverlay v-model="overlayState.show" :content="<ImageWithPreviewURL[]>getAllMedia"
+							v-model:currentItem="overlayState.currentImage" @close="overlayClosed" />
+					</div>
 
-					<FullsizeOverlay v-model="overlayState.show" :content="<ImageWithPreviewURL[]>getAllMedia"
-						v-model:currentItem="overlayState.currentImage" @close="overlayClosed" />
-				</div>
-
-				<template #empty></template>
-				<template #loading></template>
-				<template #error></template>
-			</v-infinite-scroll>
-
-			<Transition name="fixed-btn-fade">
-				<v-btn v-if="srollEl && srollEl?.$el.scrollHeight > srollEl?.$el.clientHeight && !isScrollOnBottom"
-					class="fixed-button-scrolldown" color="blue-grey-darken-1" :icon="mdiArrowDown" size="large"
-					@click="scrollBottom('smooth')" />
-			</Transition>
+					<template #empty></template>
+					<template #loading></template>
+					<template #error></template>
+				</v-infinite-scroll>
+			</div>
 
 			<MessageForm class="message-form pb-4 pt-2 px-6" ref="msgForm" @create-message="createMessage"
 				@update-message="updateMessage" @scroll-to-message="scrollToAndHighlightMessage" />
+			<v-fade-transition>
+				<v-btn v-if="srollEl && srollEl?.$el.scrollHeight > srollEl?.$el.clientHeight && !isScrollOnBottom"
+					class="fixed-button-scrolldown" color="blue-grey-darken-1" :icon="mdiArrowDown" size="large"
+					@click="scrollBottom('smooth')" />
+			</v-fade-transition>
 		</div>
 		<!-- <v-dialog v-model="attachDialog" width="auto" ref="dropZone">
 			<v-card minHeight="80vh" minWidth="80vh" class="bg-blue-accent-1 d-flex flex-column align-center justify-center"
@@ -78,7 +78,8 @@ import { Unsubscribe } from 'firebase/firestore';
 import { VDialog } from 'vuetify/components';
 import { ImageWithPreviewURL } from '@/components/chat/messages/media/ImageFrame.vue';
 import { VInfiniteScroll } from 'vuetify/labs/VInfiniteScroll';
-import { ScrollToPlugin, gsap } from 'gsap/all';
+import { gsap } from 'gsap';
+import { ScrollToPlugin } from 'gsap/all';
 
 gsap.registerPlugin(ScrollToPlugin);
 
@@ -100,7 +101,7 @@ const attachDialog = ref(false);
 const dropZone = ref<VDialog | HTMLElement>();
 
 // Using chat scroll composable with infinite scroll
-const { isScrolling, scrollOpacity, isScrollOnBottom, scrollBottom, onLoad, scrollSide } = useChatScroll(toRef(() => srollEl.value?.$el), async (direction) => {
+const { isScrollOnBottom, scrollBottom, onLoad, scrollSide } = useChatScroll(toRef(() => srollEl.value?.$el), async (direction) => {
 	await loadMoreChatMessages(chatId.value, direction);
 });
 
@@ -273,36 +274,52 @@ const scrollToAndHighlightMessage = (mId: Message['id']) => {
 
 <style lang="scss" scoped>
 // Custom scroll
-$scroll-bg: v-bind(scrollOpacity) !important;
-@import "@/assets/styles/scroll";
+.chat__content {
+	--v-scroll-bg: transparent;
+	&:hover {
+		--v-scroll-bg: rgba(255, 255, 255, 0.2);
+	}
+}
 
+@import "@/assets/styles/scroll";
+</style>
+
+
+<style lang="scss" scoped>
 .container {
 	padding: 0 !important;
 	height: 100%;
 }
-.chat__field {}
+.chat__field {
+	flex: 1 1 auto;
+	overflow: hidden;
+}
 .chat__content {
+	width: 100%;
+	flex: 1 1 auto;
+	position: relative;
+	z-index: 1;
+}
+.scrollable {
 	position: absolute;
-	bottom: 80px;
-	top: 0;
-	left: 0;
-	right: 0;
+	max-height: 100%;
+	height: auto;
+	flex: 1 1 auto;
 	overflow-y: auto;
 	overflow-x: hidden;
-	& > :first-child {
-		margin-top: auto !important;
-	}
+	inset: 0;
 }
 .message-form {
+	width: 100%;
+	flex: 0 0 auto;
 	margin-left: auto;
 	margin-right: auto;
-	max-width: 1080px;
-	position: absolute;
-	left: 0;
-	right: 0;
-	bottom: 0;
+	display: flex;
+	max-width: 1280px;
+	transition: height 0.2s ease-in 0s;
 }
 .messages-field {
+	flex: 1 1 auto;
 	width: 100%;
 	margin: 0 auto;
 	max-width: 1080px;
@@ -334,17 +351,9 @@ $scroll-bg: v-bind(scrollOpacity) !important;
 }
 .fixed-button-scrolldown {
 	position: absolute;
-	bottom: 102px;
-	right: 5%;
+	transform: translate(-100%, -100%);
+	bottom: 40px;
+	right: 0%;
 	z-index: 100;
-}
-.fixed-btn-fade-enter-active,
-.fade-leave-active {
-	transition: opacity 0.5s ease;
-}
-
-.fixed-btn-fade-enter-from,
-.fixed-btn-fade-leave-to {
-	opacity: 0;
 }
 </style>

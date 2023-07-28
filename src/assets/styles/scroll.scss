@@ -1,13 +1,16 @@
-$scroll-width: 0.55rem !default;
-$scroll-border: 0.5rem !default;
-$scroll-bg: rgba(
-	$color: #ffffff,
-	$alpha: 0.2
-) !default;
-$scroll-hover-bg: rgba(
-	$color: #ffffff,
-	$alpha: 0.4
-) !default;
+:root {
+	--v-scroll-width: 0.5rem;
+	--v-scroll-border: 0.5rem;
+	--v-scroll-bg: rgba(255, 255, 255, 0.2);
+	--v-scroll-hover-bg: rgba(255, 255, 255, 0.4);
+	--v-scroll-thumb-border: 0.5rem;
+}
+
+$scroll-width: var(--v-scroll-width) !default;
+$scroll-border: var(--v-scroll-border) !default;
+$scroll-bg: var(--v-scroll-bg) !default;
+$scroll-hover-bg: var(--v-scroll-hover-bg) !default;
+$scroll-thumb-border: var(--v-scroll-thumb-border) !default;
 
 /* width */
 ::-webkit-scrollbar {
@@ -21,7 +24,7 @@ $scroll-hover-bg: rgba(
 /* Handle */
 ::-webkit-scrollbar-thumb {
 	background-color: $scroll-bg;
-	border-radius: 0.5rem;
+	border-radius: $scroll-thumb-border;
 	transition: all 0.35s ease-in 0s;
 	&:hover {
 		background-color: $scroll-hover-bg;

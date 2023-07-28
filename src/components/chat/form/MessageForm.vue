@@ -1,11 +1,11 @@
 <template>
 	<div>
-		<div class="message-form d-flex flex-row align-end">
+		<div class="message-form d-flex flex-row align-end flex-fill">
 			<div class="message-textarea">
-				<Transition name="reply">
+				<v-slide-y-reverse-transition>
 					<MessageReply v-model="showReply" :m-type="msgToEditState.type" :content="msgToEditState.content"
 						class="reply-wrapper" @go-to-message="emit('scrollToMessage', msgToEditState.id)" />
-				</Transition>
+				</v-slide-y-reverse-transition>
 				<v-textarea v-model.trim="textareaValue" variant="solo" hide-details @keyup.enter="createMessage('text')"
 					placeholder="Ваше сообщение" rows="1" max-rows="12" auto-grow focused @paste="onInputPasted">
 					<template #append-inner>
@@ -166,11 +166,10 @@ defineExpose({
 	flex: 1 1 auto;
 }
 .reply-wrapper {
-	position: absolute;
+	position: relative;
 	left: 0;
 	right: 0;
 	top: 0;
-	transform: translateY(-95%);
 	z-index: 0;
 }
 .attach-btn {
@@ -184,15 +183,5 @@ defineExpose({
 }
 .attach-icon {
 	transform: rotate(135deg) translate(-20%, 50%);
-}
-.reply-enter-active,
-.reply-leave-active {
-	transition: all 0.2s ease-in;
-}
-
-.reply-enter-from,
-.reply-leave-to {
-	top: 50%;
-	opacity: 0;
 }
 </style>

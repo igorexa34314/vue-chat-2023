@@ -157,6 +157,7 @@ const deleteAttachItem = (fileId: AttachedContent[number]['id']) => {
 <style lang="scss" scoped>
 // Custom scroll
 $scroll-width: 0.35rem !important;
+
 @import "@/assets/styles/scroll";
 
 .attachments {

@@ -1,6 +1,6 @@
 <template>
 	<div class="reply-wrapper" v-if="modelValue">
-		<v-alert variant="flat" color="grey-darken-4">
+		<v-alert variant="flat" color="grey-darken-4" density="compact">
 			<template #prepend>
 				<v-icon :icon="mdiPencil" @click="emit('goToMessage')" />
 			</template>
