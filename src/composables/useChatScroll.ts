@@ -19,7 +19,7 @@ export const useChatScroll = (
 	const messages = computed(() => messagesStore.messages);
 
 	// Hiding scroll when inactive
-	const { arrivedState } = useScroll(scrollEl, {
+	const { arrivedState, isScrolling } = useScroll(scrollEl, {
 		offset: { bottom: 600 },
 		behavior: 'smooth'
 	});
@@ -64,7 +64,7 @@ export const useChatScroll = (
 	const { pause: pauseMessageWatcher, resume: resumeMessageWatcher } = watchPausable(
 		() => messages.value.length,
 		(newVal, oldVal) => {
-			if (newVal > oldVal) {
+			if (newVal > oldVal && !isScrolling.value) {
 				nextTick().then(() => scrollBottom('instant'));
 			}
 		},

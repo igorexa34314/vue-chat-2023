@@ -6,11 +6,11 @@
 
 		<v-spacer></v-spacer>
 
-		<Transition name="append-search">
+		<v-fade-transition>
 			<v-text-field v-show="searchState.enabled" v-model="searchState.text" ref="search"
 				@blur="searchState.enabled = false" class="mr-3" placeholder="Поиск" variant="solo" density="compact"
 				hide-details />
-		</Transition>
+		</v-fade-transition>
 
 		<v-btn variant="text" :icon="mdiMagnify" @click="enableSearch" disabled />
 
@@ -77,15 +77,3 @@ const exit = async () => {
 	push('/login');
 };
 </script>
-
-<style lang="scss" scoped>
-.append-search-enter-active,
-.append-search-leave-active {
-	transition: opacity 0.3s ease;
-}
-
-.append-search-enter-from,
-.append-search-leave-to {
-	opacity: 0;
-}
-</style>

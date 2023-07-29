@@ -9,7 +9,7 @@
 				<v-infinite-scroll v-else-if="messages && messages.length" :side="scrollSide || 'start'" @load="onLoad"
 					ref="srollEl" tag="div" class="scrollable d-flex px-4">
 					<div class="messages-field d-flex flex-column justify-end">
-						<TransitionGroup :name="enTransition ? 'messages-list' : ''">
+						<TransitionGroup :css="false" @before-enter="onBeforeEnter" @enter="onEnter" @leave="onLeave">
 							<MessageItem v-for="m in messages" :key="m.id" :self="uid === m.sender.id" :type="m.type"
 								:content="m.content" :sender="m.sender" :created_at="<Date>m.created_at"
 								@contextmenu="(e: MouseEvent) => openCtxMenu(e, { mId: m.id, mType: m.type })"
@@ -30,7 +30,6 @@
 					<template #error></template>
 				</v-infinite-scroll>
 			</div>
-
 			<MessageForm class="message-form pb-4 pt-2 px-6" ref="msgForm" @create-message="createMessage"
 				@update-message="updateMessage" @scroll-to-message="scrollToAndHighlightMessage" />
 			<v-fade-transition>
@@ -148,16 +147,16 @@ watchEffect(async (onCleanup) => {
 	});
 });
 
-const enTransition = ref(false);
+const allowTransition = ref(false);
 const createMessage = async (type: Message['type'] = 'text', content: Partial<AttachFormContent>) => {
 	try {
-		enTransition.value = true;
+		allowTransition.value = true;
 		await createDBMessage(chatId.value, type, content);
 	} catch (e) {
 		showMessage(sbMessages[e as keyof typeof sbMessages] || e as string, 'red-darken-3', 2000);
 	}
 	finally {
-		enTransition.value = false;
+		nextTick().then(() => allowTransition.value = false);
 	}
 };
 const updateMessage = async ({ id, type, content }: EditMessageData) => {
@@ -260,7 +259,7 @@ const scrollToAndHighlightMessage = (mId: Message['id']) => {
 	const highlighter = gsap.utils.selector(`#message-${mId}`)('span.highlighter');
 	gsap.timeline({ delay: 0 })
 		.to(srollEl.value?.$el, {
-			scrollTo: { y: `#message-${mId}`, autoKill: true }, duration: 0.4, ease: 'power2',
+			scrollTo: { y: `#message-${mId}`, autoKill: true, offsetY: 100 }, duration: 0.4, ease: 'power2',
 		})
 		.fromTo(highlighter, {
 			autoAlpha: 0.2
@@ -269,6 +268,36 @@ const scrollToAndHighlightMessage = (mId: Message['id']) => {
 			ease: 'power0',
 			duration: 2.5,
 		}, '<');
+}
+
+const onBeforeEnter = (el: Element) => {
+	if (allowTransition.value) {
+		// 	gsap.set(el, { autoAlpha: 0 })
+	}
+}
+
+const onEnter = (el: Element, done: () => void) => {
+	if (allowTransition.value) {
+		gsap.from(el, {
+			autoAlpha: 0,
+			translateX: '-0.01%',
+			translateY: '100%',
+			scale: 0.5,
+			duration: 0.2,
+			onComplete: done
+		})
+	} else done()
+}
+
+const onLeave = (el: Element, done: () => void) => {
+	if (allowTransition.value) {
+		gsap.to(el, {
+			opacity: 0,
+			height: 0,
+			onComplete: done
+		})
+	}
+	else done()
 }
 </script>
 
@@ -282,10 +311,7 @@ const scrollToAndHighlightMessage = (mId: Message['id']) => {
 }
 
 @import "@/assets/styles/scroll";
-</style>
 
-
-<style lang="scss" scoped>
 .container {
 	padding: 0 !important;
 	height: 100%;
@@ -330,16 +356,6 @@ const scrollToAndHighlightMessage = (mId: Message['id']) => {
 		padding-top: 0 !important;
 	}
 }
-.messages-list-enter-active,
-.messages-list-leave-active {
-	transition: all 0.35s ease-in;
-}
-.messages-list-enter-from,
-.messages-list-leave-to {
-	opacity: 0;
-	transform: translateX(30px);
-}
-
 .message-item {}
 .attach-frame {
 	width: 90%;
@@ -351,7 +367,7 @@ const scrollToAndHighlightMessage = (mId: Message['id']) => {
 }
 .fixed-button-scrolldown {
 	position: absolute;
-	transform: translate(-100%, -100%);
+	transform: translate(-50%, -100%);
 	bottom: 40px;
 	right: 0%;
 	z-index: 100;

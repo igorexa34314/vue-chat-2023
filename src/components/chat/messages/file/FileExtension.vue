@@ -1,15 +1,16 @@
 <template>
 	<div v-bind="hoverProps" style="cursor: pointer;" class="file-icon">
 		<v-icon :icon="mdiFile" size="80px" @click="emit('downloadFile')" title="Download" />
-		<Transition name="fade">
+
+		<v-fade-transition>
 			<div v-if="loading" class="loader">
 				<image-loader size="32px" icon-size="20px" bg-color="transparent" />
 			</div>
 			<span v-else-if="!isHovering" class="file-icon-ext font-weight-bold text-brown-darken-4">
-				{{ getFileExt(file.fullname).length <= 6 ? getFileExt(file.fullname) : '' }}</span>
+				{{ getFileExt(file.fullname).length <= 5 ? getFileExt(file.fullname) : '' }}</span>
 					<v-icon v-else :icon="mdiDownload" size="22px" variant="text" class="file-icon-btn" color="black"
 						density="compact" :flat="false" :ripple="false" @click="emit('downloadFile')" />
-		</Transition>
+		</v-fade-transition>
 	</div>
 </template>
 
@@ -58,13 +59,5 @@ const emit = defineEmits<{
 	left: 50%;
 	transform: translate(-50%, -30%);
 
-}
-.fade-enter-active,
-.fade-leave-active {
-	transition: opacity 0.25s ease;
-}
-.fade-enter-from,
-.fade-leave-to {
-	opacity: 0;
 }
 </style>

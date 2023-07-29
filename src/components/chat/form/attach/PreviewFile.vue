@@ -13,7 +13,7 @@
 	<div v-else class="file-icon">
 		<v-icon :icon="mdiFile" size="80px" />
 		<span class="file-icon-ext font-weight-black text-brown-darken-4">
-			{{ getFileExt(previewItem.fileData.name).length <= 6 ? getFileExt(previewItem.fileData.name) : '' }}</span>
+			{{ getFileExt(previewItem.fileData.name).length <= 5 ? getFileExt(previewItem.fileData.name) : '' }}</span>
 	</div>
 
 	<div class="file-details ml-2 text-subtitle-1 font-weight-medium flex-grow-1">
@@ -25,7 +25,7 @@
 </template>
 
 <script setup lang="ts">
-import { mdiFile , mdiTrashCanOutline} from '@mdi/js';
+import { mdiFile, mdiTrashCanOutline } from '@mdi/js';
 import ImageLoader from '@/components/chat/ImageLoader.vue';
 import { ref } from 'vue';
 import { formatFileSize, getFileExt } from '@/utils/filters/messages';

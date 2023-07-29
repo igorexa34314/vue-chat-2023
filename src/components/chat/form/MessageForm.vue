@@ -7,7 +7,7 @@
 						class="reply-wrapper" @go-to-message="emit('scrollToMessage', msgToEditState.id)" />
 				</v-slide-y-reverse-transition>
 				<v-textarea v-model.trim="textareaValue" variant="solo" hide-details @keyup.enter="createMessage('text')"
-					placeholder="Ваше сообщение" rows="1" max-rows="12" auto-grow focused @paste="onInputPasted">
+					placeholder="Ваше сообщение" rows="1" max-rows="10" auto-grow focused @paste="onInputPasted">
 					<template #append-inner>
 						<AttachMenu ref="attachMenuEl" @attach-file="attachFiles">
 							<template #activator="{ props }">
@@ -117,7 +117,12 @@ const changeContentType = () => {
 const onInputPasted = (e: ClipboardEvent) => {
 	if (e.clipboardData?.types.includes('Files')) {
 		const attachedFiles = e.clipboardData.files;
-		attachFiles('media', attachedFiles);
+		console.log(attachedFiles);
+		if (Array.from(attachedFiles).every(f => f.type.startsWith('image/'))) {
+			attachFiles('media', attachedFiles);
+		} else {
+			attachFiles('file', attachedFiles);
+		}
 	}
 };
 const msgToEditState = reactive({

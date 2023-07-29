@@ -2,12 +2,13 @@
 	<div v-bind="hoverProps" class="file-icon mx-1">
 		<ImageFrame :image="file" rounded="true" height="100%" :loader="{ size: '30px', iconSize: '18px' }"
 			@loaded="emit('loaded')" />
-		<Transition name="fade">
+
+		<v-fade-transition>
 			<div class="preview-hover" v-if="isHovering" @click="emit('openFile')">
 				<v-icon :icon="mdiEyeOutline" size="22px" variant="text" class="file-icon-btn" color="white" density="compact"
 					title="Open" flat :ripple="false" />
 			</div>
-		</Transition>
+		</v-fade-transition>
 	</div>
 </template>
 
@@ -58,13 +59,5 @@ const emit = defineEmits<{
 	height: 100%;
 	border-radius: 4px;
 	background-color: rgba($color: #000000, $alpha: 0.75);
-}
-.fade-enter-active,
-.fade-leave-active {
-	transition: opacity 0.25s ease;
-}
-.fade-enter-from,
-.fade-leave-to {
-	opacity: 0;
 }
 </style>

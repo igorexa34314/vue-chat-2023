@@ -136,7 +136,6 @@ const addMoreFiles = (e: Event) => {
 };
 const onInputPasted = (e: ClipboardEvent) => {
 	if (e.clipboardData?.types.includes('Files') && attachedFiles.value.length < 10) {
-		console.log(attachedFiles.value.length);
 		const attachData = e.clipboardData.files;
 		emit('add-more-files', props.contentType !== 'file' ? 'media' : 'file', attachData);
 	}

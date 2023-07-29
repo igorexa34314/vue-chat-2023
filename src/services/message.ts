@@ -307,23 +307,26 @@ const createUploadTask = (
 			try {
 				// Handle successful uploads on complete
 				const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-				const batch = writeBatch(db);
-				batch.update(messageRef, {
-					'content.attachments': arrayRemove(DBcontentToUpdate)
-				});
-				batch.update(messageRef, {
-					'content.attachments': arrayUnion({
-						...DBcontentToUpdate,
-						raw: {
-							bucket: uploadTask.snapshot.ref.bucket,
-							fullpath: uploadTask.snapshot.ref.fullPath,
-							sizes: file.sizes,
-							fullsize: fileData.size,
-							downloadURL
-						}
-					} as MessageAttachment)
-				});
-				await batch.commit();
+				const raw = {
+					bucket: uploadTask.snapshot.ref.bucket,
+					fullpath: uploadTask.snapshot.ref.fullPath,
+					fullsize: fileData.size,
+					downloadURL
+				} as MessageAttachment['raw'];
+				if (file.sizes) {
+					raw.sizes = file.sizes;
+				}
+				await writeBatch(db)
+					.update(messageRef, {
+						'content.attachments': arrayRemove(DBcontentToUpdate)
+					})
+					.update(messageRef, {
+						'content.attachments': arrayUnion({
+							...DBcontentToUpdate,
+							raw
+						} as MessageAttachment)
+					})
+					.commit();
 				finishLoading(fileId);
 			} catch (e) {
 				errorHandler(e);
@@ -369,12 +372,12 @@ const uploadAttachments = async <T extends MessageAttachment>(
 			for (const file of attach) {
 				docRefPromises.push(
 					(async () => {
-						const { fileData, id, thumbnail, sizes } = file;
+						const { fileData, id, thumbnail, ...sizes } = file;
 						let attachContent = {
 							id,
 							type: fileData.type,
 							fullname: fileData.name,
-							raw: { sizes, fullsize: fileData.size }
+							raw: { ...sizes, fullsize: fileData.size }
 						} as Partial<T>;
 						if (file.fileData.type.startsWith('image/') && sizes && thumbnail) {
 							const thumbData = (await uploadThumb(
