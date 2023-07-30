@@ -16,28 +16,27 @@
 		"base64-arraybuffer": "^1.0.2",
 		"firebase": "^10.1.0",
 		"gsap": "^3.12.2",
-		"pinia": "^2.1.4",
+		"pinia": "^2.1.6",
 		"uuid": "^9.0.0",
 		"vue": "^3.3.4",
 		"vue-i18n": "9",
 		"vue-meta": "^3.0.0-alpha.10",
 		"vue-router": "4",
-		"vuefire": "^3.1.11",
-		"vuetify": "^3.3.9"
+		"vuefire": "^3.1.12",
+		"vuetify": "^3.3.10"
 	},
 	"devDependencies": {
 		"@intlify/unplugin-vue-i18n": "^0.12.2",
-		"@types/intl": "^1.2.0",
-		"@types/node": "^20.4.4",
+		"@types/node": "^20.4.5",
 		"@types/uuid": "^9",
 		"@vitejs/plugin-vue": "^4.2.3",
 		"sass": "^1.64.1",
 		"typescript": "^5.1.6",
-		"vite": "^4.4.6",
+		"vite": "^4.4.7",
 		"vite-plugin-pages": "^0.31.0",
 		"vite-plugin-vue-layouts": "^0.8.0",
 		"vite-plugin-vuetify": "^1.0.2",
-		"vue-tsc": "^1.8.6"
+		"vue-tsc": "^1.8.8"
 	},
 	"packageManager": "yarn@3.6.1",
 	"repository": {

@@ -29,7 +29,7 @@ const props = withDefaults(defineProps<{
 	loading: false
 });
 const emit = defineEmits<{
-	(e: 'downloadFile'): void;
+	downloadFile: []
 }>();
 </script>
 

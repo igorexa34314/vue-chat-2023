@@ -5,13 +5,11 @@
 </template>
 
 <script setup lang="ts">
-import LoginForm from '@/components/LoginForm.vue';
+import LoginForm from '@/components/auth/LoginForm.vue';
 import { useMeta } from 'vue-meta';
 
 useMeta({ title: 'Вход' });
 </script>
-
-<style lang="scss" scoped></style>
 
 <route lang="yaml">
 meta:

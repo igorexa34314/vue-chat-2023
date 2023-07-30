@@ -1,7 +1,7 @@
 <template>
-	<div v-bind="hoverProps" class="file-icon mx-1">
-		<ImageFrame :image="file" rounded="true" height="100%" :loader="{ size: '30px', iconSize: '18px' }"
-			@loaded="emit('loaded')" />
+	<div v-bind="hoverProps" class="file-icon mx-1 d-flex align-center">
+		<ImageFrame :image="file" rounded="true" :loader="{ size: '30px', iconSize: '18px' }" @loaded="emit('loaded')"
+			max-height="100%" />
 
 		<v-fade-transition>
 			<div class="preview-hover" v-if="isHovering" @click="emit('openFile')">
@@ -23,8 +23,8 @@ const props = defineProps<{
 	hoverProps: Record<string, unknown>;
 }>();
 const emit = defineEmits<{
-	(e: 'loaded'): void;
-	(e: 'openFile'): void;
+	loaded: [],
+	openFile: []
 }>();
 </script>
 

@@ -41,30 +41,27 @@
 <script setup lang="ts">
 import { mdiMagnify, mdiFilter, mdiDotsVertical, mdiAccountCircleOutline, mdiLogout } from '@mdi/js';
 import messages from '@/utils/messages.json';
-import { reactive, ref, nextTick } from 'vue';
+import { ref, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import { logout } from '@/services/auth';
-import { useUserdataStore } from '@/stores/userdata';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { VTextField } from 'vuetify/components';
 
 const { push } = useRouter();
-const { $reset } = useUserdataStore();
 const { showMessage } = useSnackbarStore();
 
 const emit = defineEmits<{
-	(e: 'drawer'): void;
+	drawer: []
 }>();
 
 const search = ref<VTextField>();
-const searchState = reactive({
+const searchState = ref({
 	enabled: false,
 	text: ''
 });
 
 const enableSearch = () => {
-	searchState.enabled = true;
-	// @ts-ignore
+	searchState.value.enabled = true;
 	nextTick(() => search.value?.focus());
 };
 const exit = async () => {
@@ -73,7 +70,6 @@ const exit = async () => {
 	} catch (e) {
 		showMessage(messages[e as keyof typeof messages] || (e as string), 'red-darken-3', 2000);
 	}
-	$reset();
 	push('/login');
 };
 </script>

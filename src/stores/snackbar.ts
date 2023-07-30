@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { reactive } from 'vue';
+import { ref } from 'vue';
 
 export interface SnackbarOptions {
 	text: string;
@@ -8,16 +8,18 @@ export interface SnackbarOptions {
 }
 
 export const useSnackbarStore = defineStore('snackbar', () => {
-	const snackbarState: SnackbarOptions = reactive({
+	const snackbarState = ref<SnackbarOptions>({
 		text: '',
 		color: '',
 		timeout: 0
 	});
 
-	const showMessage = (text: SnackbarOptions['text'], color?: SnackbarOptions['color'], timeout?: SnackbarOptions['timeout']) => {
-		snackbarState.text = text || 'missing "message".';
-		snackbarState.color = color || 'green-darken-1';
-		snackbarState.timeout = timeout || 2500;
+	const showMessage = (
+		text: SnackbarOptions['text'] = 'missing "message"',
+		color: SnackbarOptions['color'] = 'green-darken-1',
+		timeout: SnackbarOptions['timeout'] = 2500
+	) => {
+		snackbarState.value = { text, color, timeout };
 	};
 	return {
 		snackbarState,

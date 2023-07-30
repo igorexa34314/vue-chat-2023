@@ -1,5 +1,5 @@
 <template>
-	<div v-if="previewItem.fileData.type.startsWith('image/')" class="file-preview pa-2">
+	<div v-if="previewItem.fileData.type.startsWith('image/')" class="file-preview pa-1">
 		<v-card height="100%" width="100%" variant="tonal">
 			<v-img aspect-ratio="1" ref="imgEl" :lazy-src="previewItem.thumbnail?.url" :src="previewItem.preview"
 				:alt="previewItem.fileData.name" cover eager>
@@ -30,21 +30,23 @@ import ImageLoader from '@/components/chat/ImageLoader.vue';
 import { ref } from 'vue';
 import { formatFileSize, getFileExt } from '@/utils/filters/messages';
 import { VImg } from 'vuetify/components';
-import { AttachedContent } from '@/components/chat/form/attach/AttachDialog.vue';
+import { AttachedContent } from '@/components/chat/attach/AttachDialog.vue';
 
 const props = withDefaults(defineProps<{
 	previewItem: AttachedContent[number];
 }>(), {
-
 });
+
 const emit = defineEmits<{
-	(e: 'delete-item', itemId: string): void
+	'delete-item': [itemId: string]
 }>();
+
 const imgEl = ref<VImg>();
+
 defineExpose({ imgEl });
 </script>
 
-<style scoped lang="scss">
+<style lang="scss" scoped>
 .file-details, .file-details p {
 	overflow: hidden;
 	white-space: nowrap;

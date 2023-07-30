@@ -19,5 +19,3 @@ if (msg && messages[msg]) {
 	showMessage(messages[msg]);
 }
 </script>
-
-<style lang="scss" scoped></style>

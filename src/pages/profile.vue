@@ -3,7 +3,7 @@
 		<h2 class="ml-4 mt-2">Ваш профиль</h2>
 
 		<v-tabs v-model="pickedProfileTab" class="mt-5 ml-3" density="comfortable">
-			<v-tab v-for="tab in profileTabs" :key="tab.value" :value="tab.value">
+			<v-tab v-for="tab in profileTabs" :key="tab.value" :value="tab.value" :disabled="tab.disabled">
 				{{ tab.title }}
 			</v-tab>
 		</v-tabs>
@@ -23,7 +23,7 @@
 import InfoForm, { ProfileForm } from '@/components/profile/InfoForm.vue';
 import messages from '@/utils/messages.json';
 import { storeToRefs } from 'pinia';
-import { updateUserdata, updateUserAvatar } from '@/services/userdata';
+import { updateUserdata, updateUserAvatar } from '@/services/user';
 import { useUserdataStore } from '@/stores/userdata';
 import { ref, inject } from 'vue';
 import { useSnackbarStore } from '@/stores/snackbar';
@@ -37,8 +37,8 @@ const { showMessage } = useSnackbarStore();
 const loading = inject(globalLoadingKey);
 const profileTabs = [
 	{ title: 'Информация', value: 'info' },
-	{ title: 'Безопасность', value: 'security' },
-	{ title: 'Уведомления', value: 'notifications' },
+	{ title: 'Безопасность', value: 'security', disabled: true },
+	{ title: 'Уведомления', value: 'notifications', disabled: true },
 ];
 const pickedProfileTab = ref(profileTabs[0].value);
 
@@ -61,3 +61,4 @@ const submitForm = async ({ avatar, ...formData }: ProfileForm) => {
 	display: none;
 }
 </style>
+@/services/user

@@ -25,11 +25,11 @@ const props = withDefaults(defineProps<{
 	iconSize: 26
 });
 const emit = defineEmits<{
-	(e: 'cancel'): void
+	cancel: []
 }>();
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .image-loader {
 	border-radius: 50%;
 	background-color: rgba(0, 0, 0, 0.7);

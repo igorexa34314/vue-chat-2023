@@ -52,8 +52,8 @@
 
 <script setup lang="ts">
 import { mdiClose, mdiDotsVertical, mdiPlus, mdiFileMultipleOutline, mdiFolderMultipleImage } from '@mdi/js';
-import FileAttachment from '@/components/chat/form/attach/FileAttachment.vue';
-import MediaAttachment from '@/components/chat/form/attach/MediaAttachment.vue';
+import FileAttachment from '@/components/chat/attach/FileAttachment.vue';
+import MediaAttachment from '@/components/chat/attach/MediaAttachment.vue';
 import { ref, computed, watchEffect, Ref } from "vue";
 import { useVModel } from '@vueuse/core';
 import { useSnackbarStore } from '@/stores/snackbar';
@@ -74,12 +74,12 @@ const props = withDefaults(defineProps<AttachDialogProps>(), {
 });
 
 const emit = defineEmits<{
-	(e: 'update:modelValue', val: boolean): void
-	(e: 'update:subtitleText', val: boolean): void
-	(e: 'add-more-files', type: Exclude<Message['type'], 'text'>, files: FileList): void
-	(e: 'changeContentType'): void
-	(e: 'submit', type: AttachDialogProps['contentType'], content: AttachedContent): void
-	(e: 'close'): void
+	'update:modelValue': [val: boolean],
+	'update:subtitleText': [val: boolean],
+	'add-more-files': [type: Exclude<Message['type'], 'text'>, files: FileList],
+	changeContentType: [],
+	submit: [type: AttachDialogProps['contentType'], content: AttachedContent],
+	close: []
 }>();
 
 const { showMessage } = useSnackbarStore();

@@ -5,15 +5,15 @@
 </template>
 
 <script setup lang="ts">
-import PreviewFile from '@/components/chat/form/attach/PreviewFile.vue';
+import PreviewFile from '@/components/chat/attach/PreviewFile.vue';
 import { ref, computed } from 'vue';
-import { AttachedContent } from '@/components/chat/form/attach/AttachDialog.vue';
+import { AttachedContent } from '@/components/chat/attach/AttachDialog.vue';
 
 const props = defineProps<{
 	files: AttachedContent
 }>();
 const emit = defineEmits<{
-	(e: 'deleteAttach', imgId: AttachedContent[number]['id']): void
+	deleteAttach: [imgId: AttachedContent[number]['id']]
 }>();
 
 const getFilePreview = computed(() => {
@@ -27,5 +27,3 @@ const isFilesReady = computed(() => {
 });
 defineExpose({ isFilesReady });
 </script>
-
-<style scoped lang="scss"></style>

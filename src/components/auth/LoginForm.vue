@@ -28,22 +28,22 @@
 </template>
 
 <script setup lang="ts">
-import passField from '@/components/UI/passField.vue';
+import PassField from '@/components/UI/PassField.vue';
 import messages from '@/utils/messages.json';
 import validations from '@/utils/validations';
-import { reactive, ref } from 'vue';
+import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { loginWithEmail, signInWithGoogle } from '@/services/auth';
 import { useSnackbarStore } from '@/stores/snackbar';
-import { googleImg } from '@/utils/globals';
-import  { VForm } from 'vuetify/components';
+import { googleImg } from '@/globals';
+import { VForm } from 'vuetify/components';
 
 
 const { push } = useRouter();
 const { showMessage } = useSnackbarStore();
 
 const formEl = ref<VForm>();
-const formState = reactive({
+const formState = ref({
 	email: '',
 	password: ''
 });
@@ -52,7 +52,7 @@ const submitForm = async () => {
 	const valid = (await formEl.value?.validate())?.valid;
 	if (valid) {
 		try {
-			await loginWithEmail(formState);
+			await loginWithEmail(formState.value);
 			push('/profile');
 		} catch (e) {
 			showMessage(messages[e as keyof typeof messages] || e as string, 'red-darken-3', 2000);
@@ -75,4 +75,4 @@ const loginWithGoogle = async () => {
 	left: 100%;
 	transform: translate(-120%);
 }
-</style>
+</style>@/globals

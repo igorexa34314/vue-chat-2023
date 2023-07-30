@@ -12,7 +12,7 @@ import {
 	getDocs,
 	Timestamp
 } from 'firebase/firestore';
-import { getUserRef, getUserdataById } from '@/services/userdata';
+import { getUserRef, getUserdataById } from '@/services/user';
 import { fbErrorHandler as errorHandler } from '@/services/errorHandler';
 import { UserData, UserInfo } from '@/types/db/UserdataTable';
 import { ChatInfo as DBChatTable } from '@/types/db/ChatTable';
@@ -21,17 +21,19 @@ export interface ChatInfo extends Omit<DBChatTable, 'members'> {
 	members: Pick<UserInfo, 'uid' | 'displayName' | 'photoURL'>[];
 }
 
-const chatCol = collection(getFirestore(), 'chat');
+export const chatCol = collection(getFirestore(), 'chats');
 
 const isPrivateChatExists = async (
 	u1: UserInfo['uid'],
 	u2: UserInfo['uid']
 ): Promise<ChatInfo['id'] | undefined> => {
-	let chatId;
-	const q = query(chatCol, where('type', '==', 'private'), where('members', '==', [u1, u2]));
+	let chatId: ChatInfo['id'] | undefined;
+	const q = query(chatCol, where('members', 'array-contains', u1), where('type', '==', 'private'));
 	const querySnapshot = await getDocs(q);
 	querySnapshot.forEach(doc => {
-		chatId = doc.id;
+		if ((doc.data().members as string[]).includes(u2)) {
+			chatId = doc.id;
+		}
 	});
 	return chatId;
 };

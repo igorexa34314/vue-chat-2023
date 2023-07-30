@@ -41,18 +41,18 @@ const props = withDefaults(defineProps<{
 });
 
 const emit = defineEmits<{
-	(e: 'update:modelValue', val: boolean): void;
-	(e: 'closed'): void;
-	(e: 'forward'): void;
-	(e: 'edit'): void;
-	(e: 'pin'): void;
-	(e: 'copySelected'): void;
-	(e: 'copyAll'): void;
-	(e: 'copyImage'): void;
-	(e: 'copyLink'): void;
-	(e: 'download'): void;
-	(e: 'select'): void;
-	(e: 'delete'): void;
+	'update:modelValue': [val: boolean],
+	closed: [],
+	forward: [],
+	edit: [],
+	pin: [],
+	copySelected: [],
+	copyAll: [],
+	copyImage: [],
+	copyLink: [],
+	download: [],
+	select: [],
+	delete: [],
 }>();
 const selectedText = ref('');
 const getSelectionText = () => {

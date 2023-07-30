@@ -9,7 +9,6 @@ import {
 	writeBatch,
 	deleteDoc,
 	onSnapshot,
-	getDoc,
 	getDocs,
 	updateDoc
 } from 'firebase/firestore';
@@ -24,16 +23,16 @@ import {
 	deleteObject
 } from 'firebase/storage';
 import { getUid } from '@/services/auth';
-import { getUserdataById } from '@/services/userdata';
+import { getUserdataById } from '@/services/user';
 import { fbErrorHandler as errorHandler } from '@/services/errorHandler';
 import { encode } from 'base64-arraybuffer';
 import { storeToRefs } from 'pinia';
-import { useMessagesStore, Message, LastVisibleFbRef, Direction } from '@/stores/messages';
+import { useMessagesStore, Message, Direction } from '@/stores/messages';
 import { useLoadingStore } from '@/stores/loading';
 import { DocumentReference, DocumentData, DocumentChange } from 'firebase/firestore';
 import { UserInfo } from '@/types/db/UserdataTable';
 import { Message as DBMessage, MessageAttachment, MessageContent } from '@/types/db/MessagesTable';
-import { ChatInfo } from '@/services/chat';
+import { ChatInfo, chatCol } from '@/services/chat';
 import { EditMessageData } from '@/components/chat/form/MessageForm.vue';
 
 export interface AttachFormContent {
@@ -48,8 +47,6 @@ export interface AttachFormContent {
 		sizes?: MessageAttachment['raw']['sizes'];
 	}[];
 }
-
-const chatCol = collection(db, 'chat');
 
 export const fetchChatMessages = async (chatId: ChatInfo['id'], lmt: number = 10) => {
 	try {
@@ -235,13 +232,14 @@ export const createMessage = async (
 };
 export const updateMessageContent = async (
 	chatId: ChatInfo['id'],
-	{ id: mId, type: mType, content }: EditMessageData
+	{ id: mId, content }: EditMessageData
 ) => {
 	try {
 		const messageRef = doc(collection(doc(chatCol, chatId), 'messages'), mId);
 		// Rewrite text content data to DB
-		const textContent = { ['content.' + (mType === 'text' ? 'text' : 'subtitle')]: content.text };
-		await updateDoc(messageRef, textContent);
+		await updateDoc(messageRef, {
+			'content.text': content.text
+		});
 	} catch (e) {
 		errorHandler(e);
 	}
@@ -257,7 +255,7 @@ const createUploadTask = (
 	const { fileData, id: fileId } = file;
 	const fileRef = storageRef(
 		storage,
-		`chat/${chatId}/messageData/${messageRef.id}/${
+		`chats/${chatId}/messageData/${messageRef.id}/${
 			fileId + '.' + fileData.name.split('.').slice(1).join('.')
 		}`
 	);
@@ -345,7 +343,7 @@ const uploadThumb = async <T extends MessageAttachment['thumbnail']>(
 			const { fileData, id, thumbnail } = attach;
 			const thumbRef = storageRef(
 				storage,
-				`chat/${chatId}/messageData/${messageId}/${
+				`chats/${chatId}/messageData/${messageId}/${
 					id + '_thumb.' + fileData.name.split('.').slice(1).join('.')
 				}`
 			);

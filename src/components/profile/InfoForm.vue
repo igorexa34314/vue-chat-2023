@@ -10,7 +10,7 @@
 				:color="index === 0 ? 'blue-darken-3' : 'red-darken-3'" class="mr-2" />
 		</v-radio-group>
 
-		<birthdayPicker v-model="<Date>formState.birthday_date" class="birthday-picker mt-5" />
+		<birthday-picker v-model="<Date>formState.birthday_date" class="birthday-picker mt-5" />
 
 		<div class="w-50 mt-5">
 			<v-card variant="outlined" max-width="250" class="mb-5" elevation="9">
@@ -34,10 +34,10 @@
 
 <script setup lang="ts">
 import ImageLoader from '@/components/chat/ImageLoader.vue';
-import birthdayPicker from '@/components/UI/birthdayPicker.vue';
+import BirthdayPicker from '@/components/UI/BirthdayPicker.vue';
 import validations from '@/utils/validations';
 import { ref } from 'vue';
-import { defaultAvatar } from '@/utils/globals';
+import { defaultAvatar } from '@/globals';
 import { UserInfo } from '@/types/db/UserdataTable';
 import { VForm } from 'vuetify/components';
 
@@ -50,8 +50,9 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-	(e: 'submit', data: ProfileForm): void
+	submit: [data: ProfileForm]
 }>();
+
 const formEl = ref<VForm>();
 const formState = ref<ProfileForm>({ ...props.uinfo });
 
@@ -74,4 +75,4 @@ const submitForm = async () => {
 .birthday-picker {
 	max-width: 550px;
 }
-</style>
+</style>@/globals

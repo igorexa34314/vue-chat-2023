@@ -8,12 +8,12 @@
 				<div v-if="loading"><page-loader /></div>
 				<v-infinite-scroll v-else-if="messages && messages.length" :side="scrollSide || 'start'" @load="onLoad"
 					ref="srollEl" tag="div" class="scrollable d-flex px-4">
-					<div class="messages-field d-flex flex-column justify-end">
+					<div class="messages-field d-flex flex-column justify-end px-3">
 						<TransitionGroup :css="false" @before-enter="onBeforeEnter" @enter="onEnter" @leave="onLeave">
 							<MessageItem v-for="m in messages" :key="m.id" :self="uid === m.sender.id" :type="m.type"
 								:content="m.content" :sender="m.sender" :created_at="<Date>m.created_at"
 								@contextmenu="(e: MouseEvent) => openCtxMenu(e, { mId: m.id, mType: m.type })"
-								:id="`message-${m.id}`" :data-message-id="m.id" class="message-item"
+								:id="`message-${m.id}`" :data-message-id="m.id" class="message-item px-4 py-2"
 								@open-in-overlay="openInOverlay" @dragstart.prevent @drop.prevent draggable="false" />
 						</TransitionGroup>
 
@@ -32,15 +32,17 @@
 			</div>
 			<MessageForm class="message-form pb-4 pt-2 px-6" ref="msgForm" @create-message="createMessage"
 				@update-message="updateMessage" @scroll-to-message="scrollToAndHighlightMessage" />
+
 			<v-fade-transition>
 				<v-btn v-if="srollEl && srollEl?.$el.scrollHeight > srollEl?.$el.clientHeight && !isScrollOnBottom"
-					class="fixed-button-scrolldown" color="blue-grey-darken-1" :icon="mdiArrowDown" size="large"
+					class="fixed-button-scrolldown" color="blue-grey-darken-1" :icon="mdiArrowDown" size="default"
 					@click="scrollBottom('smooth')" />
 			</v-fade-transition>
+
 		</div>
 		<!-- <v-dialog v-model="attachDialog" width="auto" ref="dropZone">
 			<v-card minHeight="80vh" minWidth="80vh" class="bg-blue-accent-1 d-flex flex-column align-center justify-center"
-				style="position: reactive; left: 25%">
+				style="position: relative; left: 25%">
 				<div class="attach-frame text-h4 ma-6 font-weight-bold">
 					Прикрепите файлы
 				</div>
@@ -63,7 +65,7 @@ import { useMessagesStore, Message } from '@/stores/messages';
 import { useCurrentUser } from 'vuefire';
 import { getChatInfoById, ChatInfo } from '@/services/chat';
 import { createMessage as createDBMessage, updateMessageContent as updateDBMessageContent } from '@/services/message';
-import { ref, reactive, computed, onUnmounted, nextTick, watchEffect, toRef } from 'vue';
+import { ref, computed, onUnmounted, nextTick, watchEffect, toRef } from 'vue';
 import { useMeta } from 'vue-meta';
 import { useRoute } from 'vue-router';
 import { useChatScroll } from '@/composables/useChatScroll';
@@ -168,26 +170,23 @@ const updateMessage = async ({ id, type, content }: EditMessageData) => {
 };
 
 // Context menu on message right click
-const msgCtxMenu = reactive({
+const msgCtxMenu = ref({
 	show: false,
 	contentType: 'text' as Message['type'],
 	position: { x: 0, y: 0 },
 	activeMessage: '' as Message['id']
 });
 const openCtxMenu = (e: MouseEvent, { mId, mType }: { mId: Message['id']; mType?: Message['type'] }) => {
-	msgCtxMenu.activeMessage = mId;
-	const highlighter = gsap.utils.selector(`#message-${msgCtxMenu.activeMessage}`)('span.highlighter');
+	const highlighter = gsap.utils.selector(`#message-${mId}`)('span.highlighter');
 	gsap.set(highlighter, {
 		autoAlpha: 0.2,
 	});
-	msgCtxMenu.show = false;
-	msgCtxMenu.position.x = e.clientX;
-	msgCtxMenu.position.y = e.clientY;
-	msgCtxMenu.contentType = mType || 'text';
-	nextTick().then(() => msgCtxMenu.show = true);
+	msgCtxMenu.value = { show: false, activeMessage: mId, position: { x: e.clientX, y: e.clientY }, contentType: mType || 'text' };
+	nextTick().then(() => msgCtxMenu.value.show = true);
 };
+
 const ctxMenuClosed = () => {
-	const highlighter = gsap.utils.selector(`#message-${msgCtxMenu.activeMessage}`)('span.highlighter');
+	const highlighter = gsap.utils.selector(`#message-${msgCtxMenu.value.activeMessage}`)('span.highlighter');
 	gsap.set(highlighter, {
 		autoAlpha: 0,
 	});
@@ -198,13 +197,12 @@ onUnmounted(() => {
 	resetMsgStore();
 });
 const getAllMedia = computed(() => messages.value.filter(m => m.type !== 'text').flatMap(m => m.content.attachments.filter(f => f.raw?.previewURL)));
-const overlayState = reactive({
+const overlayState = ref({
 	show: false,
 	currentImage: 0,
 });
 const openInOverlay = (imgId: ImageWithPreviewURL['id']) => {
-	overlayState.currentImage = getAllMedia.value?.findIndex(img => img.id == imgId);
-	overlayState.show = true;
+	overlayState.value = { show: true, currentImage: getAllMedia.value?.findIndex(img => img.id == imgId) };
 }
 const overlayClosed = () => { };
 
@@ -219,7 +217,7 @@ const copySelectedText = async () => {
 };
 const copyTextMessage = async () => {
 	try {
-		const msgText = messages.value.find(m => m.type === 'text' && m.id === msgCtxMenu.activeMessage)?.content.text.trim() || '';
+		const msgText = messages.value.find(m => m.type === 'text' && m.id === msgCtxMenu.value.activeMessage)?.content.text.trim() || '';
 		await navigator.clipboard.writeText(msgText);
 		showMessage('Copied to clipboard', 'deep-purple-accent-3', 2000);
 	} catch (e) {
@@ -229,7 +227,7 @@ const copyTextMessage = async () => {
 };
 const copyImage = async () => {
 	try {
-		const imageToCopy = messages.value.find(m => m.id === msgCtxMenu.activeMessage)?.content.attachments[0].raw.previewURL || '';
+		const imageToCopy = messages.value.find(m => m.id === msgCtxMenu.value.activeMessage)?.content.attachments[0].raw.previewURL || '';
 		await copyImageToClipboard(imageToCopy);
 		showMessage('Copied to clipboard', 'deep-purple-accent-3', 2000);
 	} catch (e) {
@@ -239,7 +237,7 @@ const copyImage = async () => {
 };
 const downloadFile = async () => {
 	try {
-		const fileToDownLoad = messages.value.find(m => m.id === msgCtxMenu.activeMessage)?.content.attachments[0];
+		const fileToDownLoad = messages.value.find(m => m.id === msgCtxMenu.value.activeMessage)?.content.attachments[0];
 		if (fileToDownLoad) {
 			await downloadFileProcess(fileToDownLoad);
 		}
@@ -250,7 +248,7 @@ const downloadFile = async () => {
 };
 const msgForm = ref<InstanceType<typeof MessageForm>>();
 const editMessage = () => {
-	const messageToEdit = messages.value.find(m => m.id === msgCtxMenu.activeMessage);
+	const messageToEdit = messages.value.find(m => m.id === msgCtxMenu.value.activeMessage);
 	if (messageToEdit) {
 		msgForm.value?.editMessage(messageToEdit);
 	}
@@ -309,7 +307,6 @@ const onLeave = (el: Element, done: () => void) => {
 		--v-scroll-bg: rgba(255, 255, 255, 0.2);
 	}
 }
-
 @import "@/assets/styles/scroll";
 
 .container {
@@ -327,21 +324,23 @@ const onLeave = (el: Element, done: () => void) => {
 	z-index: 1;
 }
 .scrollable {
+	width: 100%;
 	position: absolute;
 	max-height: 100%;
 	height: auto;
 	flex: 1 1 auto;
+	overflow-y: overlay;
 	overflow-y: auto;
 	overflow-x: hidden;
 	inset: 0;
 }
-.message-form {
+:global(.message-form) {
 	width: 100%;
 	flex: 0 0 auto;
 	margin-left: auto;
 	margin-right: auto;
 	display: flex;
-	max-width: 1280px;
+	max-width: 1080px;
 	transition: height 0.2s ease-in 0s;
 }
 .messages-field {
@@ -368,8 +367,8 @@ const onLeave = (el: Element, done: () => void) => {
 .fixed-button-scrolldown {
 	position: absolute;
 	transform: translate(-50%, -100%);
-	bottom: 40px;
-	right: 0%;
+	bottom: 2rem;
+	right: 0;
 	z-index: 100;
 }
 </style>

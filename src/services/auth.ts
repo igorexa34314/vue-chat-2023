@@ -1,7 +1,15 @@
-import { getAuth, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import {
+	getAuth,
+	signOut,
+	createUserWithEmailAndPassword,
+	signInWithEmailAndPassword,
+	updateProfile,
+	signInWithPopup,
+	GoogleAuthProvider
+} from 'firebase/auth';
 import { getStorage, ref, getDownloadURL } from 'firebase/storage';
 import { getCurrentUser } from 'vuefire';
-import { createUser } from '@/services/userdata';
+import { createUser } from '@/services/user';
 import { fbErrorHandler } from '@/services/errorHandler';
 import { User as FirebaseUser } from 'firebase/auth';
 

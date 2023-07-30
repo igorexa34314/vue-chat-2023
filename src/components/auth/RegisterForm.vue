@@ -16,7 +16,7 @@
 
 				<v-checkbox v-model="formState.agreeTerms" :rules="validations.terms" required density="compact" class="mt-3">
 					<template #label>
-						<div class="">Согласен с <router-link to="" target="_blank">правилами</router-link></div>
+						<div class="">Согласен с <a href="https://uml.ua/pro-licej/himn/" target="_blank">правилами</a></div>
 					</template>
 				</v-checkbox>
 
@@ -36,21 +36,21 @@
 </template>
 
 <script setup lang="ts">
-import passField from '@/components/UI/passField.vue';
+import PassField from '@/components/UI/PassField.vue';
 import validations from '@/utils/validations';
 import messages from '@/utils/messages.json';
-import { reactive, ref } from 'vue';
+import { ref } from 'vue';
 import { registerWithEmail, signInWithGoogle } from '@/services/auth';
 import { useRouter } from 'vue-router';
 import { useSnackbarStore } from '@/stores/snackbar';
-import { googleImg } from '@/utils/globals';
+import { googleImg } from '@/globals';
 import { VForm } from 'vuetify/components';
 
 const { push } = useRouter();
 const { showMessage } = useSnackbarStore();
 
 const formEl = ref<VForm>();
-const formState = reactive({
+const formState = ref({
 	displayName: '',
 	password: '',
 	email: '',
@@ -60,12 +60,9 @@ const formState = reactive({
 const submitForm = async () => {
 	const valid = (await formEl.value?.validate())?.valid;
 	if (valid) {
+		const { agreeTerms, ...formData } = formState.value
 		try {
-			await registerWithEmail({
-				displayName: formState.displayName,
-				email: formState.email,
-				password: formState.password
-			});
+			await registerWithEmail(formData);
 			push('/profile');
 		} catch (e) {
 			showMessage(messages[e as keyof typeof messages] || e as string, 'red-darken-3', 2000);
@@ -88,4 +85,4 @@ const signWithGoogle = async () => {
 	left: 100%;
 	transform: translate(-110%);
 }
-</style>
+</style>@/globals

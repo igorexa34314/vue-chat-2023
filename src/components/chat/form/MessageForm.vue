@@ -1,74 +1,77 @@
 <template>
-	<div>
-		<div class="message-form d-flex flex-row align-end flex-fill">
-			<div class="message-textarea">
-				<v-slide-y-reverse-transition>
-					<MessageReply v-model="showReply" :m-type="msgToEditState.type" :content="msgToEditState.content"
-						class="reply-wrapper" @go-to-message="emit('scrollToMessage', msgToEditState.id)" />
-				</v-slide-y-reverse-transition>
-				<v-textarea v-model.trim="textareaValue" variant="solo" hide-details @keyup.enter="createMessage('text')"
-					placeholder="Ваше сообщение" rows="1" max-rows="10" auto-grow focused @paste="onInputPasted">
-					<template #append-inner>
-						<AttachMenu ref="attachMenuEl" @attach-file="attachFiles">
-							<template #activator="{ props }">
-								<div class="attach-btn ml-4">
-									<v-icon v-bind="props" :icon="mdiAttachment" size="large" class="attach-icon"
-										v-ripple="false" />
-								</div>
-							</template>
-						</AttachMenu>
-					</template>
-				</v-textarea>
-			</div>
-			<v-btn :icon="msgToEditState.isEditing ? mdiCheck : mdiSend"
-				:label="msgToEditState.isEditing ? 'Подтвердить' : 'Отправить'" class="ml-3 mb-1" @click="submitHandler" />
+	<div class="message-form d-flex flex-row align-end" v-bind="$attrs">
+		<div class="message-textarea">
+			<MessageReply v-model="showReply" :m-type="msgToEditState.type" :content="msgToEditState.content"
+				class="reply-wrapper" @go-to-message="emit('scrollToMessage', msgToEditState.id)" />
+			<v-textarea v-model.trim="textareaValue" variant="solo" hide-details @keyup.enter="createMessage('text')"
+				placeholder="Ваше сообщение" rows="1" max-rows="10" auto-grow focused @paste="onInputPasted">
+				<template #append-inner>
+					<AttachMenu ref="attachMenuEl" @attach-file="attachFiles">
+						<template #activator="{ props }">
+							<div class="attach-btn ml-4">
+								<v-icon v-bind="props" :icon="mdiAttachment" size="large" class="attach-icon" v-ripple="false" />
+							</div>
+						</template>
+					</AttachMenu>
+				</template>
+			</v-textarea>
 		</div>
-		<AttachDialog v-model="attachDialogState.show" v-model:subtitleText="messageState.text"
-			:contentType="attachDialogState.contentType" :fileList="messageState.attachedFiles" @submit="createMessage"
-			@close="closeDialog" @add-more-files="attachFiles" @change-content-type="changeContentType" />
+		<v-btn :icon="msgToEditState.isEditing ? mdiCheck : mdiSend"
+			:label="msgToEditState.isEditing ? 'Подтвердить' : 'Отправить'" class="ml-3 mb-1" @click="submitHandler">
+
+		</v-btn>
 	</div>
+	<AttachDialog v-model="attachDialogState.show" v-model:subtitleText="messageState.text"
+		:contentType="attachDialogState.contentType" :fileList="messageState.attachedFiles" @submit="createMessage"
+		@close="closeDialog" @add-more-files="attachFiles" @change-content-type="changeContentType" />
 </template>
 
 <script setup lang="ts">
 import { mdiAttachment, mdiSend, mdiCheck } from '@mdi/js';
 import MessageReply from './MessageReply.vue';
-import AttachMenu from '@/components/chat/form/attach/AttachMenu.vue';
-import AttachDialog, { AttachDialogProps, AttachedContent } from '@/components/chat/form/attach/AttachDialog.vue';
+import AttachMenu from '@/components/chat/attach/AttachMenu.vue';
+import AttachDialog, { AttachDialogProps, AttachedContent } from '@/components/chat/attach/AttachDialog.vue';
 import { useSnackbarStore } from '@/stores/snackbar';
-import { reactive, computed, watchEffect } from 'vue';
+import { ref, computed, watchEffect } from 'vue';
 import { v4 as uuidv4 } from 'uuid';
 import { AttachFormContent } from '@/services/message';
 import { Message } from '@/stores/messages';
 import { MessageContent } from '@/types/db/MessagesTable';
 
 export type EditMessageData = Pick<Message, 'id' | 'type' | Partial<'content'>>;
-interface messageForm extends Omit<MessageContent, 'attachments'> {
+interface MessageForm extends Omit<MessageContent, 'attachments'> {
 	attachedFiles: AttachDialogProps['fileList']
 };
 
-const { showMessage } = useSnackbarStore();
 const emit = defineEmits<{
-	(e: 'createMessage', msgType: Message['type'], msgContent: Partial<AttachFormContent>): void;
-	(e: 'updateMessage', mData: EditMessageData): void;
-	(e: 'scrollToMessage', mId: Message['id']): void;
+	createMessage: [msgType: Message['type'], msgContent: Partial<AttachFormContent>],
+	updateMessage: [mData: EditMessageData],
+	scrollToMessage: [mId: Message['id']],
 }>();
-const messageState: messageForm = reactive({
+
+defineOptions({
+	inheritAttrs: false,
+});
+
+const { showMessage } = useSnackbarStore();
+
+const messageState = ref<MessageForm>({
 	text: '',
 	attachedFiles: [],
 });
 
-const attachDialogState = reactive({
+const attachDialogState = ref({
 	show: false,
 	contentType: 'file' as Exclude<Message['type'], 'text'>,
 });
 
 const textareaValue = computed({
-	get: () => !attachDialogState.show ? messageState.text : '',
-	set: (val: string) => messageState.text = val,
+	get: () => !attachDialogState.value.show ? messageState.value.text : '',
+	set: (val: string) => messageState.value.text = val,
 });
 
 const submitHandler = () => {
-	if (msgToEditState.isEditing) {
+	if (msgToEditState.value.isEditing) {
 		updateMessage();
 	}
 	else {
@@ -76,21 +79,20 @@ const submitHandler = () => {
 	}
 }
 const createMessage = (type: Message['type'] = 'text', attachData?: AttachedContent) => {
-	if (messageState.text || attachData) {
+	if (messageState.value.text || attachData) {
 		emit('createMessage', type, {
-			text: messageState.text,
+			text: messageState.value.text,
 			attachments: attachData
 		} as AttachFormContent);
-		messageState.text = '';
-		messageState.attachedFiles = [];
-		msgToEditState.isEditing = false;
+		messageState.value = { text: '', attachedFiles: [] };
+		msgToEditState.value.isEditing = false;
 	}
 };
 
 const attachFiles = async (type: Exclude<Message['type'], 'text'>, fileList: FileList) => {
 	if (!fileList?.length)
 		return;
-	if (fileList.length > 10 || messageState.attachedFiles.length > 10) {
+	if (fileList.length > 10 || messageState.value.attachedFiles.length > 10) {
 		showMessage('Нельзя отправлять более 10 файлов в одном сообщении', 'red-darken-3', 2500);
 		return;
 	}
@@ -100,18 +102,18 @@ const attachFiles = async (type: Exclude<Message['type'], 'text'>, fileList: Fil
 	}
 	if (type === 'media' && files.length) {
 		files = files.filter(f => f.type.startsWith('image/') || f.type.startsWith('video/'))
-		attachDialogState.contentType = 'media';
+		attachDialogState.value.contentType = 'media';
 	}
-	else if (type === 'file') attachDialogState.contentType = 'file';
-	messageState.attachedFiles = files.map(f => ({ id: uuidv4(), fileData: f }));
-	attachDialogState.show = true;
+	else if (type === 'file') attachDialogState.value.contentType = 'file';
+	messageState.value.attachedFiles = files.map(f => ({ id: uuidv4(), fileData: f }));
+	attachDialogState.value.show = true;
 };
 const changeContentType = () => {
-	if (attachDialogState.contentType === 'media') {
-		attachDialogState.contentType = 'file';
+	if (attachDialogState.value.contentType === 'media') {
+		attachDialogState.value.contentType = 'file';
 	}
-	else if (attachDialogState.contentType === 'file' && messageState.attachedFiles.every(({ fileData }) => fileData.type.startsWith('image/'))) {
-		attachDialogState.contentType = 'media';
+	else if (attachDialogState.value.contentType === 'file' && messageState.value.attachedFiles.every(({ fileData }) => fileData.type.startsWith('image/'))) {
+		attachDialogState.value.contentType = 'media';
 	}
 };
 const onInputPasted = (e: ClipboardEvent) => {
@@ -125,40 +127,36 @@ const onInputPasted = (e: ClipboardEvent) => {
 		}
 	}
 };
-const msgToEditState = reactive({
+const msgToEditState = ref({
 	isEditing: false,
 	id: '' as Message['id'],
 	type: '' as Message['type'],
 	content: null as Message['content'] | null,
 });
 watchEffect(() => {
-	if (!msgToEditState.isEditing) {
-		msgToEditState.id = '';
-		msgToEditState.content = null;
-		messageState.text = '';
+	if (!msgToEditState.value.isEditing) {
+		msgToEditState.value = { ...msgToEditState.value, id: '', content: null };
+		messageState.value.text = '';
 	}
 });
 
 const editMessage = ({ id, type, content }: EditMessageData) => {
-	msgToEditState.id = id;
-	msgToEditState.type = type;
-	msgToEditState.content = content;
-	messageState.text = content.text;
-	msgToEditState.isEditing = true;
+	messageState.value.text = content.text;
+	msgToEditState.value = { id, type, content, isEditing: true };
 };
 const updateMessage = () => {
-	if (messageState.text && msgToEditState.id) {
-		const { id, type } = msgToEditState;
-		emit('updateMessage', { id, type, content: { text: messageState.text } } as EditMessageData);
-		msgToEditState.isEditing = false;
+	if (messageState.value.text && msgToEditState.value.id) {
+		const { id, type } = msgToEditState.value;
+		emit('updateMessage', { id, type, content: { text: messageState.value.text } } as EditMessageData);
+		msgToEditState.value.isEditing = false;
 	}
 };
 const showReply = computed({
-	get: () => msgToEditState.isEditing,
-	set: (val: boolean) => msgToEditState.isEditing = val,
+	get: () => msgToEditState.value.isEditing,
+	set: (val: boolean) => msgToEditState.value.isEditing = val,
 });
 const closeDialog = () => {
-	messageState.attachedFiles = [];
+	messageState.value.attachedFiles = [];
 };
 defineExpose({
 	editMessage
@@ -166,16 +164,16 @@ defineExpose({
 </script>
 
 <style lang="scss" scoped>
+.message-form {
+	position: relative;
+}
 .message-textarea {
 	position: relative;
 	flex: 1 1 auto;
 }
 .reply-wrapper {
 	position: relative;
-	left: 0;
-	right: 0;
-	top: 0;
-	z-index: 0;
+	top: 2px;
 }
 .attach-btn {
 	position: relative;

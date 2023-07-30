@@ -1,13 +1,13 @@
 <template>
-   <v-card v-if="image" class="image__wrapper" variant="text"
-      @click="image.raw?.previewURL || image.raw?.downloadURL ? emit('open') : undefined" width="100%" :height="height"
-      :max-height="maxHeight" :rounded="rounded" v-ripple="false">
+   <v-card v-if="image" class="image__wrapper" variant="text" :width="width || calcImageSize.w" @click="openImageFullsize"
+      :max-height="maxHeight" :rounded="rounded" v-ripple="false" height="100%">
       <!-- <canvas></canvas> -->
       <v-img :lazy-src="image.thumbnail" :src="image.raw?.previewURL || image.raw?.downloadURL"
-         :alt="alt || image.fullname" :width="image.raw.sizes?.w" eager @load="imageLoaded" cover draggable="false">
+         :alt="alt || image.fullname" width="100%" eager @load="imageLoaded" cover draggable="false"
+         :aspect-ratio="aspectRatio || (image.raw.sizes!.w / image.raw.sizes!.h)" :height="height || calcImageSize.h">
          <template #placeholder>
             <ImageLoader v-bind="loader" :model-value="getUploadingStateById(image.id)?.progress"
-               @cancel="cancelImageLoading(image?.id as string)" />
+               @cancel="cancelImageLoading(image.id)" />
          </template>
       </v-img>
    </v-card>
@@ -22,24 +22,28 @@ import { useLoadingStore } from '@/stores/loading';
 import { useMessagesStore } from '@/stores/messages';
 import { VImg, VCard } from 'vuetify/components';
 import { MessageContentWithPreview } from '@/stores/messages';
+import { computed } from 'vue';
+import { maxMessageMedia } from '@/globals';
 
 export type ImageWithPreviewURL = MessageContentWithPreview['attachments'][number];
 
 const props = withDefaults(defineProps<{
    image: ImageWithPreviewURL;
+   width?: string | number | VCard['width'],
    maxHeight?: string | number | VCard['maxHeight'];
    height?: string | number | VCard['height'];
    rounded?: string | number | boolean | VCard['rounded'];
    loader?: InstanceType<typeof ImageLoader>['$props'];
    alt?: string | VImg['alt'];
+   aspectRatio?: VImg['aspectRatio'];
 }>(), {
-   maxHeight: '280px',
+   maxHeight: maxMessageMedia.h,
    height: 'auto',
-   rounded: 0
+   rounded: 0,
 })
 const emit = defineEmits<{
-   (e: 'open'): void;
-   (e: 'loaded'): void;
+   open: [],
+   loaded: []
 }>();
 const { setAttachPreviewURL } = useMessagesStore();
 const { getUploadingStateById } = storeToRefs(useLoadingStore());
@@ -55,9 +59,23 @@ const cancelImageLoading = (imgId: string) => {
    getUploadingStateById.value(imgId)?.task.cancel();
 };
 
+const calcImageSize = computed(() => {
+   const { w, h } = props.image.raw.sizes!;
+   const ar = w / h;
+   if (w > maxMessageMedia.w || h > maxMessageMedia.h) {
+      return w > h ? { w: maxMessageMedia.w, h: maxMessageMedia.w / ar } : { h: maxMessageMedia.h, w: maxMessageMedia.h * ar }
+   }
+   else return { w, h }
+});
+
 const imageLoaded = () => {
    if (props.image.raw.previewURL) {
       emit('loaded');
+   }
+};
+const openImageFullsize = () => {
+   if (props.image.raw?.previewURL || props.image.raw?.downloadURL) {
+      emit('open');
    }
 };
 onUnmounted(() => {

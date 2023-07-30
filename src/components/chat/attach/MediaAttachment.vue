@@ -14,17 +14,18 @@
 </template>
 
 <script setup lang="ts">
-// import FileAttachment from '@/components/chat/form/attach/FileAttachment.vue';
-import PreviewImage from '@/components/chat/form/attach/PreviewImage.vue';
+// import FileAttachment from '@/components/chat/attach/FileAttachment.vue';
+import PreviewImage from '@/components/chat/attach/PreviewImage.vue';
 import { ref, computed } from 'vue';
 import { calcImageCols as calcCols } from '@/utils/images';
-import { AttachedContent } from '@/components/chat/form/attach/AttachDialog.vue';
+import { AttachedContent } from '@/components/chat/attach/AttachDialog.vue';
 
 const props = defineProps<{
 	files: AttachedContent
 }>();
+
 const emit = defineEmits<{
-	(e: 'deleteAttach', imgId: AttachedContent[number]['id']): void
+	deleteAttach: [imgId: AttachedContent[number]['id']]
 }>();
 
 const mediaFiles = computed(() => props.files.filter(file => file.fileData.type.startsWith('image/')));
@@ -35,7 +36,7 @@ const calcImageCols = computed(() => (imgIdx: number) => calcCols(mediaFiles.val
 defineExpose({ isImgsReady });
 </script>
 
-<style scoped lang="scss">
+<style lang="scss" scoped>
 .images-grid {
 	padding: 0.7em 0.2em 0.5em 0;
 	width: 100%;

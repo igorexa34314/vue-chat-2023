@@ -7,10 +7,9 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, computed, watch } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { VSelect } from 'vuetify/components';
 import { useI18n, DateTimeOptions } from 'vue-i18n';
-
 
 const monthsForLocales = (monthFormat: DateTimeOptions['month'] = 'long') => {
 	const { d } = useI18n({ inheritLocale: true, useScope: 'global' });
@@ -33,7 +32,7 @@ const props = withDefaults(defineProps<{
 	density: 'compact'
 });
 const emit = defineEmits<{
-	(e: 'update:modelValue', date: Date): void;
+	'update:modelValue': [date: Date]
 }>();
 
 const datePickerDateItems = computed(() => ([
@@ -42,7 +41,7 @@ const datePickerDateItems = computed(() => ([
 	{ type: 'year', title: 'Год', items: Array.from({ length: new Date().getFullYear() - +props.fromYear }, (v, i) => (+props.fromYear - 1) + i).reverse(), order: 3 },
 ]));
 
-const datePickerState = reactive({
+const datePickerState = ref({
 	month: props.modelValue.getMonth() + 1,
 	day: props.modelValue.getDate(),
 	year: props.modelValue.getFullYear(),

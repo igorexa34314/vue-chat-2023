@@ -57,9 +57,9 @@ const props = withDefaults(defineProps<OverlayProps>(), {
 	currentItem: 0,
 });
 const emit = defineEmits<{
-	(e: 'update:modelValue', val: boolean): void;
-	(e: 'update:currentItem', val: number): void;
-	(e: 'close'): void;
+	'update:modelValue': [val: boolean],
+	'update:currentItem': [val: number],
+	close: []
 }>();
 
 const showOverlay = useVModel(props, 'modelValue', emit);

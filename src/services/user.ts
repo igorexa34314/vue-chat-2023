@@ -17,7 +17,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { fbErrorHandler as errorHandler } from '@/services/errorHandler';
 import { UserData, UserInfo } from '@/types/db/UserdataTable';
 
-const usersCol = collection(db, 'userdata');
+const usersCol = collection(db, 'users');
 export const getUserRef = (uid: UserInfo['uid'] | undefined) => doc(usersCol, uid);
 
 export const createUser = async ({
@@ -59,7 +59,7 @@ export const updateUserAvatar = async (avatar: File | File[]) => {
 		if (avatar instanceof File) {
 			const avatarRef = storageRef(
 				storage,
-				`userdata/${await getUid()}/avatar/${uuidv4() + '.' + avatar.name.split('.').at(-1)}`
+				`users/${await getUid()}/avatar/${uuidv4() + '.' + avatar.name.split('.').at(-1)}`
 			);
 			await uploadBytes(avatarRef, avatar, {
 				contentType: avatar.type
@@ -121,7 +121,7 @@ export const getUserdataById = async (uid: UserInfo['uid']) => {
 export const addToFriend = async (uid: UserInfo['uid']) => {
 	try {
 		await updateDoc(getUserRef(await getUid()), {
-			friendsUid: arrayUnion(uid)
+			friends: arrayUnion(uid)
 		});
 	} catch (e) {
 		errorHandler(e);

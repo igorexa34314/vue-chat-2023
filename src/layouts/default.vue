@@ -14,24 +14,27 @@
 import AppNavbar from '@/components/app/AppNavbar.vue';
 import AppSidebar from '@/components/app/AppSidebar.vue';
 import { ref, onUnmounted, provide } from 'vue';
-import { fetchAuthUserdata } from '@/services/userdata';
+import { fetchAuthUserdata } from '@/services/user';
 import { useAsyncState } from '@vueuse/core';
 import { globalLoadingKey } from '@/injection-keys';
+import { useUserdataStore } from '@/stores/userdata';
 
 const drawer = ref(true);
 
 // Fetching all auth userdata
 const { state: unsub, isLoading } = useAsyncState(fetchAuthUserdata, undefined, {});
+const { $reset } = useUserdataStore();
 
 provide(globalLoadingKey, isLoading);
 
-// Unsubscribe from receiving userdata realtime firebase
-onUnmounted(() => unsub.value?.());
+// Unsubscribe from receiving userdata realtime firebase and reseting store
+onUnmounted(() => {
+	unsub.value?.();
+	$reset();
+});
 </script>
-
-<style lang="scss" scoped></style>
 
 <route lang="yaml">
 meta:
   requiresAuth: true 
-</route>
+</route>@/services/user

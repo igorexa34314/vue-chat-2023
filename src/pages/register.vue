@@ -5,13 +5,11 @@
 </template>
 
 <script setup lang="ts">
-import RegisterForm from '@/components/RegisterForm.vue';
+import RegisterForm from '@/components/auth/RegisterForm.vue';
 import { useMeta } from 'vue-meta'
 
 useMeta({ title: 'Регистрация' });
 </script>
-
-<style lang="scss" scoped></style>
 
 <route lang="yaml">
 meta:

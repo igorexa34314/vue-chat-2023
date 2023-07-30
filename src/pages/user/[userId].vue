@@ -43,13 +43,13 @@
 import { mdiHelp, mdiGenderMale, mdiGenderFemale, mdiMessageText, mdiAccountPlusOutline } from '@mdi/js';
 import messages from '@/utils/messages.json';
 import { computed, toRef } from 'vue';
-import { getUserdataById, addToFriend as addFriend } from '@/services/userdata';
+import { getUserdataById, addToFriend as addFriend } from '@/services/user';
 import { useRoute, useRouter } from 'vue-router';
 import { getUid } from '@/services/auth';
 import { joinPrivateChat } from '@/services/chat';
 import { useMeta } from 'vue-meta';
 import { useSnackbarStore } from '@/stores/snackbar';
-import { defaultAvatar } from '@/utils/globals';
+import { defaultAvatar } from '@/globals';
 
 const { showMessage } = useSnackbarStore();
 const route = useRoute();
@@ -81,3 +81,4 @@ const addToFriend = async () => {
 	}
 }
 </script>
+@/globals@/services/user

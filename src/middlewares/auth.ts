@@ -6,7 +6,7 @@ export const checkAuth = async (
 	from: RouteLocationNormalized,
 	next: NavigationGuardNext
 ) => {
-	if (to.meta.auth) {
+	if (to.meta.auth || to.meta.requiresAuth) {
 		const currentUser = await getCurrentUser();
 		if (!currentUser) {
 			return next({

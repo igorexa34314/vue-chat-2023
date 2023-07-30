@@ -1,19 +1,19 @@
 <template>
-	<div :class="{ self }" class="message d-flex px-6 py-2" @contextmenu.prevent="emit('contextmenu', $event)">
+	<div :class="{ self }" class="message d-flex" @contextmenu.prevent="emit('contextmenu', $event)">
 		<v-avatar size="30px" :image="sender.photoURL || defaultAvatar" :class="self ? 'ml-2' : 'mr-2'"
 			class="sender__avatar" @click="push({ name: 'user-userId', params: { userId: sender.id } })"
 			:title="sender.displayName" />
 
-		<v-card min-width="120px" max-width="850px" density="compact" class="message__card"
-			:class="self ? 'bg-light-blue-darken-3' : ''" variant="tonal">
+		<v-card min-width="120px" max-width="650px" density="compact" class="message__card"
+			:class="self ? 'self bg-light-blue-darken-3' : ''" variant="tonal">
 
 			<v-card-title v-if="type === 'text'" class="message__head d-flex flex-row align-center">
 				<small class="sender__name" @click="push({ name: 'user-userId', params: { userId: sender.id } })">
 					{{ sender.displayName }}</small>
 			</v-card-title>
 
-			<v-card-text class="message__content pb-1"
-				:class="type === 'file' ? 'pl-2 pt-2' : type === 'media' ? 'pl-4 pt-4' : ''">
+			<v-card-text class="message__content pb-1 pr-3"
+				:class="type === 'file' ? 'pl-2 pt-2' : type === 'media' ? 'pl-3 pt-3' : ''">
 
 				<component :is="messageComponent" v-bind="{ content }" :class="{ 'pr-3': type === 'file' }"
 					@openInOverlay="(imgId: ImageWithPreviewURL['id']) => emit('openInOverlay', imgId)" />
@@ -34,7 +34,7 @@ import TextMessage from '@/components/chat/messages/text/TextMessage.vue';
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { messagesDateFormat } from '@/utils/filters/messages';
-import { defaultAvatar } from '@/utils/globals';
+import { defaultAvatar } from '@/globals';
 import { ImageWithPreviewURL } from '@/components/chat/messages/media/ImageFrame.vue';
 import { Message } from '@/stores/messages';
 
@@ -51,8 +51,8 @@ const props = withDefaults(defineProps<MessageItemProps>(), {
 	active: false
 });
 const emit = defineEmits<{
-	(e: 'openInOverlay', imgId: ImageWithPreviewURL['id']): void;
-	(e: 'contextmenu', event: MouseEvent): void;
+	openInOverlay: [imgId: ImageWithPreviewURL['id']],
+	contextmenu: [event: MouseEvent]
 }>();
 const { push } = useRouter();
 const messageComponent = computed(() => props.type === 'media' ? MediaMessage : props.type === 'file' ? FileMessage : TextMessage);
@@ -74,11 +74,8 @@ const messageComponent = computed(() => props.type === 'media' ? MediaMessage : 
 		right: -25%;
 		z-index: -1;
 	}
-	&__card {
-		@media(max-width: 720px) {
-			max-height: 320px !important;
-		}
-	}
+	&.self {}
+	&__card {}
 	&__head {}
 	&__content {
 		line-height: 1.5;
@@ -124,4 +121,4 @@ const messageComponent = computed(() => props.type === 'media' ? MediaMessage : 
 }
 .close__btn {}
 .download__btn {}
-</style>
+</style>@/globals

@@ -1,13 +1,14 @@
 <template>
-	<div class="reply-wrapper" v-if="modelValue">
-		<v-alert variant="flat" color="grey-darken-4" density="compact">
+	<Transition :css="false" @before-enter="onBeforeEnter" @enter="onEnter" @leave="onLeave">
+		<v-alert v-show="modelValue" v-bind="$attrs" class="reply-wrapper py-2" color="grey-darken-4" density="compact"
+			variant="flat" rounded="0" elevation="0">
 			<template #prepend>
-				<v-icon :icon="mdiPencil" @click="emit('goToMessage')" />
+				<v-icon :icon="mdiPencil" />
 			</template>
 			<template #text>
-				<div class="reply-original d-flex align-center" @click="emit('goToMessage')">
+				<div class="reply-original d-flex align-center pa-2" @click="emit('goToMessage')">
 					<div class="reply-original-media" v-if="getImagesFromEditMsg && getImagesFromEditMsg.length">
-						<v-img :src="getImagesFromEditMsg.at(-1)" aspect-ratio="1" width="48px" />
+						<v-img :src="getImagesFromEditMsg.at(-1)" aspect-ratio="1" width="48px" height="100%" cover />
 					</div>
 					<div class="reply-original-content-wrapper">
 						<div class="reply-type">Редактирование</div>
@@ -21,24 +22,34 @@
 				<v-icon :icon="mdiClose" @click="cancelReply" />
 			</template>
 		</v-alert>
-	</div>
+	</Transition>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
 import { mdiPencil, mdiClose } from '@mdi/js';
 import { Message } from '@/stores/messages';
+import { gsap } from 'gsap';
 
-const props = defineProps<{
-	modelValue: boolean;
-	mType: Message['type']
+const props = withDefaults(defineProps<{
+	modelValue?: boolean;
+	mType?: Message['type']
 	content: Message['content'] | null;
-}>();
+}>(), {
+	modelValue: false,
+	mType: 'text'
+});
+
 const emit = defineEmits<{
-	(e: 'goToMessage'): void;
-	(e: 'update:modelValue', val: boolean): void;
-	(e: 'cancel'): void;
+	'update:modelValue': [val: boolean],
+	goToMessage: [],
+	cancel: []
 }>();
+
+defineOptions({
+	inheritAttrs: false,
+});
+
 const getTextFromEditMsg = computed(() => {
 	return props.mType === 'text' ?
 		props.content?.text :
@@ -52,20 +63,52 @@ const cancelReply = () => {
 	emit('update:modelValue', false);
 	emit('cancel');
 }
+
+const onBeforeEnter = (el: Element) => {
+	// 	gsap.set(el, { autoAlpha: 0 })
+}
+
+const onEnter = (el: Element, done: () => void) => {
+	gsap.from(el, {
+		height: 0,
+		duration: 0.2,
+		top: '2px',
+		ease: 'power2',
+		onComplete: done,
+	})
+}
+
+const onLeave = (el: Element, done: () => void) => {
+	gsap.to(el, {
+		height: 0,
+		duration: 0.2,
+		top: '2px',
+		ease: 'power2',
+		onComplete: done,
+	})
+}
 </script>
 
 <style lang="scss" scoped>
 .reply {
+	&-wrapper {
+		border-radius: 0.75rem 0.75rem 0 0 !important;
+	}
 	&-type {
 		color: #7E57C2;
 	}
 	&-original {
+		border-radius: 0.35rem;
+		cursor: pointer;
 		gap: 0.8em;
+		transition: background-color 0.05s ease-in-out 0s;
+		&:hover {
+			background-color: rgba(255, 255, 255, 0.2);
+		}
 		&-content-wrapper {
 			flex: 1 1 auto;
 			overflow: hidden;
 			text-overflow: ellipsis;
-
 		}
 		&-media {
 			flex: 0 0 48px;

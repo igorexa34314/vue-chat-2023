@@ -16,7 +16,7 @@
 import { mdiDelete } from '@mdi/js';
 import ImageLoader from '@/components/chat/ImageLoader.vue';
 import { ref } from 'vue';
-import { AttachedContent } from '@/components/chat/form/attach/AttachDialog.vue';
+import { AttachedContent } from '@/components/chat/attach/AttachDialog.vue';
 import { VImg } from 'vuetify/components';
 
 const props = withDefaults(defineProps<{
@@ -27,14 +27,17 @@ const props = withDefaults(defineProps<{
 	maxHeight: '300px',
 	imgRatio: 1,
 });
+
 const emit = defineEmits<{
-	(e: 'delete-item', itemId: string): void;
+	'delete-item': [itemId: string]
 }>();
+
 const imgEl = ref<VImg>();
+
 defineExpose({ imgEl });
 </script>
 
-<style scoped lang="scss">
+<style lang="scss" scoped>
 .delete-media-btn {
 	bottom: 0;
 	right: 0;

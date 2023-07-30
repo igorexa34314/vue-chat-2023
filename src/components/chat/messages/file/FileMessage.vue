@@ -1,6 +1,6 @@
 <template>
 	<div v-if="content.attachments.length" class="file-message__wrapper">
-		<p v-if="content.text.length" class="message__subtitle mb-3">{{ content.text }}</p>
+		<TextMessage v-if="content.text.length" v-bind="{ content }" class="message__subtitle mb-3" />
 		<div v-for="(file, index) in content.attachments" :key="file.id"
 			:class="{ 'mb-1': index !== (content.attachments.length - 1) }" class="d-flex align-center">
 			<v-hover #default="{ isHovering, props: hoverProps }">
@@ -17,6 +17,7 @@
 </template>
 
 <script setup lang="ts">
+import TextMessage from '@/components/chat/messages/text/TextMessage.vue';
 import FileExtension from '@/components/chat/messages/file/FileExtension.vue';
 import FilePreview from '@/components/chat/messages/file/FilePreview.vue';
 import { ref } from 'vue';
@@ -31,8 +32,8 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-	(e: 'openInOverlay', imgId: ImageWithPreviewURL['id']): void;
-	// (e: 'mediaLoaded', media: { id: ImageWithPreviewURL['id']; previewURL: ImageWithPreviewURL['raw']['previewURL'] }): void;
+	openInOverlay: [imgId: ImageWithPreviewURL['id']],
+	// mediaLoaded: [media: { id: ImageWithPreviewURL['id']; previewURL: ImageWithPreviewURL['raw']['previewURL'] }]
 }>();
 
 const isLoading = ref(false);

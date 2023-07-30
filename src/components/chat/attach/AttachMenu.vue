@@ -21,12 +21,8 @@
 import { mdiImage, mdiFileDocumentOutline } from '@mdi/js';
 import { Message } from '@/types/db/MessagesTable';
 
-const props = defineProps<{
-	class?: string;
-}>();
-
 const emit = defineEmits<{
-	(e: 'attach-file', type: Exclude<Message['type'], 'text'>, files: FileList): void
+	'attach-file': [type: Exclude<Message['type'], 'text'>, files: FileList]
 }>();
 
 interface AttachMenu {

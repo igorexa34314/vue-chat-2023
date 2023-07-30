@@ -21,7 +21,7 @@
 
 <script setup lang="ts">
 import { mdiEye, mdiEyeOff } from '@mdi/js';
-import { reactive } from 'vue';
+import { ref } from 'vue';
 import validations from '@/utils/validations';
 import { useVModel } from '@vueuse/core';
 
@@ -47,10 +47,10 @@ const props = withDefaults(defineProps<PassFieldProps>(), {
 	repeaterPlaceholder: 'Повторите пароль',
 });
 const emit = defineEmits<{
-	(e: 'update:modelValue', pass: Password): void
+	'update:modelValue': [pass: Password]
 }>();
 
-const passFieldState = reactive({
+const passFieldState = ref({
 	showPass: false,
 	showRepeater: false,
 });
@@ -58,9 +58,3 @@ const passFieldState = reactive({
 const password = useVModel(props, 'modelValue', emit)
 const repeaterRules = [(v: Password) => !!v || 'Повторите пароль', (v: Password) => (v && v === password.value) || 'Пароли должны совпадать'];
 </script>
-
-<script lang="ts">
-export default { name: 'pass-field' }
-</script>
-
-<style lang="scss" scoped></style>
