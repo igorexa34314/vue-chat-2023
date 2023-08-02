@@ -3,24 +3,21 @@
 		<div class="message-textarea">
 			<MessageReply v-model="showReply" :m-type="msgToEditState.type" :content="msgToEditState.content"
 				class="reply-wrapper" @go-to-message="emit('scrollToMessage', msgToEditState.id)" />
-			<v-textarea v-model.trim="textareaValue" variant="solo" hide-details @keyup.enter="createMessage('text')"
-				placeholder="Ваше сообщение" rows="1" max-rows="10" auto-grow focused @paste="onInputPasted">
-				<template #append-inner>
-					<AttachMenu ref="attachMenuEl" @attach-file="attachFiles">
-						<template #activator="{ props }">
-							<div class="attach-btn ml-4">
-								<v-icon v-bind="props" :icon="mdiAttachment" size="large" class="attach-icon" v-ripple="false" />
-							</div>
-						</template>
-					</AttachMenu>
-				</template>
+			
+				<v-textarea v-model.trim="textareaValue" variant="solo" hide-details @keyup.enter="createMessage('text')"
+				placeholder="Your message" rows="1" max-rows="10" auto-grow focused @paste="onInputPasted" #append-inner>
+				<AttachMenu ref="attachMenuEl" @attach-file="attachFiles" #activator="{ props }">
+					<div class="attach-btn ml-4">
+						<v-icon v-bind="props" :icon="mdiAttachment" size="large" class="attach-icon" v-ripple="false" />
+					</div>
+				</AttachMenu>
 			</v-textarea>
 		</div>
-		<v-btn :icon="msgToEditState.isEditing ? mdiCheck : mdiSend"
-			:label="msgToEditState.isEditing ? 'Подтвердить' : 'Отправить'" class="ml-3 mb-1" @click="submitHandler">
 
-		</v-btn>
+		<v-btn :icon="msgToEditState.isEditing ? mdiCheck : mdiSend" :label="msgToEditState.isEditing ? 'Submit' : 'Send'"
+			class="ml-3 mb-1" @click="submitHandler" />
 	</div>
+	
 	<AttachDialog v-model="attachDialogState.show" v-model:subtitleText="messageState.text"
 		:contentType="attachDialogState.contentType" :fileList="messageState.attachedFiles" @submit="createMessage"
 		@close="closeDialog" @add-more-files="attachFiles" @change-content-type="changeContentType" />
@@ -93,7 +90,7 @@ const attachFiles = async (type: Exclude<Message['type'], 'text'>, fileList: Fil
 	if (!fileList?.length)
 		return;
 	if (fileList.length > 10 || messageState.value.attachedFiles.length > 10) {
-		showMessage('Нельзя отправлять более 10 файлов в одном сообщении', 'red-darken-3', 2500);
+		showMessage('You can send only 10 files or less in one message ', 'red-darken-3', 2500);
 		return;
 	}
 	let files: File[] = [];

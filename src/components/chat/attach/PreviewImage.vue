@@ -1,10 +1,8 @@
 <template>
 	<v-card class="image-wrapper d-flex" height="100%" :max-height="maxHeight">
 		<v-img :aspect-ratio="imgRatio" ref="imgEl" :lazy-src="previewItem.thumbnail?.url" :src="previewItem.preview"
-			:alt="previewItem.fileData.name" cover eager>
-			<template #placeholder>
-				<ImageLoader />
-			</template>
+			:alt="previewItem.fileData.name" cover eager #placeholder>
+			<ImageLoader />
 		</v-img>
 		<v-btn color="white" variant="text" position="absolute" :icon="mdiDelete"
 			class="bg-blue-grey-darken-2 delete-media-btn" @click="emit('delete-item', previewItem.id)" density="comfortable"

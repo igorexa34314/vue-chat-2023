@@ -63,19 +63,19 @@ onMounted(() => {
 });
 const showMenu = useVModel(props, 'modelValue', emit);
 const contextMenuItems = computed(() => ([
-	{ title: 'Ответить', value: 'reply', icon: mdiReplyOutline },
-	{ title: 'Изменить', value: 'edit', icon: mdiPencil },
-	{ title: 'Закрепить', value: 'pin', icon: mdiPinOutline },
-	selectedText.value ? { title: 'Скопировать выделенный текст', value: 'copySelected', icon: mdiContentCopy } :
+	{ title: 'Reply', value: 'reply', icon: mdiReplyOutline },
+	{ title: 'Edit', value: 'edit', icon: mdiPencil },
+	{ title: 'Pin', value: 'pin', icon: mdiPinOutline },
+	selectedText.value ? { title: 'Copy selected text', value: 'copySelected', icon: mdiContentCopy } :
 		props.contentType === 'text' ?
-			{ title: 'Скопировать текст', value: 'copyAll', icon: mdiContentCopy } :
+			{ title: 'Copy text', value: 'copyAll', icon: mdiContentCopy } :
 			props.contentType === 'media' ?
-				{ title: 'Скопировать изображение', value: 'copyImage', icon: mdiImage } :
-				{ title: 'Скопировать ссылку', value: 'copyLink', icon: mdiLinkVariant },
+				{ title: 'Copy image', value: 'copyImage', icon: mdiImage } :
+				{ title: 'Copy link', value: 'copyLink', icon: mdiLinkVariant },
 	props.contentType !== 'text' ? { title: 'Скачать', value: 'download', icon: mdiDownload } : false,
-	{ title: 'Переслать', value: 'forward', icon: mdiShareOutline },
-	{ title: 'Выбрать', value: 'select', icon: mdiCheckCircleOutline },
-	{ title: 'Удалить', value: 'delete', icon: mdiDeleteOutline, colorClass: 'text-deep-orange-accent-3' },
+	{ title: 'Forward', value: 'forward', icon: mdiShareOutline },
+	{ title: 'Select', value: 'select', icon: mdiCheckCircleOutline },
+	{ title: 'Delete', value: 'delete', icon: mdiDeleteOutline, colorClass: 'text-deep-orange-accent-3' },
 ].filter(Boolean)) as { title: string, value: string, icon: string, colorClass?: string }[]);
 onUnmounted(() => {
 	document.removeEventListener('selectionchange', getSelectionText);

@@ -1,19 +1,19 @@
 <template>
 	<v-card width="100%" max-width="450" variant="tonal" class="pa-2">
 		<v-card-item class="mb-3">
-			<v-card-title class="text-center">Войти в чат</v-card-title>
+			<v-card-title class="text-center">Login to chat</v-card-title>
 		</v-card-item>
 
 		<v-card-text class="mt-3">
 			<v-form ref="formEl" @submit.prevent="submitForm" lazy-validation>
 
-				<v-text-field v-model.trim="formState.email" :rules="validations.email" label="Ваша почта"
-					placeholder="Введите почту" class="mt-5" variant="underlined" clearable required />
+				<v-text-field v-model.trim="formState.email" :rules="validations.email" label="Email" placeholder="Enter email"
+					class="mt-5" variant="underlined" clearable required />
 
 				<pass-field v-model.trim="formState.password" class="mt-5" />
 
 				<v-btn type="submit" color="success" class="btn mt-6">
-					Войти
+					Sign In
 				</v-btn>
 			</v-form>
 		</v-card-text>
@@ -22,7 +22,7 @@
 				<v-btn type="button" @click="loginWithGoogle" variant="plain" stacked density="compact" size="small"> <v-img
 						:src="googleImg" eager width="36px" alt="Войти через Google" /></v-btn>
 			</div>
-			<div class="text-center mt-4">Нет аккаунта? <router-link to="/register">Зарегистрироваться</router-link></div>
+			<div class="text-center mt-4">Dont have an account? <router-link to="/register">Register</router-link></div>
 		</v-card-actions>
 	</v-card>
 </template>
@@ -75,4 +75,4 @@ const loginWithGoogle = async () => {
 	left: 100%;
 	transform: translate(-120%);
 }
-</style>@/globals
+</style>

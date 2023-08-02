@@ -2,10 +2,8 @@
 	<div v-if="previewItem.fileData.type.startsWith('image/')" class="file-preview pa-1">
 		<v-card height="100%" width="100%" variant="tonal">
 			<v-img aspect-ratio="1" ref="imgEl" :lazy-src="previewItem.thumbnail?.url" :src="previewItem.preview"
-				:alt="previewItem.fileData.name" cover eager>
-				<template #placeholder>
+				:alt="previewItem.fileData.name" cover eager #placeholder>
 					<ImageLoader width="2" size="30" icon-size="16" />
-				</template>
 			</v-img>
 		</v-card>
 	</div>

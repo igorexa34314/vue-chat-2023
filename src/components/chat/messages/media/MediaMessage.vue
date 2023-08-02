@@ -1,10 +1,12 @@
 <template>
 	<div class="media-message mb-3">
 		<TextMessage v-if="content.text.length" v-bind="{ content }" class="message__subtitle mb-3" />
+
 		<div class="images-frame" :style="{ 'max-width': `${maxMessageMedia.w}px` }">
 			<v-row dense align-content="stretch" no-gutters>
 				<v-col v-for="(img, index) of content.attachments" :cols="calcImageCols(index)"
 					:class="{ 'image-col': content.attachments.length > 2 }">
+
 					<ImageFrame :image="img" :key="img.id" :alt="content.text" @open="emit('openInOverlay', img.id)"
 						@loaded="('mediaLoaded')" :width="maxMessageMedia.w"
 						:max-height="content.attachments.length > 2 ? '400px' : `${maxMessageMedia.h}px`" />

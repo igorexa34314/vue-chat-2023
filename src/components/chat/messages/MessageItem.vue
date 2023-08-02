@@ -1,14 +1,13 @@
 <template>
 	<div :class="{ self }" class="message d-flex" @contextmenu.prevent="emit('contextmenu', $event)">
 		<v-avatar size="30px" :image="sender.photoURL || defaultAvatar" :class="self ? 'ml-2' : 'mr-2'"
-			class="sender__avatar" @click="push({ name: 'user-userId', params: { userId: sender.id } })"
-			:title="sender.displayName" />
+			class="sender__avatar" @click="openUserProfile" :title="sender.displayName" />
 
 		<v-card min-width="120px" max-width="650px" density="compact" class="message__card"
 			:class="self ? 'self bg-light-blue-darken-3' : ''" variant="tonal">
 
 			<v-card-title v-if="type === 'text'" class="message__head d-flex flex-row align-center">
-				<small class="sender__name" @click="push({ name: 'user-userId', params: { userId: sender.id } })">
+				<small class="sender__name" @click="openUserProfile">
 					{{ sender.displayName }}</small>
 			</v-card-title>
 
@@ -56,6 +55,7 @@ const emit = defineEmits<{
 }>();
 const { push } = useRouter();
 const messageComponent = computed(() => props.type === 'media' ? MediaMessage : props.type === 'file' ? FileMessage : TextMessage);
+const openUserProfile = () => { push({ name: 'user-userId', params: { userId: props.sender.id } }) };
 </script>
 
 <style lang="scss" scoped>
@@ -85,8 +85,8 @@ const messageComponent = computed(() => props.type === 'media' ? MediaMessage : 
 		text-align: end;
 		font-size: 0.55rem;
 	}
+	/* Code for Firefox */
 	::-moz-selection {
-		/* Code for Firefox */
 		background: #1A237E;
 	}
 
@@ -121,4 +121,4 @@ const messageComponent = computed(() => props.type === 'media' ? MediaMessage : 
 }
 .close__btn {}
 .download__btn {}
-</style>@/globals
+</style>

@@ -1,11 +1,11 @@
 <template>
 	<v-form ref="formEl" @submit.prevent="submitForm" lazy-validation class="pa-4 mt-2"
 		style="position: relative; overflow: auto;">
-		<v-text-field v-model.trim="formState.displayName" :rules="validations.name" label="Ваше имя"
-			placeholder="Введите ваше имя" class="" variant="underlined" counter="16" clearable required
+		<v-text-field v-model.trim="formState.displayName" :rules="validations.name" label="Display name"
+			placeholder="Enter your name" class="" variant="underlined" counter="16" clearable required
 			style="max-width: 600px" />
 
-		<v-radio-group v-model="formState.gender" inline label="Ваш пол" class="mt-6">
+		<v-radio-group v-model="formState.gender" inline label="Gender" class="mt-6">
 			<v-radio v-for="(gender, index) in genderItems" :key="gender.value" :label="gender.name" :value="gender.value"
 				:color="index === 0 ? 'blue-darken-3' : 'red-darken-3'" class="mr-2" />
 		</v-radio-group>
@@ -14,20 +14,20 @@
 
 		<div class="w-50 mt-5">
 			<v-card variant="outlined" max-width="250" class="mb-5" elevation="9">
-				<v-img :lazy-src="defaultAvatar" :src="formState.photoURL || defaultAvatar" alt="Ваш аватар" cover eager>
-					<template #placeholder>
-						<ImageLoader />
-					</template>
+				<v-img :lazy-src="defaultAvatar" :src="formState.photoURL || defaultAvatar" alt="Photo URL" cover eager
+					#placeholder>
+					<ImageLoader />
 				</v-img>
 			</v-card>
-			<div class="mb-4">Загрузите ваше фото</div>
-			<v-file-input v-model="formState.avatar" label="Аватар" :rules="validations.file" variant="solo"
-				placeholder="Загрузите аватар" accept="image/* " density="comfortable" single-line style="max-width: 550px;" />
+
+			<div class="mb-4">Upload your avatar</div>
+			<v-file-input v-model="formState.avatar" label="Avatar" :rules="validations.file" variant="solo"
+				placeholder="Upload avatar" accept="image/* " density="comfortable" single-line style="max-width: 550px;" />
 		</div>
 
 		<v-btn type="submit" color="success" class="btn mt-5"
 			:disabled="JSON.stringify(uinfo) === JSON.stringify(formState)">
-			Применить
+			Apply
 		</v-btn>
 	</v-form>
 </template>
@@ -75,4 +75,4 @@ const submitForm = async () => {
 .birthday-picker {
 	max-width: 550px;
 }
-</style>@/globals
+</style>

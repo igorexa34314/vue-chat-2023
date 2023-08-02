@@ -42,7 +42,7 @@
 <script setup lang="ts">
 import { mdiHelp, mdiGenderMale, mdiGenderFemale, mdiMessageText, mdiAccountPlusOutline } from '@mdi/js';
 import messages from '@/utils/messages.json';
-import { computed, toRef } from 'vue';
+import { computed, toRef, ref, watchEffect } from 'vue';
 import { getUserdataById, addToFriend as addFriend } from '@/services/user';
 import { useRoute, useRouter } from 'vue-router';
 import { getUid } from '@/services/auth';
@@ -50,27 +50,35 @@ import { joinPrivateChat } from '@/services/chat';
 import { useMeta } from 'vue-meta';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { defaultAvatar } from '@/globals';
+import { UserData } from '@/types/db/UserdataTable';
 
 const { showMessage } = useSnackbarStore();
 const route = useRoute();
 const { push } = useRouter();
 
-const userId = toRef(route.params.userId as string);
-const userdata = await getUserdataById(userId.value);
+const userdata = ref<UserData>();
+const userId = toRef(() => route.params.userId as string | null);
+watchEffect(async () => {
+	if (userId.value) {
+		userdata.value = await getUserdataById(userId.value);
+	}
+});
 const uid = await getUid();
 
 //Dynamic page title
 useMeta(computed(() => {
 	if (userdata && Object.keys(userdata).length) {
-		return { title: `${userdata?.info?.displayName}` }
+		return { title: `${userdata.value?.info.displayName}` || 'Профиль' }
 	}
 	return { title: 'Профиль' }
 }));
 
 const goToChat = async () => {
 	try {
-		const chatId = await joinPrivateChat(userId.value);
-		push({ name: 'chat-chatId', params: { chatId } });
+		if (userId.value) {
+			const chatId = await joinPrivateChat(userId.value);
+			push({ name: 'chat-chatId', params: { chatId } });
+		}
 	} catch (e) {
 		showMessage(messages[e as keyof typeof messages] || e as string, 'red-darken-3', 2000);
 	}
@@ -81,4 +89,3 @@ const addToFriend = async () => {
 	}
 }
 </script>
-@/globals@/services/user

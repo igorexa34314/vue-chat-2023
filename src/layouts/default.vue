@@ -4,7 +4,7 @@
 
 		<AppSidebar v-model="drawer" />
 
-		<v-main style="min-height: 100vh; overflow: hidden;">
+		<v-main style="min-height: 100dvh; min-height: 100vh; overflow: hidden;">
 			<RouterView />
 		</v-main>
 	</v-layout>

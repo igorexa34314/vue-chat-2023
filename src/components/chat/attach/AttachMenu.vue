@@ -33,8 +33,8 @@ interface AttachMenu {
 }
 
 const attachMenuItems: AttachMenu[] = [
-	{ title: 'Фото или видео', icon: mdiImage, attachmentType: 'media', accept: 'image/*, video/*' },
-	{ title: 'Файл', icon: mdiFileDocumentOutline, attachmentType: 'file' },
+	{ title: 'Media', icon: mdiImage, attachmentType: 'media', accept: 'image/*, video/*' },
+	{ title: 'File', icon: mdiFileDocumentOutline, attachmentType: 'file' },
 ];
 const addFiles = (type: AttachMenu['attachmentType'], e: Event) => {
 	const files = (e.target as HTMLInputElement).files;

@@ -13,15 +13,14 @@
 					<v-icon :icon="mdiArrowRight" size="55px" class="carousel-next-btn" />
 				</div>
 			</template>
+
 			<v-carousel-item v-for="item of content" :key="item.id" cover>
 				<div class="carousel-image-element" style="max-width: 75vw;">
 					<v-card class="fullsize-image__wrapper d-flex align-center justify-center" variant="text"
 						:width="item.raw.sizes?.w" :height="item.raw.sizes?.h" max-height="100%" max-width="100%"
 						:style="{ transform: `scale(${zoomed ? '2' : '1'})` }">
-						<v-img :src="item.raw.previewURL" :alt="alt || item.fullname" :width="item.raw.sizes?.w">
-							<template #placeholder>
-								<ImageLoader />
-							</template>
+						<v-img :src="item.raw.previewURL" :alt="alt || item.fullname" :width="item.raw.sizes?.w" #placeholder>
+							<ImageLoader />
 						</v-img>
 					</v-card>
 				</div>
@@ -87,6 +86,7 @@ const zoomImage = () => {
 	pointer-events: none;
 	position: fixed;
 	width: 100vw;
+	min-height: 100dvh;
 	min-height: 100vh;
 	margin: 0 !important;
 	display: flex;
@@ -124,6 +124,7 @@ const zoomImage = () => {
 }
 .carousel__control {
 	padding: 0px 1em;
+	height: 100dvh;
 	height: 100vh;
 	display: flex;
 	align-items: center;

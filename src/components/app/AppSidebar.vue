@@ -1,9 +1,5 @@
 <template>
 	<v-navigation-drawer v-model="drawer" width="320" location="left" class="pa-3">
-		<!-- <div v-if="!userdata || !Object.keys(userdata.info).length || !userChatsInfo || !userChatsInfo.length">
-			<page-loader />
-		</div> -->
-
 		<v-card v-if="userInfo && Object.keys(userInfo).length" class="user-info py-1 bg-blue-grey-darken-4"
 			density="compact" variant="text" to="/profile" draggable="false">
 			<template #prepend>
@@ -16,8 +12,8 @@
 
 		<div v-if="loading"><page-loader /></div>
 
-		<div v-else-if="!getUserChatsInfo || !getUserChatsInfo?.length" class="mt-4 pa-3">
-			<p class="text-h6 text-center">Чатов нет</p>
+		<div v-else-if="!getUserChatsInfo.length" class="mt-4 pa-3">
+			<p class="text-h6 text-center">No chats</p>
 		</div>
 
 		<v-list v-else density="comfortable" class="chat-list mt-3">
@@ -59,7 +55,8 @@ const getUserChatsInfo = computedAsync(async () => {
 	if (userChats.value?.length) {
 		return (await Promise.all(userChats.value.map(getChatInfoById)) as ChatInfo[]);
 	}
-}, [], {
+	return [];
+}, undefined, {
 	evaluating: loading,
 	onError: (e) => {
 		console.error(e);
@@ -81,4 +78,4 @@ const getUserChatsInfo = computedAsync(async () => {
 		pointer-events: text !important;
 	}
 }
-</style>@/globals
+</style>

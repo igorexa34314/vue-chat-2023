@@ -11,7 +11,7 @@
 						<v-img :src="getImagesFromEditMsg.at(-1)" aspect-ratio="1" width="48px" height="100%" cover />
 					</div>
 					<div class="reply-original-content-wrapper">
-						<div class="reply-type">Редактирование</div>
+						<div class="reply-type">Editing</div>
 						<div class="reply-original-text">
 							<p>{{ getTextFromEditMsg }}</p>
 						</div>
@@ -55,7 +55,7 @@ const getTextFromEditMsg = computed(() => {
 		props.content?.text :
 		!getImagesFromEditMsg.value || !getImagesFromEditMsg.value.length ?
 			props.content?.attachments.at(-1)?.fullname :
-			(getImagesFromEditMsg.value.length === 1 ? 'Фотография' : 'Альбом') +
+			(getImagesFromEditMsg.value.length === 1 ? 'Photo' : 'Album') +
 			', ' + props.content?.text;
 });
 const getImagesFromEditMsg = computed(() => props.content?.attachments?.filter(item => item.raw.previewURL).map(img => img.raw.previewURL));

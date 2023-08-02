@@ -1,27 +1,27 @@
 <template>
 	<v-card width="100%" max-width="450" variant="tonal" class="pa-2">
 		<v-card-item class="mb-3">
-			<v-card-title class="text-center">Регистрация</v-card-title>
+			<v-card-title class="text-center">Register</v-card-title>
 		</v-card-item>
 		<v-card-text class="mt-3">
 			<v-form ref="formEl" lazy-validation @submit.prevent="submitForm">
 
-				<v-text-field v-model.trim="formState.displayName" :rules="validations.name" label="Ваше имя"
-					placeholder="Введите ваше имя" class="" variant="underlined" counter="16" clearable required />
+				<v-text-field v-model.trim="formState.displayName" :rules="validations.name" label="Display name"
+					placeholder="Enter your display name" class="" variant="underlined" counter="16" clearable required />
 
-				<v-text-field v-model.trim="formState.email" :rules="validations.email" label="Ваша почта"
-					placeholder="Введите вашу почту" class="mt-4" variant="underlined" clearable required />
+				<v-text-field v-model.trim="formState.email" :rules="validations.email" label="Email"
+					placeholder="Enter your email" class="mt-4" variant="underlined" clearable required />
 
 				<pass-field v-model="formState.password" class="mt-4" repeater />
 
 				<v-checkbox v-model="formState.agreeTerms" :rules="validations.terms" required density="compact" class="mt-3">
 					<template #label>
-						<div class="">Согласен с <a href="https://uml.ua/pro-licej/himn/" target="_blank">правилами</a></div>
+						<div class="">Agree with <a href="https://uml.ua/pro-licej/himn/" target="_blank">rules</a></div>
 					</template>
 				</v-checkbox>
 
 				<v-btn type="submit" color="success" class="btn mt-4">
-					Регистрация
+					Register
 				</v-btn>
 			</v-form>
 		</v-card-text>
@@ -30,7 +30,7 @@
 				<v-btn type="button" @click="signWithGoogle" variant="plain" stacked density="compact" size="small"> <v-img
 						:src="googleImg" width="36px" alt="Войти через Google" eager /></v-btn>
 			</div>
-			<div class="mt-4 text-center">Уже зарегистрированы? <router-link to="/login">Войти</router-link></div>
+			<div class="mt-4 text-center">Have an account? <router-link to="/login">Sign In</router-link></div>
 		</v-card-actions>
 	</v-card>
 </template>
@@ -85,4 +85,4 @@ const signWithGoogle = async () => {
 	left: 100%;
 	transform: translate(-110%);
 }
-</style>@/globals
+</style>

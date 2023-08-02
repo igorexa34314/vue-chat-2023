@@ -7,6 +7,7 @@
 					@mouseup="passFieldState.showPass = false" class="mr-2" style="cursor: pointer" />
 			</template>
 		</v-text-field>
+		
 		<v-text-field v-if="repeater" :type="passFieldState.showRepeater ? 'text' : 'password'" :rules="repeaterRules"
 			:label="repeaterLabel" :placeholder="repeaterPlaceholder" :variant="variant || 'underlined'"
 			:class="repeaterClass + ` mt-4`" required>
@@ -40,11 +41,11 @@ interface PassFieldProps {
 }
 const props = withDefaults(defineProps<PassFieldProps>(), {
 	repeater: false,
-	placeholder: 'Введите пароль',
-	label: 'Пароль',
+	placeholder: 'Enter password',
+	label: 'Password',
 	variant: 'underlined',
-	repeaterLabel: 'Пароль еще раз',
-	repeaterPlaceholder: 'Повторите пароль',
+	repeaterLabel: 'Repeat password',
+	repeaterPlaceholder: 'Repeat your password',
 });
 const emit = defineEmits<{
 	'update:modelValue': [pass: Password]
@@ -56,5 +57,5 @@ const passFieldState = ref({
 });
 
 const password = useVModel(props, 'modelValue', emit)
-const repeaterRules = [(v: Password) => !!v || 'Повторите пароль', (v: Password) => (v && v === password.value) || 'Пароли должны совпадать'];
+const repeaterRules = [(v: Password) => !!v || 'Repeat your password', (v: Password) => (v && v === password.value) || 'Passwords should match'];
 </script>

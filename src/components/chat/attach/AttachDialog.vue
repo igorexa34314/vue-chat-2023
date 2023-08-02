@@ -5,7 +5,7 @@
 				<v-btn :icon="mdiClose" variant="text" @click="closeDialog" />
 				<h3 class="text-center flex-grow-1">{{ 'Отправить ' + attachedFiles.length + ' ' + (contentType === 'media' ?
 					'фото' :
-					attachedFiles.length === 1 ? 'файл' : attachedFiles.length > 4 ? 'файлов' : 'файла') }}</h3>
+					attachedFiles.length === 1 ? 'file' : attachedFiles.length > 4 ? 'files' : 'files') }}</h3>
 				<v-menu location="bottom left" :offset="[0, -30]" :elevation="8">
 					<template #activator="{ props }">
 						<v-btn v-bind="props" variant="text" :icon="mdiDotsVertical" />
@@ -26,7 +26,7 @@
 								<v-icon :icon="contentType !== 'file' ? mdiFileMultipleOutline : mdiFolderMultipleImage"
 									class="mr-3" />
 							</template>
-							<v-list-item-title>{{ `Отправить как ${contentType !== 'file' ? 'файлы' : 'медиа'}`
+							<v-list-item-title>{{ `Send as ${contentType !== 'file' ? 'file' : 'media'}`
 							}}</v-list-item-title>
 						</v-list-item>
 					</v-list>
@@ -40,10 +40,10 @@
 				</div>
 
 				<v-form class="d-flex align-end mt-6 mb-3 px-2" @submit.prevent="submitHandler">
-					<v-textarea v-model="subtitle" variant="plain" placeholder="Добавить подпись" class="mr-4 mb-1" hide-details
+					<v-textarea v-model="subtitle" variant="plain" placeholder="Add description" class="mr-4 mb-1" hide-details
 						style="transform: translateY(-11px);" rows="1" max-rows="4" auto-grow focused @paste="onInputPasted" />
 					<v-btn type="submit" color="light-blue-darken-4" :disabled="!isDialogReady" class="ml-1 mb-2"
-						rounded>Отправить</v-btn>
+						rounded>Submit</v-btn>
 				</v-form>
 			</v-card-text>
 		</v-card>
@@ -105,7 +105,7 @@ watchEffect(async () => {
 		const promises: Promise<AttachedContent[number]>[] = [];
 		for (const fileItem of props.fileList) {
 			if (fileItem.fileData.size > 3145728) {
-				showMessage('Допустимый размер файлов - до 3 Мбайт', 'red-darken-3', 2500);
+				showMessage('Maximum file size - 3 Mb', 'red-darken-3', 2500);
 				closeDialog();
 				return;
 			}

@@ -4,11 +4,11 @@
       <!-- <canvas></canvas> -->
       <v-img :lazy-src="image.thumbnail" :src="image.raw?.previewURL || image.raw?.downloadURL"
          :alt="alt || image.fullname" width="100%" eager @load="imageLoaded" cover draggable="false"
-         :aspect-ratio="aspectRatio || (image.raw.sizes!.w / image.raw.sizes!.h)" :height="height || calcImageSize.h">
-         <template #placeholder>
-            <ImageLoader v-bind="loader" :model-value="getUploadingStateById(image.id)?.progress"
-               @cancel="cancelImageLoading(image.id)" />
-         </template>
+         :aspect-ratio="aspectRatio || (image.raw.sizes ? (image.raw.sizes!.w / image.raw.sizes!.h) : 1)"
+         :height="height || calcImageSize.h" #placeholder>
+         
+         <ImageLoader v-bind="loader" :model-value="getUploadingStateById(image.id)?.progress"
+            @cancel="cancelImageLoading(image.id)" />
       </v-img>
    </v-card>
 </template>

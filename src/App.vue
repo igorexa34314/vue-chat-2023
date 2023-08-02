@@ -3,25 +3,24 @@
     <template #title="{ content }">{{ content ? `${content} | ${AppName}` : AppName }}</template>
   </metainfo>
   <GlobalSnackbar />
-  <Suspense>
-    <template #default>
-      <RouterView />
+  <RouterView #default="{ Component }">
+    <template v-if="Component">
+      <Suspense>
+        <!-- main content -->
+        <component :is="Component"></component>
+        <!-- loading state -->
+        <template #fallback>
+          <page-loader />
+        </template>
+      </Suspense>
     </template>
-    <template #fallback>
-      <page-loader />
-    </template>
-  </Suspense>
+  </RouterView>
 </template>
 
 <script setup lang="ts">
 import GlobalSnackbar from '@/components/app/GlobalSnackbar.vue';
-import { onErrorCaptured } from 'vue';
 
 const AppName = import.meta.env.VITE_APP_NAME || 'My Chat';
-
-// onErrorCaptured((err, instance, info) => {
-//   console.error(err, instance, info);
-// });
 </script>
 
 <style lang="scss">

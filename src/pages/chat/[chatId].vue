@@ -1,11 +1,11 @@
 <template>
 	<v-container class="container d-flex flex-column" fluid>
 		<div v-if="userChats && userChats.length && !userChats.some(el => el === chatId)" class="text-h5 pa-5">
-			Такого чата не существует либо вы не состоите в нем</div>
+			This chat doesnt exists</div>
 		<div v-else-if="userChats && userChats.length" class="chat__field d-flex flex-column flex-grow">
-			<!-- <div v-else-if="!messages || !messages.length" class="text-h5 pa-4">Сообщений в чате пока нет</div> -->
 			<div class="chat__content">
 				<div v-if="loading"><page-loader /></div>
+
 				<v-infinite-scroll v-else-if="messages && messages.length" :side="scrollSide || 'start'" @load="onLoad"
 					ref="srollEl" tag="div" class="scrollable d-flex px-4">
 					<div class="messages-field d-flex flex-column justify-end px-3">
@@ -29,6 +29,9 @@
 					<template #loading></template>
 					<template #error></template>
 				</v-infinite-scroll>
+
+				<!-- <div v-else class="text-h5 pa-4">This chat is empty right now
+				</div> -->
 			</div>
 			<MessageForm class="message-form pb-4 pt-2 px-6" ref="msgForm" @create-message="createMessage"
 				@update-message="updateMessage" @scroll-to-message="scrollToAndHighlightMessage" />
@@ -139,6 +142,7 @@ watchEffect(async (onCleanup) => {
 			console.error(e);
 		}
 		finally {
+			await nextTick();
 			loading.value = false;
 		}
 	}
@@ -372,3 +376,4 @@ const onLeave = (el: Element, done: () => void) => {
 	z-index: 100;
 }
 </style>
+@/plugins/chat

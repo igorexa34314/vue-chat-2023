@@ -8,13 +8,9 @@
 			</v-col>
 		</v-row>
 	</div>
-	<!-- <div v-if="otherFiles.length" class="mt-4">
-		<FileAttachment :files="otherFiles" />
-	</div> -->
 </template>
 
 <script setup lang="ts">
-// import FileAttachment from '@/components/chat/attach/FileAttachment.vue';
 import PreviewImage from '@/components/chat/attach/PreviewImage.vue';
 import { ref, computed } from 'vue';
 import { calcImageCols as calcCols } from '@/utils/images';
@@ -29,7 +25,6 @@ const emit = defineEmits<{
 }>();
 
 const mediaFiles = computed(() => props.files.filter(file => file.fileData.type.startsWith('image/')));
-// const otherFiles = computed(() => props.files.filter(file => !file.fileData.type.startsWith('image/')));
 const prevEl = ref<InstanceType<typeof PreviewImage>[]>();
 const isImgsReady = computed(() => prevEl.value?.map(img => img.imgEl).every(img => img?.state === 'loaded'));
 const calcImageCols = computed(() => (imgIdx: number) => calcCols(mediaFiles.value.length, imgIdx));

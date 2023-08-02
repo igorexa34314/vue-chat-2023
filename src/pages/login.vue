@@ -1,5 +1,5 @@
 <template>
-	<v-container class="d-flex flex-column align-center justify-center" style="min-height: 100vh">
+	<v-container class="d-flex flex-column align-center justify-center" style="min-height: 100dvh; min-height: 100vh">
 		<LoginForm />
 	</v-container>
 </template>
@@ -8,7 +8,7 @@
 import LoginForm from '@/components/auth/LoginForm.vue';
 import { useMeta } from 'vue-meta';
 
-useMeta({ title: 'Вход' });
+useMeta({ title: 'Login' });
 </script>
 
 <route lang="yaml">
