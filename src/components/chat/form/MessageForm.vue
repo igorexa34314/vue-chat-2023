@@ -3,21 +3,23 @@
 		<div class="message-textarea">
 			<MessageReply v-model="showReply" :m-type="msgToEditState.type" :content="msgToEditState.content"
 				class="reply-wrapper" @go-to-message="emit('scrollToMessage', msgToEditState.id)" />
-			
-				<v-textarea v-model.trim="textareaValue" variant="solo" hide-details @keyup.enter="createMessage('text')"
-				placeholder="Your message" rows="1" max-rows="10" auto-grow focused @paste="onInputPasted" #append-inner>
+
+			<v-textarea v-model.trim="textareaValue" variant="solo" hide-details @keyup.enter="createMessage('text')"
+				placeholder="Your message" rows="1" max-rows="10" :density="smAndUp ? 'default' : 'comfortable'" auto-grow
+				focused @paste="onInputPasted" #append-inner>
 				<AttachMenu ref="attachMenuEl" @attach-file="attachFiles" #activator="{ props }">
-					<div class="attach-btn ml-4">
-						<v-icon v-bind="props" :icon="mdiAttachment" size="large" class="attach-icon" v-ripple="false" />
+					<div class="attach-btn ml-sm-4">
+						<v-icon v-bind="props" :icon="mdiAttachment" :size="smAndUp ? 'large' : 'default'" class="attach-icon"
+							:v-ripple="false" />
 					</div>
 				</AttachMenu>
 			</v-textarea>
 		</div>
 
 		<v-btn :icon="msgToEditState.isEditing ? mdiCheck : mdiSend" :label="msgToEditState.isEditing ? 'Submit' : 'Send'"
-			class="ml-3 mb-1" @click="submitHandler" />
+			class="ml-2 ml-sm-3 mb-sm-1" @click="submitHandler" />
 	</div>
-	
+
 	<AttachDialog v-model="attachDialogState.show" v-model:subtitleText="messageState.text"
 		:contentType="attachDialogState.contentType" :fileList="messageState.attachedFiles" @submit="createMessage"
 		@close="closeDialog" @add-more-files="attachFiles" @change-content-type="changeContentType" />
@@ -25,6 +27,7 @@
 
 <script setup lang="ts">
 import { mdiAttachment, mdiSend, mdiCheck } from '@mdi/js';
+import { useDisplay } from 'vuetify';
 import MessageReply from './MessageReply.vue';
 import AttachMenu from '@/components/chat/attach/AttachMenu.vue';
 import AttachDialog, { AttachDialogProps, AttachedContent } from '@/components/chat/attach/AttachDialog.vue';
@@ -51,6 +54,7 @@ defineOptions({
 });
 
 const { showMessage } = useSnackbarStore();
+const { smAndUp } = useDisplay();
 
 const messageState = ref<MessageForm>({
 	text: '',

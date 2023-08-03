@@ -1,12 +1,13 @@
 <template>
    <v-card v-if="image" class="image__wrapper" variant="text" :width="width || calcImageSize.w" @click="openImageFullsize"
-      :max-height="maxHeight" :rounded="rounded" v-ripple="false" height="100%">
+      :max-height="maxHeight || (smAndUp ? maxMessageMedia.h : maxMessageMediaSm.h)" :rounded="rounded" v-ripple="false"
+      height="100%">
       <!-- <canvas></canvas> -->
       <v-img :lazy-src="image.thumbnail" :src="image.raw?.previewURL || image.raw?.downloadURL"
          :alt="alt || image.fullname" width="100%" eager @load="imageLoaded" cover draggable="false"
          :aspect-ratio="aspectRatio || (image.raw.sizes ? (image.raw.sizes!.w / image.raw.sizes!.h) : 1)"
          :height="height || calcImageSize.h" #placeholder>
-         
+
          <ImageLoader v-bind="loader" :model-value="getUploadingStateById(image.id)?.progress"
             @cancel="cancelImageLoading(image.id)" />
       </v-img>
@@ -18,12 +19,13 @@ import ImageLoader from '@/components/chat/ImageLoader.vue';
 import { onUnmounted, watchEffect, toRef } from 'vue';
 import { loadPreviewbyFullpath } from '@/services/message';
 import { storeToRefs } from 'pinia';
+import { useDisplay } from 'vuetify';
 import { useLoadingStore } from '@/stores/loading';
 import { useMessagesStore } from '@/stores/messages';
 import { VImg, VCard } from 'vuetify/components';
 import { MessageContentWithPreview } from '@/stores/messages';
 import { computed } from 'vue';
-import { maxMessageMedia } from '@/globals';
+import { maxMessageMedia, maxMessageMediaSm } from '@/globals';
 
 export type ImageWithPreviewURL = MessageContentWithPreview['attachments'][number];
 
@@ -37,7 +39,6 @@ const props = withDefaults(defineProps<{
    alt?: string | VImg['alt'];
    aspectRatio?: VImg['aspectRatio'];
 }>(), {
-   maxHeight: maxMessageMedia.h,
    height: 'auto',
    rounded: 0,
 })
@@ -45,6 +46,8 @@ const emit = defineEmits<{
    open: [],
    loaded: []
 }>();
+
+const { smAndUp } = useDisplay();
 const { setAttachPreviewURL } = useMessagesStore();
 const { getUploadingStateById } = storeToRefs(useLoadingStore());
 watchEffect(async () => {
@@ -60,10 +63,11 @@ const cancelImageLoading = (imgId: string) => {
 };
 
 const calcImageSize = computed(() => {
+   const maxSize = smAndUp.value ? maxMessageMedia : maxMessageMediaSm;
    const { w, h } = props.image.raw.sizes!;
    const ar = w / h;
-   if (w > maxMessageMedia.w || h > maxMessageMedia.h) {
-      return w > h ? { w: maxMessageMedia.w, h: maxMessageMedia.w / ar } : { h: maxMessageMedia.h, w: maxMessageMedia.h * ar }
+   if (w > maxSize.w || h > maxSize.h) {
+      return w > h ? { w: maxSize.w, h: maxSize.w / ar } : { h: maxSize.h, w: maxSize.h * ar }
    }
    else return { w, h }
 });

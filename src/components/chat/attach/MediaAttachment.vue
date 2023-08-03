@@ -33,7 +33,7 @@ defineExpose({ isImgsReady });
 
 <style lang="scss" scoped>
 .images-grid {
-	padding: 0.7em 0.2em 0.5em 0;
+	padding: 0 0.2em 0.5em 0;
 	width: 100%;
 	height: 100%;
 	max-width: 450px;

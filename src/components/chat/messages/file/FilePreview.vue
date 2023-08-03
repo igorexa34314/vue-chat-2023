@@ -1,12 +1,12 @@
 <template>
 	<div v-bind="hoverProps" class="file-icon mx-1 d-flex align-center">
-		<ImageFrame :image="file" rounded="true" :loader="{ size: '30px', iconSize: '18px' }" @loaded="emit('loaded')"
-			max-height="100%" />
+		<ImageFrame :image="file" rounded="true" :loader="{ size: smAndUp ? '30px' : '26px', iconSize: '18px' }"
+			@loaded="emit('loaded')" max-height="100%" />
 
 		<v-fade-transition>
 			<div class="preview-hover" v-if="isHovering" @click="emit('openFile')">
-				<v-icon :icon="mdiEyeOutline" size="22px" variant="text" class="file-icon-btn" color="white" density="compact"
-					title="Open" flat :ripple="false" />
+				<v-icon :icon="mdiEyeOutline" :size="smAndUp ? '22px' : '18px'" variant="text" class="file-icon-btn"
+					color="white" density="compact" title="Open" flat :ripple="false" />
 			</div>
 		</v-fade-transition>
 	</div>
@@ -15,6 +15,7 @@
 <script setup lang="ts">
 import ImageFrame from '@/components/chat/messages/media/ImageFrame.vue';
 import { mdiEyeOutline } from '@mdi/js';
+import { useDisplay } from 'vuetify';
 import { Message } from '@/stores/messages';
 
 const props = defineProps<{
@@ -26,15 +27,21 @@ const emit = defineEmits<{
 	loaded: [],
 	openFile: []
 }>();
+
+const { smAndUp } = useDisplay();
 </script>
 
 <style lang="scss" scoped>
 .file-icon {
+	position: relative;
 	user-select: none !important;
 	cursor: pointer;
-	width: 80px;
-	height: 60px;
-	position: relative;
+	width: 72px;
+	height: 54px;
+	@media(min-width: 600px) {
+		width: 80px;
+		height: 60px;
+	}
 	&-ext, &-btn {
 		margin-left: auto;
 		margin-right: auto;

@@ -3,7 +3,7 @@
 		<template #activator="{ props }">
 			<slot name="activator" :props="props"></slot>
 		</template>
-		<v-list density="compact">
+		<v-list density="compact" class="attach-menu" :width="smAndUp ? '180px' : 'auto'">
 			<v-list-item v-for="item in attachMenuItems" :key="item.attachmentType" style="cursor: pointer; padding: 0;"
 				class="add-attachment">
 				<label :for="item.attachmentType" style="cursor: pointer; display: block; padding: 4px 16px;">
@@ -20,10 +20,7 @@
 <script setup lang="ts">
 import { mdiImage, mdiFileDocumentOutline } from '@mdi/js';
 import { Message } from '@/types/db/MessagesTable';
-
-const emit = defineEmits<{
-	'attach-file': [type: Exclude<Message['type'], 'text'>, files: FileList]
-}>();
+import { useDisplay } from 'vuetify';
 
 interface AttachMenu {
 	title: string;
@@ -31,6 +28,12 @@ interface AttachMenu {
 	attachmentType: Exclude<Message['type'], 'text'>;
 	accept?: string;
 }
+
+const emit = defineEmits<{
+	'attach-file': [type: Exclude<Message['type'], 'text'>, files: FileList]
+}>();
+
+const { smAndUp } = useDisplay();
 
 const attachMenuItems: AttachMenu[] = [
 	{ title: 'Media', icon: mdiImage, attachmentType: 'media', accept: 'image/*, video/*' },

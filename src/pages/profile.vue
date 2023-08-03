@@ -1,6 +1,6 @@
 <template>
-	<section class="mt-5 pa-5">
-		<h2 class="ml-4 mt-2">Ваш профиль</h2>
+	<section class="mt-3 mt-sm-5 pa-3 pa-sm-5">
+		<h2 class="ml-4 mt-2">Profile</h2>
 
 		<v-tabs v-model="pickedProfileTab" class="mt-5 ml-3" density="comfortable">
 			<v-tab v-for="tab in profileTabs" :key="tab.value" :value="tab.value" :disabled="tab.disabled">
@@ -30,15 +30,15 @@ import { useSnackbarStore } from '@/stores/snackbar';
 import { useMeta } from 'vue-meta';
 import { globalLoadingKey } from '@/injection-keys';
 
-useMeta({ title: 'Мой профиль' });
+useMeta({ title: 'My profile' });
 
 const { getUInfo: userInfo } = storeToRefs(useUserdataStore());
 const { showMessage } = useSnackbarStore();
 const loading = inject(globalLoadingKey);
 const profileTabs = [
-	{ title: 'Информация', value: 'info' },
-	{ title: 'Безопасность', value: 'security', disabled: true },
-	{ title: 'Уведомления', value: 'notifications', disabled: true },
+	{ title: 'Info', value: 'info' },
+	{ title: 'Security', value: 'security', disabled: true },
+	{ title: 'Notifications', value: 'notifications', disabled: true },
 ];
 const pickedProfileTab = ref(profileTabs[0].value);
 
@@ -55,10 +55,3 @@ const submitForm = async ({ avatar, ...formData }: ProfileForm) => {
 	}
 };
 </script>
-
-<style lang="scss" scoped>
-[v-cloak] {
-	display: none;
-}
-</style>
-@/services/user

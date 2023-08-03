@@ -1,6 +1,6 @@
 <template>
-	<v-dialog v-if="attachedFiles.length" v-model="dialog" width="auto" persistent class="attach-dialog">
-		<v-card width="560px" variant="flat" elevation="3">
+	<v-dialog v-if="attachedFiles.length" v-model="dialog" max-width="560px" width="100%" persistent class="attach-dialog">
+		<v-card variant="flat" elevation="3">
 			<v-card-title class="d-flex align-center mt-2">
 				<v-btn :icon="mdiClose" variant="text" @click="closeDialog" />
 				<h3 class="text-center flex-grow-1">{{ 'Отправить ' + attachedFiles.length + ' ' + (contentType === 'media' ?

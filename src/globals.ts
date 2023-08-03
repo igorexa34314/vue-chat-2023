@@ -3,3 +3,4 @@ export const googleImg = new URL('@/assets/img/google.png', import.meta.url).hre
 export const savedMessages = new URL('@/assets/img/saved-messages.png', import.meta.url).href;
 
 export const maxMessageMedia = { w: 480, h: 480 } as const;
+export const maxMessageMediaSm = { w: 400, h: 400 } as const;

@@ -1,7 +1,7 @@
 <template>
 	<div v-if="content.attachments.length" class="file-message__wrapper">
-		<TextMessage v-if="content.text.length" v-bind="{ content }" class="message__subtitle mb-3" />
-		
+		<TextMessage v-if="content.text.length" v-bind="{ content }" class="message__subtitle mb-sm-3 mb-1" />
+
 		<div v-for="(file, index) in content.attachments" :key="file.id"
 			:class="{ 'mb-1': index !== (content.attachments.length - 1) }" class="d-flex align-center">
 			<v-hover #default="{ isHovering, props: hoverProps }">
@@ -9,7 +9,7 @@
 					v-bind="{ file, hoverProps, isHovering, loading: isLoading }" @downloadFile="downloadFile(file)"
 					@openFile="emit('openInOverlay', file.id)" />
 			</v-hover>
-			
+
 			<div class="file-details ml-2 text-subtitle-1 font-weight-medium">
 				<p class="text-subtitle-1" :title="file.fullname">{{ file.fullname }}</p>
 				<p class="mt-1 text-body-2">{{ formatFileSize(file.raw.fullsize) }}</p>
@@ -58,6 +58,7 @@ const downloadFile = async (file: Message['content']['attachments'][number]) => 
 <style lang="scss" scoped>
 .file-details {
 	max-width: 360px;
+	overflow: hidden;
 	p {
 		overflow: hidden;
 		text-overflow: ellipsis;

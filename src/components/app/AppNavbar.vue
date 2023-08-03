@@ -12,11 +12,11 @@
 
 		<v-btn variant="text" :icon="mdiMagnify" @click="enableSearch" />
 
-		<v-btn variant="text" :icon="mdiFilter" disabled />
+		<!-- <v-btn variant="text" :icon="mdiFilter" disabled /> -->
 
 		<v-menu draggable="false" width="150px">
 			<template #activator="{ props }">
-				<v-btn v-bind="props" variant="text" :icon="mdiDotsVertical" />
+				<v-btn v-bind="props" variant="text" :icon="mdiDotsVertical" class="mr-0 mr-sm-2" />
 			</template>
 			<v-list density="compact">
 				<v-list-item density="compact" to="/profile" draggable="false">

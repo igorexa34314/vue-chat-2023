@@ -1268,10 +1268,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^20.4.5":
-  version: 20.4.5
-  resolution: "@types/node@npm:20.4.5"
-  checksum: 36a0304a8dc346a1b2d2edac4c4633eecf70875793d61a5274d0df052d7a7af7a8e34f29884eac4fbd094c4f0201477dcb39c0ecd3307ca141688806538d1138
+"@types/node@npm:^20.4.6":
+  version: 20.4.6
+  resolution: "@types/node@npm:20.4.6"
+  checksum: 28dfc13da87f579264840bc5b8a2cde2dcb93662464a0d58f0fa98eba1aae978e3c73e893474238c4a1226d0b1a14e3936520ff9795e1c4e06fad3282be83d18
   languageName: node
   linkType: hard
 
@@ -1566,31 +1566,31 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vueuse/core@npm:^10.2.1":
-  version: 10.2.1
-  resolution: "@vueuse/core@npm:10.2.1"
+"@vueuse/core@npm:^10.3.0":
+  version: 10.3.0
+  resolution: "@vueuse/core@npm:10.3.0"
   dependencies:
     "@types/web-bluetooth": ^0.0.17
-    "@vueuse/metadata": 10.2.1
-    "@vueuse/shared": 10.2.1
+    "@vueuse/metadata": 10.3.0
+    "@vueuse/shared": 10.3.0
     vue-demi: ">=0.14.5"
-  checksum: 1a7a7ad8372a2ff87ceddee2663a29a911dcd8a1a40b0e63436bc3b0f0786598f70e40e02e69d3cacfb634e35fdcd98136e049431a73516109ff062d8004cd54
+  checksum: 54af7ab9f2aff8cc795dfc9d846aa9a27dc0949d7a6eec79697819e7dc8cb17b1682f267e7501382afa45736b6877363e640e381b7ac1fd6bc18dc860911afd8
   languageName: node
   linkType: hard
 
-"@vueuse/metadata@npm:10.2.1":
-  version: 10.2.1
-  resolution: "@vueuse/metadata@npm:10.2.1"
-  checksum: 1672c0e6e6a54fe397c04b83bf4b78a8db410df272010f5db829e9f72ed285d526ca8bb4d7a3373b17aac2fb37c83d866f6077e667f54afc1ae20bf1ab1a5478
+"@vueuse/metadata@npm:10.3.0":
+  version: 10.3.0
+  resolution: "@vueuse/metadata@npm:10.3.0"
+  checksum: fb5cb1ff730129ddd831e37cd6e7fed2ebc12211ed63c5075ecef7311852063a8eb152bb213459e36f7b69711f8da35835e2c0ece018c43700febf591ed96937
   languageName: node
   linkType: hard
 
-"@vueuse/shared@npm:10.2.1":
-  version: 10.2.1
-  resolution: "@vueuse/shared@npm:10.2.1"
+"@vueuse/shared@npm:10.3.0":
+  version: 10.3.0
+  resolution: "@vueuse/shared@npm:10.3.0"
   dependencies:
     vue-demi: ">=0.14.5"
-  checksum: eeb19c0448d3f238615e24c738d2a6ebdc8b7d840405dd8704b5d0a3cd84ac3a8d5ec87856b501fac89f0f3bb868e7339d46e5fc3ece02c07160aedd41e507b2
+  checksum: 2392ce5c798ff2aa09c82de11fef3a6cc1eb3d198598e0f19f803645003003e06c90bc4cde5367200f8458a31344edcd4ab571b84a4f7d21ee8083b9309c9bf3
   languageName: node
   linkType: hard
 
@@ -3843,16 +3843,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sass@npm:^1.64.1":
-  version: 1.64.1
-  resolution: "sass@npm:1.64.1"
+"sass@npm:^1.64.2":
+  version: 1.64.2
+  resolution: "sass@npm:1.64.2"
   dependencies:
     chokidar: ">=3.0.0 <4.0.0"
     immutable: ^4.0.0
     source-map-js: ">=0.6.2 <2.0.0"
   bin:
     sass: sass.js
-  checksum: e908f96f3d5fa5869e2f2aec97548c93d6ef390680af89870fcae8bdbaee2392ac650fbeae8d2ef8e4c99cb9f81e6b3624e1cb659af6d6e746332a22233b5ad8
+  checksum: 43a5c9b9b3b6ba27feb5c45eba90edc437b15a30fd443f5d2623bbd59fe4a922f2a6a9990296c6a6c2b5bce7f401922c5049357415f50b745952c2d478bc5526
   languageName: node
   linkType: hard
 
@@ -4243,9 +4243,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vite@npm:^4.4.7":
-  version: 4.4.7
-  resolution: "vite@npm:4.4.7"
+"vite@npm:^4.4.8":
+  version: 4.4.8
+  resolution: "vite@npm:4.4.8"
   dependencies:
     esbuild: ^0.18.10
     fsevents: ~2.3.2
@@ -4279,7 +4279,7 @@ __metadata:
       optional: true
   bin:
     vite: bin/vite.js
-  checksum: 787c4d891da18d0a0545bee07dec73c3201979dcf2b1ea3dc13fdd2d3b9ad76d413bcc0e68502183e309007a612c1f4116adefe0093d95fbbb9cf1c1755f7e41
+  checksum: e8ffe688f8a7396b1357778f00cb06d1f3dadad200823c47a1955cf52774a0cbff5ac4d6a8f8d09e26c1d4e588e5815956f9eba02ae301e77a36c3d181a1bc86
   languageName: node
   linkType: hard
 
@@ -4290,20 +4290,20 @@ __metadata:
     "@imengyu/vue3-context-menu": ^1.3.3
     "@intlify/unplugin-vue-i18n": ^0.12.2
     "@mdi/js": ^7.2.96
-    "@types/node": ^20.4.5
+    "@types/node": ^20.4.6
     "@types/uuid": ^9
     "@vitejs/plugin-vue": ^4.2.3
-    "@vueuse/core": ^10.2.1
+    "@vueuse/core": ^10.3.0
     algoliasearch: ^4.19.1
     base64-arraybuffer: ^1.0.2
     firebase: ^10.1.0
     gsap: ^3.12.2
     instantsearch.js: ^4.56.8
     pinia: ^2.1.6
-    sass: ^1.64.1
+    sass: ^1.64.2
     typescript: ^5.1.6
     uuid: ^9.0.0
-    vite: ^4.4.7
+    vite: ^4.4.8
     vite-plugin-pages: ^0.31.0
     vite-plugin-vue-layouts: ^0.8.0
     vite-plugin-vuetify: ^1.0.2
@@ -4313,8 +4313,8 @@ __metadata:
     vue-meta: ^3.0.0-alpha.10
     vue-router: 4
     vue-tsc: ^1.8.8
-    vuefire: ^3.1.12
-    vuetify: ^3.3.10
+    vuefire: ^3.1.13
+    vuetify: ^3.3.11
   languageName: unknown
   linkType: soft
 
@@ -4442,9 +4442,9 @@ vue-demi@latest:
   languageName: node
   linkType: hard
 
-"vuefire@npm:^3.1.12":
-  version: 3.1.12
-  resolution: "vuefire@npm:3.1.12"
+"vuefire@npm:^3.1.13":
+  version: 3.1.13
+  resolution: "vuefire@npm:3.1.13"
   dependencies:
     vue-demi: latest
   peerDependencies:
@@ -4458,13 +4458,13 @@ vue-demi@latest:
       optional: true
     firebase:
       optional: true
-  checksum: 8a58a61a614954a9df79dbcbda4b19b0bf936bea659254bf22d6d6880b3db132f4b810b3467a3e7c91c3cd4ac5482f010edc1f69cf91f7ad39121f2de1934888
+  checksum: 524e48cc51973b26152fcabb6863186bf0edfa283f9c255e0ce46cf4554a09c818d522e159de8f7690dbbf579388972cd7367730db11ed2f4bf140fbdc458fcb
   languageName: node
   linkType: hard
 
-"vuetify@npm:^3.3.10":
-  version: 3.3.10
-  resolution: "vuetify@npm:3.3.10"
+"vuetify@npm:^3.3.11":
+  version: 3.3.11
+  resolution: "vuetify@npm:3.3.11"
   peerDependencies:
     typescript: ">=4.7"
     vite-plugin-vuetify: ^1.0.0-alpha.12
@@ -4480,7 +4480,7 @@ vue-demi@latest:
       optional: true
     webpack-plugin-vuetify:
       optional: true
-  checksum: f11aa2821c0fafff31ac231254c3f9197b01140968575787a73a637601c007997d57594dcfe4f7aca5c78d42663469291b483ad732d3bda47808c24ba2f3c620
+  checksum: e9a90fc8ccab8f509fa20c8351f7d391150dc92cb8a8e33f047cbb1cc8a203904801e056c42bc4147071ec9b884d54ee170af17b2932ce01b41573f81b675a4d
   languageName: node
   linkType: hard
 

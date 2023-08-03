@@ -3,7 +3,7 @@
 		<v-avatar size="30px" :image="sender.photoURL || defaultAvatar" :class="self ? 'ml-2' : 'mr-2'"
 			class="sender__avatar" @click="openUserProfile" :title="sender.displayName" />
 
-		<v-card min-width="120px" max-width="650px" density="compact" class="message__card"
+		<v-card min-width="120px" :max-width="smAndUp ? '650px' : '480px'" density="compact" class="message__card"
 			:class="self ? 'self bg-light-blue-darken-3' : ''" variant="tonal">
 
 			<v-card-title v-if="type === 'text'" class="message__head d-flex flex-row align-center">
@@ -14,11 +14,11 @@
 			<v-card-text class="message__content pb-1 pr-3"
 				:class="type === 'file' ? 'pl-2 pt-2' : type === 'media' ? 'pl-3 pt-3' : ''">
 
-				<component :is="messageComponent" v-bind="{ content }" :class="{ 'pr-3': type === 'file' }"
+				<component :is="messageComponent" v-bind="{ content }" :class="{ 'pr-2 pr-sm-3': type === 'file' }"
 					@openInOverlay="(imgId: ImageWithPreviewURL['id']) => emit('openInOverlay', imgId)" />
 
 				<i18n-d tag="small" :value="created_at" :format="messagesDateFormat(created_at as Date)" scope="global"
-					locale="ru-RU" :class="{ 'mt-2': type !== 'file' }" class="message__time" />
+					locale="ru-RU" :class="{ 'mt-2': type !== 'file' }" class="message__time mt-1 mt-sm-2" />
 			</v-card-text>
 		</v-card>
 
@@ -30,6 +30,7 @@
 import MediaMessage from '@/components/chat/messages/media/MediaMessage.vue';
 import FileMessage from '@/components/chat/messages/file/FileMessage.vue';
 import TextMessage from '@/components/chat/messages/text/TextMessage.vue';
+import { useDisplay } from 'vuetify';
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { messagesDateFormat } from '@/utils/filters/messages';
@@ -53,6 +54,8 @@ const emit = defineEmits<{
 	openInOverlay: [imgId: ImageWithPreviewURL['id']],
 	contextmenu: [event: MouseEvent]
 }>();
+
+const { smAndUp } = useDisplay();
 const { push } = useRouter();
 const messageComponent = computed(() => props.type === 'media' ? MediaMessage : props.type === 'file' ? FileMessage : TextMessage);
 const openUserProfile = () => { push({ name: 'user-userId', params: { userId: props.sender.id } }) };

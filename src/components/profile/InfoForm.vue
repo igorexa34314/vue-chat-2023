@@ -5,14 +5,14 @@
 			placeholder="Enter your name" class="" variant="underlined" counter="16" clearable required
 			style="max-width: 600px" />
 
-		<v-radio-group v-model="formState.gender" inline label="Gender" class="mt-6">
+		<v-radio-group v-model="formState.gender" inline label="Gender" class="mt-3 mt-md-6">
 			<v-radio v-for="(gender, index) in genderItems" :key="gender.value" :label="gender.name" :value="gender.value"
 				:color="index === 0 ? 'blue-darken-3' : 'red-darken-3'" class="mr-2" />
 		</v-radio-group>
 
 		<birthday-picker v-model="<Date>formState.birthday_date" class="birthday-picker mt-5" />
 
-		<div class="w-50 mt-5">
+		<div class="mt-3 mt-md-5" style="max-width: 500px;">
 			<v-card variant="outlined" max-width="250" class="mb-5" elevation="9">
 				<v-img :lazy-src="defaultAvatar" :src="formState.photoURL || defaultAvatar" alt="Photo URL" cover eager
 					#placeholder>
@@ -25,7 +25,7 @@
 				placeholder="Upload avatar" accept="image/* " density="comfortable" single-line style="max-width: 550px;" />
 		</div>
 
-		<v-btn type="submit" color="success" class="btn mt-5"
+		<v-btn type="submit" color="success" class="btn mt-3 mt-md-5"
 			:disabled="JSON.stringify(uinfo) === JSON.stringify(formState)">
 			Apply
 		</v-btn>

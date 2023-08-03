@@ -2,14 +2,14 @@
 	<div class="media-message mb-3">
 		<TextMessage v-if="content.text.length" v-bind="{ content }" class="message__subtitle mb-3" />
 
-		<div class="images-frame" :style="{ 'max-width': `${maxMessageMedia.w}px` }">
+		<div class="images-frame" :style="{ 'max-width': `${imageSize.w}px` }">
 			<v-row dense align-content="stretch" no-gutters>
 				<v-col v-for="(img, index) of content.attachments" :cols="calcImageCols(index)"
 					:class="{ 'image-col': content.attachments.length > 2 }">
 
 					<ImageFrame :image="img" :key="img.id" :alt="content.text" @open="emit('openInOverlay', img.id)"
-						@loaded="('mediaLoaded')" :width="maxMessageMedia.w"
-						:max-height="content.attachments.length > 2 ? '400px' : `${maxMessageMedia.h}px`" />
+						@loaded="('mediaLoaded')" :width="imageSize.w"
+						:max-height="content.attachments.length > 2 ? '400px' : `${imageSize.h}px`" />
 				</v-col>
 			</v-row>
 		</div>
@@ -23,7 +23,8 @@ import { computed } from 'vue';
 import { calcImageCols as calcCols } from '@/utils/images';
 import { Message } from '@/stores/messages';
 import { ImageWithPreviewURL } from '@/components/chat/messages/media/ImageFrame.vue';
-import { maxMessageMedia } from '@/globals';
+import { maxMessageMedia, maxMessageMediaSm } from '@/globals';
+import { useDisplay } from 'vuetify';
 
 const props = defineProps<{
 	content: Message['content'];
@@ -34,6 +35,9 @@ const emit = defineEmits<{
 	mediaLoaded: []
 }>();
 
+const { smAndUp } = useDisplay();
+
+const imageSize = smAndUp.value ? maxMessageMedia : maxMessageMediaSm;
 const calcImageCols = computed(() => (imgIdx: number) => calcCols(props.content.attachments.length, imgIdx));
 </script>
 

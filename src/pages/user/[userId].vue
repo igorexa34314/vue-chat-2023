@@ -68,9 +68,9 @@ const uid = await getUid();
 //Dynamic page title
 useMeta(computed(() => {
 	if (userdata && Object.keys(userdata).length) {
-		return { title: `${userdata.value?.info.displayName}` || 'Профиль' }
+		return { title: `${userdata.value?.info.displayName}` || 'User' }
 	}
-	return { title: 'Профиль' }
+	return { title: 'User' }
 }));
 
 const goToChat = async () => {

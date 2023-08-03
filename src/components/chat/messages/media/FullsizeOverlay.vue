@@ -1,14 +1,15 @@
 <template>
 	<v-overlay v-if="content.length" v-model="showOverlay" content-class="image-overlay" class="fullsize-image__dialog"
 		transition="scale-transition" @click:outside="$emit('close')" close-on-back scroll-strategy="close">
-		<v-carousel v-model="overlayItem" hide-delimiters hide-delimiter-background height="85vh" show-arrows>
+		<v-carousel v-model="overlayItem" hide-delimiters hide-delimiter-background height="85vh" show-arrows
+			:continuous="false">
 			<template #prev="{ props }">
-				<div v-if="overlayItem" class="carousel__control carousel__control-prev" @click="props.onClick">
+				<div v-if="smAndUp && overlayItem" class="carousel__control carousel__control-prev" @click="props.onClick">
 					<v-icon :icon="mdiArrowLeft" size="55px" class="carousel-prev-btn" />
 				</div>
 			</template>
 			<template #next="{ props }">
-				<div v-if="overlayItem < content.length - 1" class="carousel__control carousel__control-next"
+				<div v-if="smAndUp && overlayItem < content.length - 1" class="carousel__control carousel__control-next"
 					@click="props.onClick">
 					<v-icon :icon="mdiArrowRight" size="55px" class="carousel-next-btn" />
 				</div>
@@ -44,6 +45,7 @@ import ImageLoader from '@/components/chat/ImageLoader.vue';
 import { ref } from 'vue';
 import { useVModel } from '@vueuse/core';
 import { ImageWithPreviewURL } from '@/components/chat/messages/media/ImageFrame.vue';
+import { useDisplay } from 'vuetify';
 
 interface OverlayProps {
 	modelValue?: boolean;
@@ -61,6 +63,7 @@ const emit = defineEmits<{
 	close: []
 }>();
 
+const { smAndUp } = useDisplay();
 const showOverlay = useVModel(props, 'modelValue', emit);
 const overlayItem = useVModel(props, 'currentItem', emit);
 
