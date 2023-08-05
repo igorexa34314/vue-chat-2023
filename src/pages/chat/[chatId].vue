@@ -7,7 +7,7 @@
 				<div v-if="loading"><page-loader /></div>
 
 				<v-infinite-scroll v-else-if="messages && messages.length" :side="scrollSide || 'start'" @load="onLoad"
-					ref="srollEl" tag="div" class="scrollable d-flex px-2 px-sm-4">
+					:margin="50" ref="srollEl" tag="div" class="scrollable d-flex px-2 px-sm-4">
 					<div class="messages-field d-flex flex-column justify-end px-1 px-sm-3">
 						<TransitionGroup :css="false" @before-enter="onBeforeEnter" @enter="onEnter" @leave="onLeave">
 							<MessageItem v-for="m in messages" :key="m.id" :self="uid === m.sender.id" :type="m.type"
@@ -33,9 +33,9 @@
 				<!-- <div v-else class="text-h5 pa-4">This chat is empty right now
 				</div> -->
 			</div>
-			<MessageForm class="message-form pb-3 pb-sm-4 px-3 pt-1 pt-sm-2 px-sm-6" ref="msgForm"
-				@create-message="createMessage" @update-message="updateMessage"
-				@scroll-to-message="scrollToAndHighlightMessage" />
+			<MessageForm class="message-form pb-sm-4 pt-1 pt-sm-2 px-sm-6" ref="msgForm" @create-message="createMessage"
+				@update-message="updateMessage" @scroll-to-message="scrollToAndHighlightMessage"
+				:class="xs ? 'px-2 pb-2' : 'px-3 pb-3'" />
 
 			<v-fade-transition>
 				<v-btn v-if="srollEl && srollEl?.$el.scrollHeight > srollEl?.$el.clientHeight && !isScrollOnBottom"
@@ -85,6 +85,7 @@ import { ImageWithPreviewURL } from '@/components/chat/messages/media/ImageFrame
 import { VInfiniteScroll } from 'vuetify/labs/VInfiniteScroll';
 import { gsap } from 'gsap';
 import { ScrollToPlugin } from 'gsap/all';
+import { useDisplay } from 'vuetify';
 
 gsap.registerPlugin(ScrollToPlugin);
 
@@ -92,6 +93,7 @@ const { getUChats: userChats } = storeToRefs(useUserdataStore());
 const route = useRoute();
 const { showMessage } = useSnackbarStore();
 const messagesStore = useMessagesStore();
+const { xs } = useDisplay();
 const { $reset: resetMsgStore } = messagesStore;
 
 const chatInfo = ref<ChatInfo>();

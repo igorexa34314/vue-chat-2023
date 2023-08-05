@@ -2,7 +2,7 @@
    <v-card v-if="image" class="image__wrapper" variant="text" :width="width || calcImageSize.w" @click="openImageFullsize"
       :max-height="maxHeight || (smAndUp ? maxMessageMedia.h : maxMessageMediaSm.h)" :rounded="rounded" v-ripple="false"
       height="100%">
-      <!-- <canvas></canvas> -->
+
       <v-img :lazy-src="image.thumbnail" :src="image.raw?.previewURL || image.raw?.downloadURL"
          :alt="alt || image.fullname" width="100%" eager @load="imageLoaded" cover draggable="false"
          :aspect-ratio="aspectRatio || (image.raw.sizes ? (image.raw.sizes!.w / image.raw.sizes!.h) : 1)"
@@ -11,6 +11,8 @@
          <ImageLoader v-bind="loader" :model-value="getUploadingStateById(image.id)?.progress"
             @cancel="cancelImageLoading(image.id)" />
       </v-img>
+
+      <!-- <canvas></canvas> -->
    </v-card>
 </template>
 

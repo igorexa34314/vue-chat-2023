@@ -1,10 +1,13 @@
 <template>
-	<v-dialog v-if="attachedFiles.length" v-model="dialog" max-width="560px" width="100%" persistent class="attach-dialog">
+	<v-dialog v-if="attachedFiles.length" v-model="dialog" max-width="560px" width="100%" :persistent="!mobile"
+		class="attach-dialog mx-6 mx-md-4">
 		<v-card variant="flat" elevation="3">
 			<v-card-title class="d-flex align-center mt-2">
 				<v-btn :icon="mdiClose" variant="text" @click="closeDialog" />
-				<h3 class="text-center flex-grow-1">{{ 'Отправить ' + attachedFiles.length + ' ' + (contentType === 'media' ?
-					'фото' :
+				<h3 class="text-center text-h6 text-sm-h5 flex-grow-1">{{ 'Send ' + attachedFiles.length + ' ' + (contentType
+					===
+					'media' ?
+					'image' :
 					attachedFiles.length === 1 ? 'file' : attachedFiles.length > 4 ? 'files' : 'files') }}</h3>
 				<v-menu location="bottom left" :offset="[0, -30]" :elevation="8">
 					<template #activator="{ props }">
@@ -33,17 +36,17 @@
 				</v-menu>
 			</v-card-title>
 
-			<v-card-text class="py-1">
-				<div class="attachments custom-scroll py-2 pr-4">
+			<v-card-text class="py-1 px-sm-6 px-3">
+				<div class="attachments custom-scroll py-1 py-sm-2 px-1 pl-md-0 pr-md-4">
 					<component :is="contentType === 'media' ? MediaAttachment : FileAttachment"
 						v-bind="{ files: attachedFiles }" ref="attachment" @deleteAttach="deleteAttachItem" />
 				</div>
 
-				<v-form class="d-flex align-end mt-6 mb-3 px-2" @submit.prevent="submitHandler">
+				<v-form class="d-flex align-end mt-2 mt-md-6 mb-3 px-2" @submit.prevent="submitHandler">
 					<v-textarea v-model="subtitle" variant="plain" placeholder="Add description" class="mr-4 mb-1" hide-details
 						style="transform: translateY(-11px);" rows="1" max-rows="4" auto-grow focused @paste="onInputPasted" />
-					<v-btn type="submit" color="light-blue-darken-4" :disabled="!isDialogReady" class="ml-1 mb-2"
-						rounded>Submit</v-btn>
+					<v-btn type="submit" color="light-blue-darken-4" :disabled="!isDialogReady"
+						class="ml-1 mb-3 mb-sm-4 mb-md-2" rounded>Submit</v-btn>
 				</v-form>
 			</v-card-text>
 		</v-card>
@@ -60,6 +63,7 @@ import { useSnackbarStore } from '@/stores/snackbar';
 import { getFileThumbAndSizes } from '@/utils/resizeFile';
 import { Message } from '@/types/db/MessagesTable';
 import { ThumbResult } from '@/utils/resizeFile';
+import { useDisplay } from 'vuetify';
 
 export type AttachedContent = (AttachDialogProps['fileList'][number] & { sizes?: { w: number, h: number }, thumbnail?: ThumbResult, preview?: string })[];
 export interface AttachDialogProps {
@@ -83,6 +87,7 @@ const emit = defineEmits<{
 }>();
 
 const { showMessage } = useSnackbarStore();
+const { mobile } = useDisplay();
 
 const attachment = ref<InstanceType<typeof MediaAttachment> | InstanceType<typeof FileAttachment>>();
 const dialog = useVModel(props, 'modelValue', emit);

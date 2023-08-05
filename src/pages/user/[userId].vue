@@ -6,7 +6,7 @@
 				<v-row align="center" justify="space-between">
 					<v-col cols="10" class="d-flex align-center">
 						<v-img :lazy-src="defaultAvatar" :src="(userdata?.info?.photoURL)?.toString()" alt="Фото"
-							max-width="100px" class="mr-5" eager />
+							:max-width="xs ? '80px' : '100px'" class="mr-5" eager :width="xs ? 'auto' : '100%'" />
 						<div class="">
 							<h2 class="mb-2">{{ userdata?.info?.displayName }}</h2>
 							<div class="d-flex align-center mt-2">
@@ -28,7 +28,7 @@
 						<v-tooltip location="bottom">
 							<template #activator="{ props }">
 								<v-btn v-bind="props" size="x-large" variant="text" :icon="mdiAccountPlusOutline" class="ml-2"
-									@click="addToFriend" />
+									@click="addToFriend" disabled />
 							</template>
 							<span class="text-subtitle-2 font-weight-medium">Добавить в друзья</span>
 						</v-tooltip>
@@ -51,7 +51,9 @@ import { useMeta } from 'vue-meta';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { defaultAvatar } from '@/globals';
 import { UserData } from '@/types/db/UserdataTable';
+import { useDisplay } from 'vuetify';
 
+const { xs } = useDisplay();
 const { showMessage } = useSnackbarStore();
 const route = useRoute();
 const { push } = useRouter();

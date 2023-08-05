@@ -8,7 +8,7 @@
 					:class="{ 'image-col': content.attachments.length > 2 }">
 
 					<ImageFrame :image="img" :key="img.id" :alt="content.text" @open="emit('openInOverlay', img.id)"
-						@loaded="('mediaLoaded')" :width="imageSize.w"
+						@loaded="('mediaLoaded')" :width="content.attachments.length > 1 ? imageSize.w : undefined"
 						:max-height="content.attachments.length > 2 ? '400px' : `${imageSize.h}px`" />
 				</v-col>
 			</v-row>

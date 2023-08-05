@@ -1,22 +1,25 @@
 <template>
 	<v-app-bar color="blue-grey-darken-4" :elevation="7" style="overflow: visible;">
-		<v-app-bar-nav-icon variant="text" @click.stop="emit('drawer')"></v-app-bar-nav-icon>
+		<v-app-bar-nav-icon variant="text" @click.stop="emit('drawer')" :density="!xs ? 'default' : 'comfortable'"
+			class="mr-3 mr-sm-0" />
 
-		<v-toolbar-title>My chat</v-toolbar-title>
+		<v-toolbar-title v-show="!xs || !searchState.enabled" class="app-title">My chat</v-toolbar-title>
 
-		<v-spacer></v-spacer>
+		<v-spacer />
 
 		<v-fade-transition>
 			<SearchBox v-show="searchState.enabled" ref="searchEl" @blur="searchState.enabled = false" />
 		</v-fade-transition>
 
-		<v-btn variant="text" :icon="mdiMagnify" @click="enableSearch" />
+		<v-btn v-show="!xs || !searchState.enabled" :icon="mdiMagnify" @click="enableSearch"
+			:density="!xs ? 'default' : 'comfortable'" variant="text" />
 
-		<!-- <v-btn variant="text" :icon="mdiFilter" disabled /> -->
+		<!-- <v-btn :icon="mdiFilter"  variant="text" disabled /> -->
 
 		<v-menu draggable="false" width="150px">
 			<template #activator="{ props }">
-				<v-btn v-bind="props" variant="text" :icon="mdiDotsVertical" class="mr-0 mr-sm-2" />
+				<v-btn v-bind="props" variant="text" :icon="mdiDotsVertical" class="mr-2"
+					:density="!xs ? 'default' : 'comfortable'" />
 			</template>
 			<v-list density="compact">
 				<v-list-item density="compact" to="/profile" draggable="false">
@@ -44,14 +47,16 @@ import { ref, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import { logout } from '@/services/auth';
 import { useSnackbarStore } from '@/stores/snackbar';
+import { useDisplay } from 'vuetify';
 
 const { push } = useRouter();
 const { showMessage } = useSnackbarStore();
 
 const emit = defineEmits<{
-	drawer: []
+	drawer: [],
 }>();
 
+const { xs } = useDisplay();
 const searchEl = ref<InstanceType<typeof SearchBox>>();
 const searchState = ref({
 	enabled: false,
@@ -73,3 +78,10 @@ const exit = async () => {
 	push('/login');
 };
 </script>
+
+<style lang="scss" scoped>
+.app-title {
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+</style>

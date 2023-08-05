@@ -1,5 +1,5 @@
 <template>
-	<div class="birthday-picker">
+	<div class="birthday-picker d-flex flex-column flex-sm-row align-sm-center">
 		<v-select v-for="item in datePickerDateItems" :key="item.type" :label="item.title" :items="item.items"
 			v-model="datePickerState[(item.type) as keyof typeof datePickerState]" :density="density" class="mr-4"
 			:variant="variant" :class="`${item.type}-select`" :style="{ order: item.order }" />
@@ -36,9 +36,9 @@ const emit = defineEmits<{
 }>();
 
 const datePickerDateItems = computed(() => ([
-	{ type: 'month', title: 'Месяц', items: monthsForLocales('long').map((title, i) => ({ title, value: ++i })), order: props.order === 'dd-mmm-yyyy' ? 2 : 1 },
-	{ type: 'day', title: 'День', items: Array.from({ length: 31 }, (v, i) => ++i), order: props.order === 'dd-mmm-yyyy' ? 1 : 2 },
-	{ type: 'year', title: 'Год', items: Array.from({ length: new Date().getFullYear() - +props.fromYear }, (v, i) => (+props.fromYear - 1) + i).reverse(), order: 3 },
+	{ type: 'month', title: 'Month', items: monthsForLocales('long').map((title, i) => ({ title, value: ++i })), order: props.order === 'dd-mmm-yyyy' ? 2 : 1 },
+	{ type: 'day', title: 'Day', items: Array.from({ length: 31 }, (v, i) => ++i), order: props.order === 'dd-mmm-yyyy' ? 1 : 2 },
+	{ type: 'year', title: 'Year', items: Array.from({ length: new Date().getFullYear() - +props.fromYear }, (v, i) => (+props.fromYear - 1) + i).reverse(), order: 3 },
 ]));
 
 const datePickerState = ref({
@@ -46,12 +46,8 @@ const datePickerState = ref({
 	day: props.modelValue.getDate(),
 	year: props.modelValue.getFullYear(),
 });
-watch(datePickerState, (newVal) => emit('update:modelValue', new Date(Object.values(newVal).join('-'))), { deep: true });
-</script>
 
-<style lang="scss" scoped>
-.birthday-picker {
-	display: flex;
-	align-items: center;
-}
-</style>
+watch(datePickerState, (newVal) => {
+	emit('update:modelValue', new Date(Object.values(newVal).join('-')))
+}, { deep: true });
+</script>

@@ -1,5 +1,6 @@
 <template>
-	<div :class="{ self }" class="message d-flex" @contextmenu.prevent="emit('contextmenu', $event)">
+	<div :class="{ self, 'ml-6': xs && self, 'mr-6': xs && !self }" class="message d-flex"
+		@contextmenu.prevent="emit('contextmenu', $event)">
 		<v-avatar size="30px" :image="sender.photoURL || defaultAvatar" :class="self ? 'ml-2' : 'mr-2'"
 			class="sender__avatar" @click="openUserProfile" :title="sender.displayName" />
 
@@ -55,7 +56,7 @@ const emit = defineEmits<{
 	contextmenu: [event: MouseEvent]
 }>();
 
-const { smAndUp } = useDisplay();
+const { xs, smAndUp } = useDisplay();
 const { push } = useRouter();
 const messageComponent = computed(() => props.type === 'media' ? MediaMessage : props.type === 'file' ? FileMessage : TextMessage);
 const openUserProfile = () => { push({ name: 'user-userId', params: { userId: props.sender.id } }) };

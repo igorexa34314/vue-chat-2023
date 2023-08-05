@@ -1,5 +1,5 @@
 <template>
-	<section class="mt-3 mt-sm-5 pa-3 pa-sm-5">
+	<section class="mt-1 mt-sm-5 pa-3 pa-sm-5">
 		<h2 class="ml-4 mt-2">Profile</h2>
 
 		<v-tabs v-model="pickedProfileTab" class="mt-5 ml-3" density="comfortable">
@@ -10,7 +10,7 @@
 
 		<v-window v-model="pickedProfileTab">
 			<v-window-item :value="profileTabs[0].value" style="min-height: 100px;">
-				<v-container fluid>
+				<v-container fluid class="pa-2 pa-sm-4">
 					<div v-if="loading"><page-loader /></div>
 					<InfoForm v-if="userInfo && Object.keys(userInfo).length" :uinfo="userInfo" @submit="submitForm" />
 				</v-container>

@@ -5,7 +5,7 @@
 			placeholder="Enter your name" class="" variant="underlined" counter="16" clearable required
 			style="max-width: 600px" />
 
-		<v-radio-group v-model="formState.gender" inline label="Gender" class="mt-3 mt-md-6">
+		<v-radio-group v-model="formState.gender" :inline="!xs" label="Gender" class="mt-3 mt-md-6">
 			<v-radio v-for="(gender, index) in genderItems" :key="gender.value" :label="gender.name" :value="gender.value"
 				:color="index === 0 ? 'blue-darken-3' : 'red-darken-3'" class="mr-2" />
 		</v-radio-group>
@@ -40,6 +40,7 @@ import { ref } from 'vue';
 import { defaultAvatar } from '@/globals';
 import { UserInfo } from '@/types/db/UserdataTable';
 import { VForm } from 'vuetify/components';
+import { useDisplay } from 'vuetify';
 
 export interface ProfileForm extends Omit<UserInfo, 'created_at' | 'uid' | 'providerId'> {
 	avatar?: File[];
@@ -53,13 +54,14 @@ const emit = defineEmits<{
 	submit: [data: ProfileForm]
 }>();
 
+const { xs } = useDisplay();
 const formEl = ref<VForm>();
 const formState = ref<ProfileForm>({ ...props.uinfo });
 
 const genderItems = [
-	{ name: 'Мужской', value: 'male' },
-	{ name: 'Женский', value: 'female' },
-	{ name: 'Не указывать', value: 'unknown' },
+	{ name: 'Male', value: 'male' },
+	{ name: 'Female', value: 'female' },
+	{ name: 'Unknown', value: 'unknown' },
 ];
 
 const submitForm = async () => {

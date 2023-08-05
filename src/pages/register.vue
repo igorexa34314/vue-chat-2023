@@ -6,7 +6,7 @@
 
 <script setup lang="ts">
 import RegisterForm from '@/components/auth/RegisterForm.vue';
-import { useMeta } from 'vue-meta'
+import { useMeta } from 'vue-meta';
 
 useMeta({ title: 'Register' });
 </script>
