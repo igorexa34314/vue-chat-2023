@@ -4,12 +4,12 @@
 			<slot name="activator" :props="props"></slot>
 		</template>
 		<v-list density="compact" class="attach-menu" :width="smAndUp ? '180px' : 'auto'">
-			<v-list-item v-for="item in attachMenuItems" :key="item.attachmentType" style="cursor: pointer; padding: 0;"
-				class="add-attachment">
-				<label :for="item.attachmentType" style="cursor: pointer; display: block; padding: 4px 16px;">
+			<v-list-item v-for="item in attachMenuItems" :key="item.attachmentType" style="cursor: pointer;"
+				class="add-attachment pa-0">
+				<label :for="item.attachmentType" style="cursor: pointer;" class="d-block py-1 px-4">
 					<v-icon :icon="item.icon" class="mr-4"></v-icon>
 					<span>{{ item.title }}</span>
-					<input :id="item.attachmentType" type="file" :accept="item.accept" style="display:none;"
+					<input :id="item.attachmentType" type="file" :accept="item.accept" class="d-none"
 						@change="addFiles(item.attachmentType, $event)" multiple>
 				</label>
 			</v-list-item>

@@ -14,12 +14,12 @@
 						<v-btn v-bind="props" variant="text" :icon="mdiDotsVertical" />
 					</template>
 					<v-list density="compact" class="bg-blue-grey-darken-4" min-width="180">
-						<v-list-item style="cursor: pointer; padding: 0;" class="add-attachment">
-							<label for="add-more" style="cursor: pointer; display: block; padding: 4px 0.7em;">
+						<v-list-item style="cursor: pointer;" class="add-attachment pa-0">
+							<label for="add-more" style="cursor: pointer; padding: 4px 0.7em;" class="d-block">
 								<v-icon :icon="mdiPlus" class="mr-3" />
 								<span>Добавить еще</span>
 								<input id="add-more" type="file" :accept="contentType === 'media' ? 'image/*,media/*' : undefined"
-									style="display:none;" @change="addMoreFiles" multiple>
+									class="d-none" @change="addMoreFiles" multiple>
 							</label>
 						</v-list-item>
 						<v-list-item
@@ -37,7 +37,8 @@
 			</v-card-title>
 
 			<v-card-text class="py-1 px-sm-6 px-3">
-				<div class="attachments custom-scroll py-1 py-sm-2 px-1 pl-md-0 pr-md-4">
+				<div
+					class="attachments overflow-auto d-flex flex-column justify-start custom-scroll py-1 py-sm-2 px-1 pl-md-0 pr-md-4">
 					<component :is="contentType === 'media' ? MediaAttachment : FileAttachment"
 						v-bind="{ files: attachedFiles }" ref="attachment" @deleteAttach="deleteAttachItem" />
 				</div>
@@ -161,19 +162,14 @@ const deleteAttachItem = (fileId: AttachedContent[number]['id']) => {
 <style lang="scss" scoped>
 // Custom scroll
 $scroll-width: 0.35rem !important;
-
 @import "@/assets/styles/scroll";
 
 .attachments {
-	overflow: auto;
 	max-height: 420px;
-	display: flex;
-	flex-direction: column;
-	justify-content: flex-start;
 	row-gap: 0.5em;
 }
 .attach-dialog :deep(.v-overlay__scrim) {
-	background: #000000;
+	background-color: #000000;
 	opacity: 55%;
 }
 .add-attachment {

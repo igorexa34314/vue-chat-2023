@@ -1,5 +1,5 @@
 <template>
-	<div :class="{ self, 'ml-6': xs && self, 'mr-6': xs && !self }" class="message d-flex"
+	<div :class="{ 'self justify-end': self, 'ml-6': xs && self, 'mr-6': xs && !self }" class="message d-flex"
 		@contextmenu.prevent="emit('contextmenu', $event)">
 		<v-avatar size="30px" :image="sender.photoURL || defaultAvatar" :class="self ? 'ml-2' : 'mr-2'"
 			class="sender__avatar" @click="openUserProfile" :title="sender.displayName" />
@@ -19,7 +19,7 @@
 					@openInOverlay="(imgId: ImageWithPreviewURL['id']) => emit('openInOverlay', imgId)" />
 
 				<i18n-d tag="small" :value="created_at" :format="messagesDateFormat(created_at as Date)" scope="global"
-					locale="ru-RU" :class="{ 'mt-2': type !== 'file' }" class="message__time mt-1 mt-sm-2" />
+					:class="{ 'mt-2': type !== 'file' }" class="message__time d-block text-end mt-1 mt-sm-2" />
 			</v-card-text>
 		</v-card>
 
@@ -64,11 +64,9 @@ const openUserProfile = () => { push({ name: 'user-userId', params: { userId: pr
 
 <style lang="scss" scoped>
 .message {
-	user-select: text !important;
+	user-select: text;
 	position: relative;
 	& > :deep(.highlighter) {
-		background-color: rgb(255, 255, 255);
-		opacity: 0;
 		display: block;
 		visibility: hidden;
 		position: absolute;
@@ -77,25 +75,18 @@ const openUserProfile = () => { push({ name: 'user-userId', params: { userId: pr
 		left: -50%;
 		right: -25%;
 		z-index: -1;
+		background-color: rgb(255, 255, 255);
+		opacity: 0;
 	}
-	&.self {}
-	&__card {}
-	&__head {}
 	&__content {
 		line-height: 1.5;
 	}
 	&__time {
-		display: block;
-		text-align: end;
 		font-size: 0.55rem;
 	}
 	/* Code for Firefox */
-	::-moz-selection {
-		background: #1A237E;
-	}
-
-	::selection {
-		background: #1A237E;
+	::-moz-selection, ::selection {
+		background-color: #1A237E;
 	}
 }
 .sender {
@@ -108,14 +99,13 @@ const openUserProfile = () => { push({ name: 'user-userId', params: { userId: pr
 	}
 	&__avatar {
 		cursor: pointer;
-		user-select: none !important;
+		user-select: none;
 		:deep(img) {
-			pointer-events: none !important;
+			pointer-events: none;
 		}
 	}
 }
 .self {
-	justify-content: flex-end;
 	.sender__avatar {
 		order: 2 !important;
 	}
@@ -123,6 +113,4 @@ const openUserProfile = () => { push({ name: 'user-userId', params: { userId: pr
 		order: 1 !important;
 	}
 }
-.close__btn {}
-.download__btn {}
 </style>

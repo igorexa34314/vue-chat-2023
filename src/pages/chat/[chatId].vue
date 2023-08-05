@@ -1,14 +1,16 @@
 <template>
-	<v-container class="container d-flex flex-column" fluid>
+	<v-container class=" h-100 pa-0 d-flex flex-column" fluid>
 		<div v-if="userChats && userChats.length && !userChats.some(el => el === chatId)" class="text-h5 pa-5">
 			This chat doesnt exists</div>
-		<div v-else-if="userChats && userChats.length" class="chat__field d-flex flex-column flex-grow">
-			<div class="chat__content">
+		<div v-else-if="userChats && userChats.length"
+			class="chat__field flex-fill overflow-hidden d-flex flex-column flex-grow-1">
+			<div class="chat__content w-100 flex-fill">
 				<div v-if="loading"><page-loader /></div>
 
 				<v-infinite-scroll v-else-if="messages && messages.length" :side="scrollSide || 'start'" @load="onLoad"
-					:margin="50" ref="srollEl" tag="div" class="scrollable d-flex px-2 px-sm-4">
-					<div class="messages-field d-flex flex-column justify-end px-1 px-sm-3">
+					:margin="50" ref="srollEl" tag="div"
+					class="scrollable overflow-y-auto overflow-x-hidden flex-fill w-100 h-auto d-flex px-2 px-sm-4">
+					<div class="messages-field flex-fill w-100 d-flex flex-column justify-end px-1 px-sm-3 my-0 mx-auto">
 						<TransitionGroup :css="false" @before-enter="onBeforeEnter" @enter="onEnter" @leave="onLeave">
 							<MessageItem v-for="m in messages" :key="m.id" :self="uid === m.sender.id" :type="m.type"
 								:content="m.content" :sender="m.sender" :created_at="<Date>m.created_at"
@@ -17,9 +19,10 @@
 								@open-in-overlay="openInOverlay" @dragstart.prevent @drop.prevent draggable="false" />
 						</TransitionGroup>
 
-						<ContextMenu v-model="msgCtxMenu.show" :content-type="msgCtxMenu.contentType"
-							:position="msgCtxMenu.position" @closed="ctxMenuClosed" @copy-selected="copySelectedText"
-							@copy-image="copyImage" @copy-all="copyTextMessage" @download="downloadFile" @edit="editMessage" />
+						<ContextMenu v-model="msgCtxMenu.show" :content-type="msgCtxMenu.contentType" :max-width="350"
+							:min-width="xs ? 0 : 200" :position="msgCtxMenu.position" @closed="ctxMenuClosed"
+							@copy-selected="copySelectedText" @copy-image="copyImage" @copy-all="copyTextMessage"
+							@download="downloadFile" @edit="editMessage" />
 
 						<FullsizeOverlay v-model="overlayState.show" :content="<ImageWithPreviewURL[]>getAllMedia"
 							v-model:currentItem="overlayState.currentImage" @close="overlayClosed" />
@@ -33,9 +36,9 @@
 				<!-- <div v-else class="text-h5 pa-4">This chat is empty right now
 				</div> -->
 			</div>
-			<MessageForm class="message-form pb-sm-4 pt-1 pt-sm-2 px-sm-6" ref="msgForm" @create-message="createMessage"
-				@update-message="updateMessage" @scroll-to-message="scrollToAndHighlightMessage"
-				:class="xs ? 'px-2 pb-2' : 'px-3 pb-3'" />
+			<MessageForm class="message-form flex-0-0 d-flex mx-auto w-100 pb-sm-4 pt-1 pt-sm-2 px-sm-6" ref="msgForm"
+				@create-message="createMessage" @update-message="updateMessage"
+				@scroll-to-message="scrollToAndHighlightMessage" :class="xs ? 'px-2 pb-2' : 'px-3 pb-3'" />
 
 			<v-fade-transition>
 				<v-btn v-if="srollEl && srollEl?.$el.scrollHeight > srollEl?.$el.clientHeight && !isScrollOnBottom"
@@ -47,7 +50,7 @@
 		<!-- <v-dialog v-model="attachDialog" width="auto" ref="dropZone">
 			<v-card minHeight="80vh" minWidth="80vh" class="bg-blue-accent-1 d-flex flex-column align-center justify-center"
 				style="position: relative; left: 25%">
-				<div class="attach-frame text-h4 ma-6 font-weight-bold">
+				<div class="attach-frame flex-grow-1 d-flex align-center justify-center text-h4 ma-6 font-weight-bold">
 					Прикрепите файлы
 				</div>
 			</v-card>
@@ -105,13 +108,14 @@ const chatId = toRef(() => route.params.chatId as string);
 const uid = useCurrentUser().value?.uid;
 
 const attachDialog = ref(false);
-const dropZone = ref<VDialog | HTMLElement>();
 
-// Using chat scroll composable with infinite scroll
 const { isScrollOnBottom, scrollBottom, onLoad, scrollSide } = useChatScroll(toRef(() => srollEl.value?.$el), async (direction) => {
 	await loadMoreChatMessages(chatId.value, direction);
 });
 
+// TODO
+// const dropZone = ref<VDialog | HTMLElement>();
+// Using chat scroll composable with infinite scroll
 // const { isOverDropZone } = useDropZone(dropZone.value as HTMLElement, (files) => {
 // 	console.log('droppped', files)
 // });
@@ -316,44 +320,22 @@ const onLeave = (el: Element, done: () => void) => {
 }
 @import "@/assets/styles/scroll";
 
-.container {
-	padding: 0 !important;
-	height: 100%;
-}
-.chat__field {
-	flex: 1 1 auto;
-	overflow: hidden;
-}
+.container {}
+.chat__field {}
 .chat__content {
-	width: 100%;
-	flex: 1 1 auto;
 	position: relative;
 	z-index: 1;
 }
 .scrollable {
-	width: 100%;
 	position: absolute;
 	max-height: 100%;
-	height: auto;
-	flex: 1 1 auto;
-	overflow-y: overlay;
-	overflow-y: auto;
-	overflow-x: hidden;
 	inset: 0;
 }
 :global(.message-form) {
-	width: 100%;
-	flex: 0 0 auto;
-	margin-left: auto;
-	margin-right: auto;
-	display: flex;
 	max-width: 1080px;
 	transition: height 0.2s ease-in 0s;
 }
 .messages-field {
-	flex: 1 1 auto;
-	width: 100%;
-	margin: 0 auto;
 	max-width: 1080px;
 	& > :last-child {
 		padding-bottom: 0 !important;
@@ -365,18 +347,19 @@ const onLeave = (el: Element, done: () => void) => {
 .message-item {}
 .attach-frame {
 	width: 90%;
-	flex: 1;
 	border: 3px dashed #1A237E;
-	display: flex;
-	align-items: center;
-	justify-content: center;
 }
 .fixed-button-scrolldown {
 	position: absolute;
-	transform: translate(-50%, -100%);
 	bottom: 2rem;
 	right: 0;
 	z-index: 100;
+	transform: translate(-50%, -100%);
+	@media (max-width: 600px) {
+		bottom: 1.5rem;
+	}
+	@media (max-width: 600px) {
+		bottom: 1.2rem;
+	}
 }
 </style>
-@/plugins/chat

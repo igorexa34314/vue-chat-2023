@@ -1,5 +1,5 @@
 <template>
-	<div class="birthday-picker d-flex flex-column flex-sm-row align-sm-center">
+	<div class="d-flex flex-column flex-sm-row align-sm-center" :style="{ 'max-width': `${maxWidth}px` }">
 		<v-select v-for="item in datePickerDateItems" :key="item.type" :label="item.title" :items="item.items"
 			v-model="datePickerState[(item.type) as keyof typeof datePickerState]" :density="density" class="mr-4"
 			:variant="variant" :class="`${item.type}-select`" :style="{ order: item.order }" />
@@ -24,12 +24,14 @@ const props = withDefaults(defineProps<{
 	order?: 'dd-mmm-yyyy' | 'mmm-dd-yyyy';
 	density?: VSelect['$props']['density'];
 	variant?: VSelect['$props']['variant'];
+	maxWidth?: string | number
 }>(), {
 	modelValue: () => new Date(),
 	fromYear: new Date().getFullYear() - 100,
 	order: 'dd-mmm-yyyy',
 	variant: 'outlined',
-	density: 'compact'
+	density: 'compact',
+	maxWidth: 'none'
 });
 const emit = defineEmits<{
 	'update:modelValue': [date: Date]

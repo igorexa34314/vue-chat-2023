@@ -43,9 +43,9 @@ const calcImageCols = computed(() => (imgIdx: number) => calcCols(props.content.
 
 <style lang="scss" scoped>
 .images-frame {
-	user-select: none !important;
+	user-select: none;
 }
 .image-col {
-	padding: 0.1em !important;
+	padding: 0.1em;
 }
 </style>

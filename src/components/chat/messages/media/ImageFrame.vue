@@ -1,5 +1,5 @@
 <template>
-   <v-card v-if="image" class="image__wrapper" variant="text" :width="width || calcImageSize.w" @click="openImageFullsize"
+   <v-card v-if="image" class="image__wrapper d-flex justify-center" variant="text" :width="width || calcImageSize.w" @click="openImageFullsize"
       :max-height="maxHeight || (smAndUp ? maxMessageMedia.h : maxMessageMediaSm.h)" :rounded="rounded" v-ripple="false"
       height="100%">
 
@@ -93,14 +93,12 @@ onUnmounted(() => {
 
 <style lang="scss" scoped>
 .image__wrapper {
-   user-select: none !important;
-   display: flex;
-   justify-content: center;
+   user-select: none;
    max-width: 100%;
    max-height: 100%;
    :deep(img) {
-      user-select: text !important;
-      pointer-events: none !important;
+      user-select: text;
+      pointer-events: none;
    }
 }
 </style>

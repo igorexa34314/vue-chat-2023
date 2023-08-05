@@ -1,7 +1,7 @@
 <template>
 	<div class="d-flex align-center justify-center fill-height">
 		<v-progress-circular :model-value="modelValue" :color="color" :size="size || (smAndUp ? 50 : 36)"
-			:width="width || (smAndUp ? 4 : 3)" indeterminate :bg-color="bgColor" class="image-loader"
+			:width="width || (smAndUp ? 4 : 3)" indeterminate :bg-color="bgColor" class="rounded-circle"
 			@click.capture="emit('cancel')">
 			<v-icon :icon="mdiClose" :size="iconSize || (smAndUp ? 26 : 20)" />
 		</v-progress-circular>
@@ -29,10 +29,3 @@ const emit = defineEmits<{
 
 const { smAndUp } = useDisplay();
 </script>
-
-<style lang="scss" scoped>
-.image-loader {
-	border-radius: 50%;
-	background-color: rgba(0, 0, 0, 0.7);
-}
-</style>

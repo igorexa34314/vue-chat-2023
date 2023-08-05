@@ -1,6 +1,6 @@
 <template>
 	<div class="text-message">
-		<p class="message__text">
+		<p class="text-message__text">
 			{{ content.text }}
 		</p>
 	</div>
@@ -13,7 +13,3 @@ const props = defineProps<{
 	content: Omit<MessageContent, 'attachments'>
 }>();
 </script>
-
-<style lang="scss" scoped>
-.text-message {}
-</style>

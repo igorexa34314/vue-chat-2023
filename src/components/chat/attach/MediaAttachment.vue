@@ -1,5 +1,5 @@
 <template>
-	<div v-if="mediaFiles.length" class="images-grid">
+	<div v-if="mediaFiles.length" class="images-grid w-100 h-100 my-0 mx-auto">
 		<v-row dense>
 			<v-col v-for="(img, index) in mediaFiles" :key="img.id" :cols="calcImageCols(index)">
 				<PreviewImage :preview-item="img" :max-height="files.length < 2 ? '380px' : '300px'"
@@ -26,19 +26,17 @@ const emit = defineEmits<{
 
 const mediaFiles = computed(() => props.files.filter(file => file.fileData.type.startsWith('image/')));
 const prevEl = ref<InstanceType<typeof PreviewImage>[]>();
-const isImgsReady = computed(() => prevEl.value?.map(img => img.imgEl).every(img => img?.state === 'loaded'));
 const calcImageCols = computed(() => (imgIdx: number) => calcCols(mediaFiles.value.length, imgIdx));
+
+const isImgsReady = computed(() => prevEl.value?.map(img => img.imgEl).every(img => img?.state === 'loaded'));
 defineExpose({ isImgsReady });
 </script>
 
 <style lang="scss" scoped>
 .images-grid {
 	padding: 0 0.2em 0.5em 0;
-	width: 100%;
-	height: 100%;
 	max-width: 450px;
 	max-height: 400px;
-	margin: 0 auto;
 
 	@media(max-width: 760px) {
 		max-width: 400px;

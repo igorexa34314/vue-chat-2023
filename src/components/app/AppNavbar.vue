@@ -1,9 +1,9 @@
 <template>
-	<v-app-bar color="blue-grey-darken-4" :elevation="7" style="overflow: visible;">
+	<v-app-bar color="blue-grey-darken-4" :elevation="7" class="overflow-visible">
 		<v-app-bar-nav-icon variant="text" @click.stop="emit('drawer')" :density="!xs ? 'default' : 'comfortable'"
 			class="mr-3 mr-sm-0" />
 
-		<v-toolbar-title v-show="!xs || !searchState.enabled" class="app-title">My chat</v-toolbar-title>
+		<v-toolbar-title v-show="!xs || !searchState.enabled" class="app-title text-truncate">My chat</v-toolbar-title>
 
 		<v-spacer />
 
@@ -78,10 +78,3 @@ const exit = async () => {
 	push('/login');
 };
 </script>
-
-<style lang="scss" scoped>
-.app-title {
-	overflow: hidden;
-	text-overflow: ellipsis;
-}
-</style>

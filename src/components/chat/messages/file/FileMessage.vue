@@ -10,9 +10,9 @@
 					@openFile="emit('openInOverlay', file.id)" />
 			</v-hover>
 
-			<div class="file-details ml-2 text-subtitle-1 font-weight-medium">
-				<p class="text-subtitle-1" :title="file.fullname">{{ file.fullname }}</p>
-				<p class="mt-1 text-body-2">{{ formatFileSize(file.raw.fullsize) }}</p>
+			<div class="file-details ml-2 text-subtitle-1 font-weight-medium text-truncate">
+				<p class="text-subtitle-1 text-truncate" :title="file.fullname">{{ file.fullname }}</p>
+				<p class="mt-1 text-body-2 text-truncate">{{ formatFileSize(file.raw.fullsize) }}</p>
 			</div>
 		</div>
 	</div>
@@ -58,12 +58,6 @@ const downloadFile = async (file: Message['content']['attachments'][number]) => 
 <style lang="scss" scoped>
 .file-details {
 	max-width: 360px;
-	overflow: hidden;
-	p {
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
 	@media(max-width: 720px) {
 		max-width: 320px;
 	}

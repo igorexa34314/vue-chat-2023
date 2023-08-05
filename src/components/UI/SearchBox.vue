@@ -1,14 +1,14 @@
 <template>
 	<ais-instant-search :index-name="searchIndex" :stalled-search-delay="500" :search-client="searchClient"
-		class="search mr-3">
+		class="search w-100 mr-3">
 		<ais-autocomplete #default="{ currentRefinement, indices, refine }: AisAutocompleteSlot">
 			<v-text-field :value=" currentRefinement " ref="searchEl" v-bind=" $attrs "
 				@input="refine(($event.target as HTMLInputElement)?.value)" variant="solo" placeholder="Search"
 				density="compact" hide-details single-line autofocus />
 
-			<div v-if=" currentRefinement " v-for=" index  in  indices " :key=" index.indexId " class="search-hits">
+			<div v-if=" currentRefinement " v-for="  index   in   indices  " :key=" index.indexId " class="search-hits w-100">
 				<v-list v-if=" index.hits?.length ">
-					<v-list-item v-for=" hit  in  index.hits.filter(h => h.info.uid !== uid)  " :key=" hit.objectID " @click="
+					<v-list-item v-for="  hit   in   index.hits.filter(h => h.info.uid !== uid)   " :key=" hit.objectID " @click="
 						() => {
 							openUserProfile(hit.info.uid);
 							refine('');
@@ -96,14 +96,12 @@ defineExpose({
 .search {
 	position: relative;
 	max-width: 400px;
-	width: 100%;
 }
 .search-hits {
-	width: 100%;
 	position: absolute;
-	z-index: 100;
 	top: 100%;
 	left: 50%;
+	z-index: 100;
 	transform: translateX(-50%);
 }
 </style>

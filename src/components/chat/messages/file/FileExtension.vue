@@ -7,10 +7,11 @@
 				<image-loader :size="smAndUp ? '32px' : '26px'" :icon-size="smAndUp ? '20px' : '16px'"
 					bg-color="transparent" />
 			</div>
-			<span v-else-if="!isHovering" class="file-icon-ext font-weight-bold text-brown-darken-4">
+			<span v-else-if="!isHovering" class="file-icon-ext d-inline-block mx-auto font-weight-bold text-brown-darken-4">
 				{{ getFileExt(file.fullname).length <= (smAndUp ? 5 : 4) ? getFileExt(file.fullname) : '' }}</span>
-					<v-icon v-else :icon="mdiDownload" :size="smAndUp ? '22px' : '20px'" variant="text" class="file-icon-btn"
-						color="black" density="compact" :flat="false" :ripple="false" @click="emit('downloadFile')" />
+					<v-icon v-else :icon="mdiDownload" :size="smAndUp ? '22px' : '20px'" variant="text"
+						class="file-icon-btn mx-auto d-inline-block" color="black" density="compact" :flat="false"
+						:ripple="false" @click="emit('downloadFile')" />
 		</v-fade-transition>
 	</div>
 </template>
@@ -39,18 +40,15 @@ const { smAndUp } = useDisplay();
 
 <style lang="scss" scoped>
 .file-icon {
-	user-select: none !important;
+	user-select: none;
 	position: relative;
 	&-ext, &-btn {
-		margin-left: auto;
-		margin-right: auto;
-		max-width: 45px;
-		font-size: 1em;
-		line-height: 1;
-		display: inline-block;
 		position: absolute;
+		max-width: 45px;
 		top: 50%;
+		font-size: 1em;
 		left: 50%;
+		line-height: 1;
 		transform: translate(-50%, -30%);
 		@media (min-width: 600px) {
 			font-size: 1.15em;
@@ -65,6 +63,5 @@ const { smAndUp } = useDisplay();
 	top: 50%;
 	left: 50%;
 	transform: translate(-50%, -30%);
-
 }
 </style>

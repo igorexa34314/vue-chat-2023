@@ -14,10 +14,9 @@
 
 				<pass-field v-model="formState.password" class="mt-4" repeater />
 
-				<v-checkbox v-model="formState.agreeTerms" :rules="validations.terms" required density="compact" class="mt-3">
-					<template #label>
-						<div class="">Agree with <a href="https://uml.ua/pro-licej/himn/" target="_blank">rules</a></div>
-					</template>
+				<v-checkbox v-model="formState.agreeTerms" :rules="validations.terms" required density="compact" class="mt-3"
+					#label>
+					<div class="">Agree with <a href="https://uml.ua/pro-licej/himn/" target="_blank">rules</a></div>
 				</v-checkbox>
 
 				<v-btn type="submit" color="success" class="btn mt-4">

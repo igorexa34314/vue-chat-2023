@@ -16,14 +16,12 @@ const emit = defineEmits<{
 	deleteAttach: [imgId: AttachedContent[number]['id']]
 }>();
 
-const getFilePreview = computed(() => {
-
-});
-
 const prevEl = ref<InstanceType<typeof PreviewFile>[]>();
+	
 const isFilesReady = computed(() => {
 	const imgsEl = prevEl.value?.filter(el => el.imgEl).map(el => el.imgEl);
 	return imgsEl?.length ? imgsEl.every(img => img?.state === 'loaded') : true
 });
+
 defineExpose({ isFilesReady });
 </script>

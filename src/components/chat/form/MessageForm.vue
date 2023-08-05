@@ -1,6 +1,6 @@
 <template>
 	<div class="message-form d-flex flex-row align-end" v-bind="$attrs">
-		<div class="message-textarea">
+		<div class="message-textarea flex-fill">
 			<MessageReply v-model="showReply" :m-type="msgToEditState.type" :content="msgToEditState.content"
 				class="reply-wrapper" @go-to-message="emit('scrollToMessage', msgToEditState.id)" />
 
@@ -8,7 +8,7 @@
 				placeholder="Your message" rows="1" max-rows="10" :density="smAndUp ? 'default' : 'comfortable'" auto-grow
 				focused @paste="onInputPasted" #append-inner>
 				<AttachMenu ref="attachMenuEl" @attach-file="attachFiles" #activator="{ props }">
-					<div class="attach-btn ml-sm-4">
+					<div class="attach-btn d-flex align-end justify-end ml-sm-4">
 						<v-icon v-bind="props" :icon="mdiAttachment" :size="smAndUp ? 'large' : 'default'" class="attach-icon"
 							:v-ripple="false" />
 					</div>
@@ -170,7 +170,6 @@ defineExpose({
 }
 .message-textarea {
 	position: relative;
-	flex: 1 1 auto;
 }
 .reply-wrapper {
 	position: relative;
@@ -181,9 +180,6 @@ defineExpose({
 	opacity: 0.65;
 	width: 40px;
 	height: 100%;
-	display: flex;
-	align-items: flex-end;
-	justify-content: flex-end;
 }
 .attach-icon {
 	transform: rotate(135deg) translate(-20%, 50%);

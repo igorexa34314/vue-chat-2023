@@ -1,8 +1,8 @@
 <template>
 	<context-menu v-model:show="showMenu" @close="emit('closed')"
-		:options="{ x: +position?.x, y: +position?.y, maxWidth: +maxWidth, zIndex: +zIndex, theme, xOffset: offset[0], yOffset: offset[1] }">
+		:options="{ x: position.x, y: position.y, zIndex, theme, xOffset: offset[0], yOffset: offset[1], minWidth, maxWidth }">
 		<context-menu-item v-for="item of contextMenuItems" :key="item.value" @click="emit(item.value as any)"
-			style="cursor: pointer;">
+			style="cursor: pointer;" class="w-100">
 			<template #icon>
 				<v-icon :icon="item.icon" :class="item.colorClass || ''" />
 			</template>
@@ -25,16 +25,18 @@ import '@imengyu/vue3-context-menu/lib/vue3-context-menu.css';
 const props = withDefaults(defineProps<{
 	modelValue?: boolean;
 	contentType?: Message['type'];
-	maxWidth?: MenuOptions['maxWidth'] | string | number;
-	position?: { x: MenuOptions['x'] | string | number, y: MenuOptions['y'] | string | number };
-	offset?: [MenuOptions['xOffset'] | number, MenuOptions['yOffset'] | number];
+	maxWidth?: MenuOptions['maxWidth'];
+	minWidth?: MenuOptions['minWidth'];
+	position?: { x: MenuOptions['x'], y: MenuOptions['y'] };
+	offset?: [MenuOptions['xOffset'], MenuOptions['yOffset']];
 	theme?: MenuOptions['theme'];
-	zIndex?: MenuOptions['zIndex'] | string | number;
+	zIndex?: MenuOptions['zIndex'];
 }>(), {
 	modelValue: false,
 	contentType: 'text',
-	maxWidth: '400',
-	zIndex: '100',
+	maxWidth: 400,
+	minWidth: 200,
+	zIndex: 100,
 	offset: () => ([20, 30]),
 	theme: 'dark',
 	position: () => ({ x: 0, y: 0 })
@@ -54,6 +56,7 @@ const emit = defineEmits<{
 	select: [],
 	delete: [],
 }>();
+
 const selectedText = ref('');
 const getSelectionText = () => {
 	selectedText.value = getSelection()?.toString() || '';
@@ -61,6 +64,10 @@ const getSelectionText = () => {
 onMounted(() => {
 	document.addEventListener('selectionchange', getSelectionText);
 });
+onUnmounted(() => {
+	document.removeEventListener('selectionchange', getSelectionText);
+});
+
 const showMenu = useVModel(props, 'modelValue', emit);
 const contextMenuItems = computed(() => ([
 	{ title: 'Reply', value: 'reply', icon: mdiReplyOutline },
@@ -77,9 +84,4 @@ const contextMenuItems = computed(() => ([
 	{ title: 'Select', value: 'select', icon: mdiCheckCircleOutline },
 	{ title: 'Delete', value: 'delete', icon: mdiDeleteOutline, colorClass: 'text-deep-orange-accent-3' },
 ].filter(Boolean)) as { title: string, value: string, icon: string, colorClass?: string }[]);
-onUnmounted(() => {
-	document.removeEventListener('selectionchange', getSelectionText);
-});
 </script>
-
-<style lang="scss" scoped></style>

@@ -1,61 +1,11 @@
 import { createI18n } from 'vue-i18n';
+import dateTimeFormats from '@/utils/dateTimeFormats.json';
+
+const availableLocales = ['en-US', 'ru-RU', 'uk-UA'] as const;
 
 export default createI18n({
 	locale: 'en-US',
 	fallbackLocale: 'en-US',
-	datetimeFormats: {
-		'en-US': {
-			short: {
-				year: 'numeric',
-				month: 'short',
-				day: 'numeric'
-			},
-			long: {
-				year: 'numeric',
-				month: 'short',
-				day: 'numeric',
-				weekday: 'short',
-				hour: 'numeric',
-				minute: 'numeric'
-			}
-		},
-		'ru-RU': {
-			messageLarge: {
-				month: '2-digit',
-				day: '2-digit',
-				year: 'numeric',
-				hour: 'numeric',
-				minute: 'numeric'
-			},
-			messageLong: {
-				month: 'short',
-				day: 'numeric',
-				hour: 'numeric',
-				minute: 'numeric'
-			},
-			messageShort: {
-				hour: 'numeric',
-				minute: 'numeric'
-			}
-		},
-		'uk-UA': {
-			messageLarge: {
-				month: '2-digit',
-				day: '2-digit',
-				year: 'numeric',
-				hour: 'numeric',
-				minute: 'numeric'
-			},
-			messageLong: {
-				month: 'short',
-				day: 'numeric',
-				hour: 'numeric',
-				minute: 'numeric'
-			},
-			messageShort: {
-				hour: 'numeric',
-				minute: 'numeric'
-			}
-		}
-	}
+	availableLocales,
+	datetimeFormats: Object.assign({}, ...availableLocales.map(locale => ({ [locale]: dateTimeFormats['en-US'] })))
 });

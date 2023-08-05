@@ -1,23 +1,26 @@
 <template>
-	<v-overlay v-if="content.length" v-model="showOverlay" content-class="image-overlay" class="fullsize-image__dialog"
-		transition="scale-transition" @click:outside="$emit('close')" close-on-back scroll-strategy="close">
+	<v-overlay v-if="content.length" v-model="showOverlay" content-class="image-overlay d-flex align-center ma-0"
+		class="fullsize-image__dialog" transition="scale-transition" @click:outside="$emit('close')" close-on-back
+		scroll-strategy="close">
 		<v-carousel v-model="overlayItem" hide-delimiters hide-delimiter-background height="85vh" show-arrows
 			:continuous="false">
 			<template #prev="{ props }">
-				<div v-if="smAndUp && overlayItem" class="carousel__control carousel__control-prev" @click="props.onClick">
+				<div v-if="smAndUp && overlayItem" class="carousel__control d-flex align-center carousel__control-prev"
+					@click="props.onClick">
 					<v-icon :icon="mdiArrowLeft" size="55px" class="carousel-prev-btn" />
 				</div>
 			</template>
 			<template #next="{ props }">
-				<div v-if="smAndUp && overlayItem < content.length - 1" class="carousel__control carousel__control-next"
-					@click="props.onClick">
+				<div v-if="smAndUp && overlayItem < content.length - 1"
+					class="carousel__control d-flex align-center carousel__control-next" @click="props.onClick">
 					<v-icon :icon="mdiArrowRight" size="55px" class="carousel-next-btn" />
 				</div>
 			</template>
 
 			<v-carousel-item v-for="item of content" :key="item.id" cover>
-				<div class="carousel-image-element" style="max-width: 75vw;">
-					<v-card class="fullsize-image__wrapper d-flex align-center justify-center" variant="text"
+				<div class="carousel-image-element d-flex align-center justify-center ma-auto w-100 h-100"
+					style="max-width: 75vw;">
+					<v-card class="fullsize-image__wrapper d-flex align-center justify-center my-0 mx-auto" variant="text"
 						:width="item.raw.sizes?.w" :height="item.raw.sizes?.h" max-height="100%" max-width="100%"
 						:style="{ transform: `scale(${zoomed ? '2' : '1'})` }">
 						<v-img :src="item.raw.previewURL" :alt="alt || item.fullname" :width="item.raw.sizes?.w" #placeholder>
@@ -28,7 +31,7 @@
 			</v-carousel-item>
 		</v-carousel>
 
-		<div class="actions__panel">
+		<div class="actions__panel d-flex justify-end">
 			<v-btn class="zoom-in__btn" :icon="zoomed ? mdiMagnifyMinusOutline : mdiMagnifyPlusOutline" variant="text"
 				title="Zoom" @click="zoomImage" disabled />
 			<v-btn class="download__btn" :icon="mdiDownload" variant="text"
@@ -82,7 +85,7 @@ const zoomImage = () => {
 
 <style lang="scss" scoped>
 .fullsize-image__dialog :deep(.v-overlay__scrim) {
-	background: #000000;
+	background-color: #000000;
 	opacity: 90%;
 }
 :global(.image-overlay) {
@@ -91,14 +94,10 @@ const zoomImage = () => {
 	width: 100vw;
 	min-height: 100dvh;
 	min-height: 100vh;
-	margin: 0 !important;
-	display: flex;
-	align-items: center;
 }
 .fullsize-image__wrapper {
 	pointer-events: all;
 	transition: transform 0.09s ease-in 0s;
-	margin: 0 auto;
 	& img {
 		display: block;
 		max-width: 100%;
@@ -106,33 +105,12 @@ const zoomImage = () => {
 		object-fit: contain;
 	}
 }
-.actions__panel {
-	pointer-events: all;
-	padding: 10px 2em;
-	top: 0;
-	left: 0;
-	right: 0;
-	position: fixed;
-	display: flex;
-	column-gap: 0.5rem;
-	justify-content: flex-end;
-}
-.carousel-image-element {
-	width: 100%;
-	height: 100%;
-	margin: auto;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-}
 .carousel__control {
-	padding: 0px 1em;
+	position: absolute;
 	height: 100dvh;
 	height: 100vh;
-	display: flex;
-	align-items: center;
-	position: absolute;
 	top: 50%;
+	padding: 0px 1em;
 	z-index: 1000;
 	&-prev {
 		padding-left: 1.5em;
@@ -156,5 +134,14 @@ const zoomImage = () => {
 		opacity: 1;
 		visibility: visible;
 	}
+}
+.actions__panel {
+	pointer-events: all;
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	padding: 10px 2em;
+	column-gap: 0.5rem;
 }
 </style>

@@ -7,10 +7,11 @@
 			</template>
 			<template #text>
 				<div class="reply-original d-flex align-center pa-2" @click="emit('goToMessage')">
-					<div class="reply-original-media" v-if="getImagesFromEditMsg && getImagesFromEditMsg.length">
+					<div class="reply-original-media d-flex align-center"
+						v-if="getImagesFromEditMsg && getImagesFromEditMsg.length">
 						<v-img :src="getImagesFromEditMsg.at(-1)" aspect-ratio="1" width="48px" height="100%" cover />
 					</div>
-					<div class="reply-original-content-wrapper">
+					<div class="reply-original-content-wrapper flex-fill text-truncate">
 						<div class="reply-type">Editing</div>
 						<div class="reply-original-text">
 							<p>{{ getTextFromEditMsg }}</p>
@@ -98,27 +99,20 @@ const onLeave = (el: Element, done: () => void) => {
 		color: #7E57C2;
 	}
 	&-original {
-		border-radius: 0.35rem;
 		cursor: pointer;
 		gap: 0.8em;
+		border-radius: 0.35rem;
 		transition: background-color 0.05s ease-in-out 0s;
 		&:hover {
 			background-color: rgba(255, 255, 255, 0.2);
 		}
-		&-content-wrapper {
-			flex: 1 1 auto;
-			overflow: hidden;
-			text-overflow: ellipsis;
-		}
+		&-content-wrapper {}
 		&-media {
 			flex: 0 0 48px;
-			display: flex;
-			align-items: center;
 			height: 48px;
 		}
 		&-text {
 			max-width: 100%;
-			white-space: nowrap;
 		}
 	}
 }

@@ -41,6 +41,4 @@ defineExpose({ imgEl });
 	right: 0;
 	transform: translate(-25%, -25%);
 }
-
-.image-wrapper {}
 </style>

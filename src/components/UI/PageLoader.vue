@@ -1,6 +1,6 @@
 <template>
 	<div class="page-loader">
-		<span class="loader"></span>
+		<span class="loader d-inline-block"></span>
 	</div>
 </template>
 
@@ -18,13 +18,12 @@ $loader-secondary: #FDD835;
 	z-index: 50;
 }
 .loader {
+	position: relative;
 	width: 48px;
 	height: 48px;
-	border-radius: 50%;
-	display: inline-block;
-	position: relative;
 	border: 3px solid;
 	border-color: transparent $loader-primary $loader-primary;
+	border-radius: 50%;
 	box-sizing: border-box;
 	animation: rotation 1s linear infinite;
 }
