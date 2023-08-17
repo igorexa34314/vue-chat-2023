@@ -25,6 +25,6 @@ export const useUserdataStore = defineStore('userdata', () => {
 		getUChats,
 		$reset,
 		setUserInfo,
-		setUserData
+		setUserData,
 	};
 });

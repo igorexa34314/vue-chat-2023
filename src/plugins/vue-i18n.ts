@@ -7,5 +7,5 @@ export default createI18n({
 	locale: 'en-US',
 	fallbackLocale: 'en-US',
 	availableLocales,
-	datetimeFormats: Object.assign({}, ...availableLocales.map(locale => ({ [locale]: dateTimeFormats['en-US'] })))
+	datetimeFormats: Object.assign({}, ...availableLocales.map(locale => ({ [locale]: dateTimeFormats['en-US'] }))),
 });

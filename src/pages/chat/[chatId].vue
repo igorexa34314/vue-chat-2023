@@ -1,31 +1,60 @@
 <template>
-	<v-container class=" h-100 pa-0 d-flex flex-column" fluid>
+	<v-container class="h-100 pa-0 d-flex flex-column" fluid>
 		<div v-if="userChats && userChats.length && !userChats.some(el => el === chatId)" class="text-h5 pa-5">
-			This chat doesnt exists</div>
-		<div v-else-if="userChats && userChats.length"
+			This chat doesnt exists
+		</div>
+		<div
+			v-else-if="userChats && userChats.length"
 			class="chat__field flex-fill overflow-hidden d-flex flex-column flex-grow-1">
 			<div class="chat__content w-100 flex-fill">
 				<div v-if="loading"><page-loader /></div>
 
-				<v-infinite-scroll v-else-if="messages && messages.length" :side="scrollSide || 'start'" @load="onLoad"
-					:margin="50" ref="srollEl" tag="div"
+				<v-infinite-scroll
+					v-else-if="messages && messages.length"
+					:side="scrollSide || 'start'"
+					@load="onLoad"
+					:margin="50"
+					ref="srollEl"
+					tag="div"
 					class="scrollable overflow-y-auto overflow-x-hidden flex-fill w-100 h-auto d-flex px-2 px-sm-4">
 					<div class="messages-field flex-fill w-100 d-flex flex-column justify-end px-1 px-sm-3 my-0 mx-auto">
 						<TransitionGroup :css="false" @before-enter="onBeforeEnter" @enter="onEnter" @leave="onLeave">
-							<MessageItem v-for="m in messages" :key="m.id" :self="uid === m.sender.id" :type="m.type"
-								:content="m.content" :sender="m.sender" :created_at="<Date>m.created_at"
+							<MessageItem
+								v-for="m in messages"
+								:key="m.id"
+								:self="uid === m.sender.id"
+								:type="m.type"
+								:content="m.content"
+								:sender="m.sender"
+								:created_at="m.created_at"
 								@contextmenu="(e: MouseEvent) => openCtxMenu(e, { mId: m.id, mType: m.type })"
-								:id="`message-${m.id}`" :data-message-id="m.id" class="message-item px-2 px-sm-4 py-2"
-								@open-in-overlay="openInOverlay" @dragstart.prevent @drop.prevent draggable="false" />
+								:id="`message-${m.id}`"
+								:data-message-id="m.id"
+								class="message-item px-2 px-sm-4 py-2"
+								@open-in-overlay="openInOverlay"
+								@dragstart.prevent
+								@drop.prevent
+								draggable="false" />
 						</TransitionGroup>
 
-						<ContextMenu v-model="msgCtxMenu.show" :content-type="msgCtxMenu.contentType" :max-width="350"
-							:min-width="xs ? 0 : 200" :position="msgCtxMenu.position" @closed="ctxMenuClosed"
-							@copy-selected="copySelectedText" @copy-image="copyImage" @copy-all="copyTextMessage"
-							@download="downloadFile" @edit="editMessage" />
+						<ContextMenu
+							v-model="msgCtxMenu.show"
+							:content-type="msgCtxMenu.contentType"
+							:max-width="350"
+							:min-width="xs ? 0 : 200"
+							:position="msgCtxMenu.position"
+							@closed="ctxMenuClosed"
+							@copy-selected="copySelectedText"
+							@copy-image="copyImage"
+							@copy-all="copyTextMessage"
+							@download="downloadFile"
+							@edit="editMessage" />
 
-						<FullsizeOverlay v-model="overlayState.show" :content="<ImageWithPreviewURL[]>getAllMedia"
-							v-model:currentItem="overlayState.currentImage" @close="overlayClosed" />
+						<FullsizeOverlay
+							v-model="overlayState.show"
+							:content="getAllMedia"
+							v-model:currentItem="overlayState.currentImage"
+							@close="overlayClosed" />
 					</div>
 
 					<template #empty></template>
@@ -36,16 +65,23 @@
 				<!-- <div v-else class="text-h5 pa-4">This chat is empty right now
 				</div> -->
 			</div>
-			<MessageForm class="message-form flex-0-0 d-flex mx-auto w-100 pb-sm-4 pt-1 pt-sm-2 px-sm-6" ref="msgForm"
-				@create-message="createMessage" @update-message="updateMessage"
-				@scroll-to-message="scrollToAndHighlightMessage" :class="xs ? 'px-2 pb-2' : 'px-3 pb-3'" />
+			<MessageForm
+				class="message-form flex-0-0 d-flex mx-auto w-100 pb-sm-4 pt-1 pt-sm-2 px-sm-6"
+				ref="msgForm"
+				@create-message="createMessage"
+				@update-message="updateMessage"
+				@scroll-to-message="scrollToAndHighlightMessage"
+				:class="xs ? 'px-2 pb-2' : 'px-3 pb-3'" />
 
 			<v-fade-transition>
-				<v-btn v-if="srollEl && srollEl?.$el.scrollHeight > srollEl?.$el.clientHeight && !isScrollOnBottom"
-					class="fixed-button-scrolldown" color="blue-grey-darken-1" :icon="mdiArrowDown" size="default"
+				<v-btn
+					v-if="srollEl && srollEl?.$el.scrollHeight > srollEl?.$el.clientHeight && !isScrollOnBottom"
+					class="fixed-button-scrolldown"
+					color="blue-grey-darken-1"
+					:icon="mdiArrowDown"
+					size="default"
 					@click="scrollBottom('smooth')" />
 			</v-fade-transition>
-
 		</div>
 		<!-- <v-dialog v-model="attachDialog" width="auto" ref="dropZone">
 			<v-card minHeight="80vh" minWidth="80vh" class="bg-blue-accent-1 d-flex flex-column align-center justify-center"
@@ -77,13 +113,13 @@ import { useMeta } from 'vue-meta';
 import { useRoute } from 'vue-router';
 import { useChatScroll } from '@/composables/useChatScroll';
 import { loadMoreChatMessages } from '@/services/message';
-import { useDropZone } from '@vueuse/core';
+// import { useDropZone } from '@vueuse/core';
 import { storeToRefs } from 'pinia';
 import { setChatName } from '@/utils/chat';
 import { downloadFile as downloadFileProcess } from '@/utils/message/fileActions';
 import { copyToClipboard as copyImageToClipboard } from '@/utils/message/imageActions';
 import { Unsubscribe } from 'firebase/firestore';
-import { VDialog } from 'vuetify/components';
+// import { VDialog } from 'vuetify/components';
 import { ImageWithPreviewURL } from '@/components/chat/messages/media/ImageFrame.vue';
 import { VInfiniteScroll } from 'vuetify/labs/VInfiniteScroll';
 import { gsap } from 'gsap';
@@ -107,11 +143,14 @@ let unsub: Unsubscribe | undefined;
 const chatId = toRef(() => route.params.chatId as string);
 const uid = useCurrentUser().value?.uid;
 
-const attachDialog = ref(false);
+// const attachDialog = ref(false);
 
-const { isScrollOnBottom, scrollBottom, onLoad, scrollSide } = useChatScroll(toRef(() => srollEl.value?.$el), async (direction) => {
-	await loadMoreChatMessages(chatId.value, direction);
-});
+const { isScrollOnBottom, scrollBottom, onLoad, scrollSide } = useChatScroll(
+	toRef(() => srollEl.value?.$el),
+	async direction => {
+		await loadMoreChatMessages(chatId.value, direction);
+	}
+);
 
 // TODO
 // const dropZone = ref<VDialog | HTMLElement>();
@@ -121,23 +160,24 @@ const { isScrollOnBottom, scrollBottom, onLoad, scrollSide } = useChatScroll(toR
 // });
 
 //Dynamic page title
-useMeta(computed(() => {
-	if (chatInfo.value && Object.keys(chatInfo.value).length)
-		return { title: setChatName.value(chatInfo.value) };
-	return { title: 'Chat' };
-}));
+useMeta(
+	computed(() => {
+		if (chatInfo.value && Object.keys(chatInfo.value).length) return { title: setChatName.value(chatInfo.value) };
+		return { title: 'Chat' };
+	})
+);
 
-const addAttachment = () => {
-	console.log('Drag enter');
-	attachDialog.value = true;
-};
-const removeAttachment = () => {
-	console.log('Drag leave');
-	attachDialog.value = false;
-};
+// const addAttachment = () => {
+// 	console.log('Drag enter');
+// 	attachDialog.value = true;
+// };
+// const removeAttachment = () => {
+// 	console.log('Drag leave');
+// 	attachDialog.value = false;
+// };
 
 // Reset messages when switching chat
-watchEffect(async (onCleanup) => {
+watchEffect(async onCleanup => {
 	unsub?.();
 	resetMsgStore();
 	if (chatId.value) {
@@ -147,8 +187,7 @@ watchEffect(async (onCleanup) => {
 			unsub = await fetchChatMessages(chatId.value);
 		} catch (e) {
 			console.error(e);
-		}
-		finally {
+		} finally {
 			await nextTick();
 			loading.value = false;
 		}
@@ -166,17 +205,16 @@ const createMessage = async (type: Message['type'] = 'text', content: Partial<At
 		allowTransition.value = true;
 		await createDBMessage(chatId.value, type, content);
 	} catch (e) {
-		showMessage(sbMessages[e as keyof typeof sbMessages] || e as string, 'red-darken-3', 2000);
-	}
-	finally {
-		nextTick().then(() => allowTransition.value = false);
+		showMessage(sbMessages[e as keyof typeof sbMessages] || (e as string), 'red-darken-3', 2000);
+	} finally {
+		nextTick().then(() => (allowTransition.value = false));
 	}
 };
 const updateMessage = async ({ id, type, content }: EditMessageData) => {
 	try {
 		await updateDBMessageContent(chatId.value, { id, type, content });
 	} catch (e) {
-		showMessage(sbMessages[e as keyof typeof sbMessages] || e as string, 'red-darken-3', 2000);
+		showMessage(sbMessages[e as keyof typeof sbMessages] || (e as string), 'red-darken-3', 2000);
 	}
 };
 
@@ -185,15 +223,20 @@ const msgCtxMenu = ref({
 	show: false,
 	contentType: 'text' as Message['type'],
 	position: { x: 0, y: 0 },
-	activeMessage: '' as Message['id']
+	activeMessage: '' as Message['id'],
 });
 const openCtxMenu = (e: MouseEvent, { mId, mType }: { mId: Message['id']; mType?: Message['type'] }) => {
 	const highlighter = gsap.utils.selector(`#message-${mId}`)('span.highlighter');
 	gsap.set(highlighter, {
 		autoAlpha: 0.2,
 	});
-	msgCtxMenu.value = { show: false, activeMessage: mId, position: { x: e.clientX, y: e.clientY }, contentType: mType || 'text' };
-	nextTick().then(() => msgCtxMenu.value.show = true);
+	msgCtxMenu.value = {
+		show: false,
+		activeMessage: mId,
+		position: { x: e.clientX, y: e.clientY },
+		contentType: mType || 'text',
+	};
+	nextTick().then(() => (msgCtxMenu.value.show = true));
 };
 
 const ctxMenuClosed = () => {
@@ -207,15 +250,17 @@ onUnmounted(() => {
 	unsub?.();
 	resetMsgStore();
 });
-const getAllMedia = computed(() => messages.value.filter(m => m.type !== 'text').flatMap(m => m.content.attachments.filter(f => f.raw?.previewURL)));
+const getAllMedia = computed(() =>
+	messages.value.filter(m => m.type !== 'text').flatMap(m => m.content.attachments.filter(f => f.raw?.previewURL))
+);
 const overlayState = ref({
 	show: false,
 	currentImage: 0,
 });
 const openInOverlay = (imgId: ImageWithPreviewURL['id']) => {
 	overlayState.value = { show: true, currentImage: getAllMedia.value?.findIndex(img => img.id == imgId) };
-}
-const overlayClosed = () => { };
+};
+const overlayClosed = () => {};
 
 const copySelectedText = async () => {
 	try {
@@ -228,7 +273,9 @@ const copySelectedText = async () => {
 };
 const copyTextMessage = async () => {
 	try {
-		const msgText = messages.value.find(m => m.type === 'text' && m.id === msgCtxMenu.value.activeMessage)?.content.text.trim() || '';
+		const msgText =
+			messages.value.find(m => m.type === 'text' && m.id === msgCtxMenu.value.activeMessage)?.content.text.trim() ||
+			'';
 		await navigator.clipboard.writeText(msgText);
 		showMessage('Copied to clipboard', 'deep-purple-accent-3', 2000);
 	} catch (e) {
@@ -238,7 +285,8 @@ const copyTextMessage = async () => {
 };
 const copyImage = async () => {
 	try {
-		const imageToCopy = messages.value.find(m => m.id === msgCtxMenu.value.activeMessage)?.content.attachments[0].raw.previewURL || '';
+		const imageToCopy =
+			messages.value.find(m => m.id === msgCtxMenu.value.activeMessage)?.content.attachments[0].raw.previewURL || '';
 		await copyImageToClipboard(imageToCopy);
 		showMessage('Copied to clipboard', 'deep-purple-accent-3', 2000);
 	} catch (e) {
@@ -266,24 +314,32 @@ const editMessage = () => {
 };
 const scrollToAndHighlightMessage = (mId: Message['id']) => {
 	const highlighter = gsap.utils.selector(`#message-${mId}`)('span.highlighter');
-	gsap.timeline({ delay: 0 })
+	gsap
+		.timeline({ delay: 0 })
 		.to(srollEl.value?.$el, {
-			scrollTo: { y: `#message-${mId}`, autoKill: true, offsetY: 100 }, duration: 0.4, ease: 'power2',
+			scrollTo: { y: `#message-${mId}`, autoKill: true, offsetY: 100 },
+			duration: 0.4,
+			ease: 'power2',
 		})
-		.fromTo(highlighter, {
-			autoAlpha: 0.2
-		}, {
-			autoAlpha: 0,
-			ease: 'power0',
-			duration: 2.5,
-		}, '<');
-}
+		.fromTo(
+			highlighter,
+			{
+				autoAlpha: 0.2,
+			},
+			{
+				autoAlpha: 0,
+				ease: 'power0',
+				duration: 2.5,
+			},
+			'<'
+		);
+};
 
 const onBeforeEnter = (el: Element) => {
 	if (allowTransition.value) {
-		// 	gsap.set(el, { autoAlpha: 0 })
+		gsap.set(el, { autoAlpha: 0 });
 	}
-}
+};
 
 const onEnter = (el: Element, done: () => void) => {
 	if (allowTransition.value) {
@@ -293,21 +349,20 @@ const onEnter = (el: Element, done: () => void) => {
 			translateY: '100%',
 			scale: 0.5,
 			duration: 0.2,
-			onComplete: done
-		})
-	} else done()
-}
+			onComplete: done,
+		});
+	} else done();
+};
 
 const onLeave = (el: Element, done: () => void) => {
 	if (allowTransition.value) {
 		gsap.to(el, {
 			opacity: 0,
 			height: 0,
-			onComplete: done
-		})
-	}
-	else done()
-}
+			onComplete: done,
+		});
+	} else done();
+};
 </script>
 
 <style lang="scss" scoped>
@@ -318,10 +373,12 @@ const onLeave = (el: Element, done: () => void) => {
 		--v-scroll-bg: rgba(255, 255, 255, 0.2);
 	}
 }
-@import "@/assets/styles/scroll";
+@import '@/assets/styles/scroll';
 
-.container {}
-.chat__field {}
+.container {
+}
+.chat__field {
+}
 .chat__content {
 	position: relative;
 	z-index: 1;
@@ -344,10 +401,11 @@ const onLeave = (el: Element, done: () => void) => {
 		padding-top: 0 !important;
 	}
 }
-.message-item {}
+.message-item {
+}
 .attach-frame {
 	width: 90%;
-	border: 3px dashed #1A237E;
+	border: 3px dashed #1a237e;
 }
 .fixed-button-scrolldown {
 	position: absolute;

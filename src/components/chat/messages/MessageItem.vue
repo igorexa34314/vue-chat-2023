@@ -1,25 +1,43 @@
 <template>
-	<div :class="{ 'self justify-end': self, 'ml-6': xs && self, 'mr-6': xs && !self }" class="message d-flex"
+	<div
+		:class="{ 'self justify-end': self, 'ml-6': xs && self, 'mr-6': xs && !self }"
+		class="message d-flex"
 		@contextmenu.prevent="emit('contextmenu', $event)">
-		<v-avatar size="30px" :image="sender.photoURL || defaultAvatar" :class="self ? 'ml-2' : 'mr-2'"
-			class="sender__avatar" @click="openUserProfile" :title="sender.displayName" />
+		<v-avatar
+			size="30px"
+			:image="sender.photoURL || defaultAvatar"
+			:class="self ? 'ml-2' : 'mr-2'"
+			class="sender__avatar"
+			@click="openUserProfile"
+			:title="sender.displayName" />
 
-		<v-card min-width="120px" :max-width="smAndUp ? '650px' : '480px'" density="compact" class="message__card"
-			:class="self ? 'self bg-light-blue-darken-3' : ''" variant="tonal">
-
+		<v-card
+			min-width="120px"
+			:max-width="smAndUp ? '650px' : '480px'"
+			density="compact"
+			class="message__card"
+			:class="self ? 'self bg-light-blue-darken-3' : ''"
+			variant="tonal">
 			<v-card-title v-if="type === 'text'" class="message__head d-flex flex-row align-center">
-				<small class="sender__name" @click="openUserProfile">
-					{{ sender.displayName }}</small>
+				<small class="sender__name" @click="openUserProfile"> {{ sender.displayName }}</small>
 			</v-card-title>
 
-			<v-card-text class="message__content pb-1 pr-3"
+			<v-card-text
+				class="message__content pb-1 pr-3"
 				:class="type === 'file' ? 'pl-2 pt-2' : type === 'media' ? 'pl-3 pt-3' : ''">
-
-				<component :is="messageComponent" v-bind="{ content }" :class="{ 'pr-2 pr-sm-3': type === 'file' }"
+				<component
+					:is="messageComponent"
+					v-bind="{ content }"
+					:class="{ 'pr-2 pr-sm-3': type === 'file' }"
 					@openInOverlay="(imgId: ImageWithPreviewURL['id']) => emit('openInOverlay', imgId)" />
 
-				<i18n-d tag="small" :value="created_at" :format="messagesDateFormat(created_at as Date)" scope="global"
-					:class="{ 'mt-2': type !== 'file' }" class="message__time d-block text-end mt-1 mt-sm-2" />
+				<i18n-d
+					tag="small"
+					:value="created_at"
+					:format="messagesDateFormat(created_at as Date)"
+					scope="global"
+					:class="{ 'mt-2': type !== 'file' }"
+					class="message__time d-block text-end mt-1 mt-sm-2" />
 			</v-card-text>
 		</v-card>
 
@@ -45,21 +63,25 @@ interface MessageItemProps {
 	sender: Message['sender'];
 	created_at: Message['created_at'];
 	self?: boolean;
-};
+}
 
 const props = withDefaults(defineProps<MessageItemProps>(), {
 	self: false,
-	active: false
+	active: false,
 });
 const emit = defineEmits<{
-	openInOverlay: [imgId: ImageWithPreviewURL['id']],
-	contextmenu: [event: MouseEvent]
+	openInOverlay: [imgId: ImageWithPreviewURL['id']];
+	contextmenu: [event: MouseEvent];
 }>();
 
 const { xs, smAndUp } = useDisplay();
 const { push } = useRouter();
-const messageComponent = computed(() => props.type === 'media' ? MediaMessage : props.type === 'file' ? FileMessage : TextMessage);
-const openUserProfile = () => { push({ name: 'user-userId', params: { userId: props.sender.id } }) };
+const messageComponent = computed(() =>
+	props.type === 'media' ? MediaMessage : props.type === 'file' ? FileMessage : TextMessage
+);
+const openUserProfile = () => {
+	push({ name: 'user-userId', params: { userId: props.sender.id } });
+};
 </script>
 
 <style lang="scss" scoped>
@@ -85,8 +107,9 @@ const openUserProfile = () => { push({ name: 'user-userId', params: { userId: pr
 		font-size: 0.55rem;
 	}
 	/* Code for Firefox */
-	::-moz-selection, ::selection {
-		background-color: #1A237E;
+	::-moz-selection,
+	::selection {
+		background-color: #1a237e;
 	}
 }
 .sender {

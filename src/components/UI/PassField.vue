@@ -1,19 +1,38 @@
 <template>
 	<div>
-		<v-text-field v-model="password" :type="passFieldState.showPass ? 'text' : 'password'"
-			:rules="rules || validations.password" :label="label" :placeholder="placeholder" :variant="variant" required>
+		<v-text-field
+			v-model="password"
+			:type="passFieldState.showPass ? 'text' : 'password'"
+			:rules="rules || validations.password"
+			:label="label"
+			:placeholder="placeholder"
+			:variant="variant"
+			required>
 			<template #append-inner>
-				<v-icon :icon="passFieldState.showPass ? mdiEye : mdiEyeOff" @mousedown="passFieldState.showPass = true"
-					@mouseup="passFieldState.showPass = false" class="mr-2" style="cursor: pointer" />
+				<v-icon
+					:icon="passFieldState.showPass ? mdiEye : mdiEyeOff"
+					@mousedown="passFieldState.showPass = true"
+					@mouseup="passFieldState.showPass = false"
+					class="mr-2"
+					style="cursor: pointer" />
 			</template>
 		</v-text-field>
-		
-		<v-text-field v-if="repeater" :type="passFieldState.showRepeater ? 'text' : 'password'" :rules="repeaterRules"
-			:label="repeaterLabel" :placeholder="repeaterPlaceholder" :variant="variant || 'underlined'"
-			:class="repeaterClass + ` mt-4`" required>
+
+		<v-text-field
+			v-if="repeater"
+			:type="passFieldState.showRepeater ? 'text' : 'password'"
+			:rules="repeaterRules"
+			:label="repeaterLabel"
+			:placeholder="repeaterPlaceholder"
+			:variant="variant || 'underlined'"
+			:class="repeaterClass + ` mt-4`"
+			required>
 			<template #append-inner>
-				<v-icon :icon="passFieldState.showRepeater ? mdiEye : mdiEyeOff"
-					@mousedown="passFieldState.showRepeater = true" @mouseup="passFieldState.showRepeater = false" class="mr-2"
+				<v-icon
+					:icon="passFieldState.showRepeater ? mdiEye : mdiEyeOff"
+					@mousedown="passFieldState.showRepeater = true"
+					@mouseup="passFieldState.showRepeater = false"
+					class="mr-2"
 					style="cursor: pointer" />
 			</template>
 		</v-text-field>
@@ -27,7 +46,7 @@ import validations from '@/utils/validations';
 import { useVModel } from '@vueuse/core';
 
 type Password = string;
-type Variant = "filled" | "outlined" | "plain" | "underlined" | "solo";
+type Variant = 'filled' | 'outlined' | 'plain' | 'underlined' | 'solo';
 interface PassFieldProps {
 	modelValue?: Password;
 	repeater?: boolean;
@@ -48,7 +67,7 @@ const props = withDefaults(defineProps<PassFieldProps>(), {
 	repeaterPlaceholder: 'Repeat your password',
 });
 const emit = defineEmits<{
-	'update:modelValue': [pass: Password]
+	'update:modelValue': [pass: Password];
 }>();
 
 const passFieldState = ref({
@@ -56,6 +75,9 @@ const passFieldState = ref({
 	showRepeater: false,
 });
 
-const password = useVModel(props, 'modelValue', emit)
-const repeaterRules = [(v: Password) => !!v || 'Repeat your password', (v: Password) => (v && v === password.value) || 'Passwords should match'];
+const password = useVModel(props, 'modelValue', emit);
+const repeaterRules = [
+	(v: Password) => !!v || 'Repeat your password',
+	(v: Password) => (v && v === password.value) || 'Passwords should match',
+];
 </script>

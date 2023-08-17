@@ -2,8 +2,11 @@
 	<div v-if="mediaFiles.length" class="images-grid w-100 h-100 my-0 mx-auto">
 		<v-row dense>
 			<v-col v-for="(img, index) in mediaFiles" :key="img.id" :cols="calcImageCols(index)">
-				<PreviewImage :preview-item="img" :max-height="files.length < 2 ? '380px' : '300px'"
-					:img-ratio="+calcImageCols(index) > 6 && index ? '1.778' : '1'" ref="prevEl"
+				<PreviewImage
+					:preview-item="img"
+					:max-height="files.length < 2 ? '380px' : '300px'"
+					:img-ratio="+calcImageCols(index) > 6 && index ? '1.778' : '1'"
+					ref="prevEl"
 					@delete-item="imgId => emit('deleteAttach', imgId)" />
 			</v-col>
 		</v-row>
@@ -17,11 +20,11 @@ import { calcImageCols as calcCols } from '@/utils/images';
 import { AttachedContent } from '@/components/chat/attach/AttachDialog.vue';
 
 const props = defineProps<{
-	files: AttachedContent
+	files: AttachedContent;
 }>();
 
 const emit = defineEmits<{
-	deleteAttach: [imgId: AttachedContent[number]['id']]
+	deleteAttach: [imgId: AttachedContent[number]['id']];
 }>();
 
 const mediaFiles = computed(() => props.files.filter(file => file.fileData.type.startsWith('image/')));
@@ -38,11 +41,11 @@ defineExpose({ isImgsReady });
 	max-width: 450px;
 	max-height: 400px;
 
-	@media(max-width: 760px) {
+	@media (max-width: 760px) {
 		max-width: 400px;
 	}
 
-	@media(max-width: 560px) {
+	@media (max-width: 560px) {
 		max-width: 320px;
 	}
 }

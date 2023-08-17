@@ -1,36 +1,57 @@
 <template>
-	<v-dialog v-if="attachedFiles.length" v-model="dialog" max-width="560px" width="100%" :persistent="!mobile"
+	<v-dialog
+		v-if="attachedFiles.length"
+		v-model="dialog"
+		max-width="560px"
+		width="100%"
+		:persistent="!mobile"
 		class="attach-dialog mx-6 mx-md-4">
 		<v-card variant="flat" elevation="3">
 			<v-card-title class="d-flex align-center mt-2">
 				<v-btn :icon="mdiClose" variant="text" @click="closeDialog" />
-				<h3 class="text-center text-h6 text-sm-h5 flex-grow-1">{{ 'Send ' + attachedFiles.length + ' ' + (contentType
-					===
-					'media' ?
-					'image' :
-					attachedFiles.length === 1 ? 'file' : attachedFiles.length > 4 ? 'files' : 'files') }}</h3>
+				<h3 class="text-center text-h6 text-sm-h5 flex-grow-1">
+					{{
+						'Send ' +
+						attachedFiles.length +
+						' ' +
+						(contentType === 'media'
+							? 'image'
+							: attachedFiles.length === 1
+							? 'file'
+							: attachedFiles.length > 4
+							? 'files'
+							: 'files')
+					}}
+				</h3>
 				<v-menu location="bottom left" :offset="[0, -30]" :elevation="8">
 					<template #activator="{ props }">
 						<v-btn v-bind="props" variant="text" :icon="mdiDotsVertical" />
 					</template>
 					<v-list density="compact" class="bg-blue-grey-darken-4" min-width="180">
-						<v-list-item style="cursor: pointer;" class="add-attachment pa-0">
-							<label for="add-more" style="cursor: pointer; padding: 4px 0.7em;" class="d-block">
+						<v-list-item style="cursor: pointer" class="add-attachment pa-0">
+							<label for="add-more" style="cursor: pointer; padding: 4px 0.7em" class="d-block">
 								<v-icon :icon="mdiPlus" class="mr-3" />
 								<span>Добавить еще</span>
-								<input id="add-more" type="file" :accept="contentType === 'media' ? 'image/*,media/*' : undefined"
-									class="d-none" @change="addMoreFiles" multiple>
+								<input
+									id="add-more"
+									type="file"
+									:accept="contentType === 'media' ? 'image/*,media/*' : undefined"
+									class="d-none"
+									@change="addMoreFiles"
+									multiple />
 							</label>
 						</v-list-item>
 						<v-list-item
 							v-if="contentType !== 'file' || attachedFiles.every(f => f.fileData.type.startsWith('image/'))"
-							density="compact" @click="emit('changeContentType')" class="px-3">
+							density="compact"
+							@click="emit('changeContentType')"
+							class="px-3">
 							<template #prepend>
-								<v-icon :icon="contentType !== 'file' ? mdiFileMultipleOutline : mdiFolderMultipleImage"
+								<v-icon
+									:icon="contentType !== 'file' ? mdiFileMultipleOutline : mdiFolderMultipleImage"
 									class="mr-3" />
 							</template>
-							<v-list-item-title>{{ `Send as ${contentType !== 'file' ? 'file' : 'media'}`
-							}}</v-list-item-title>
+							<v-list-item-title>{{ `Send as ${contentType !== 'file' ? 'file' : 'media'}` }}</v-list-item-title>
 						</v-list-item>
 					</v-list>
 				</v-menu>
@@ -39,15 +60,34 @@
 			<v-card-text class="py-1 px-sm-6 px-3">
 				<div
 					class="attachments overflow-auto d-flex flex-column justify-start custom-scroll py-1 py-sm-2 px-1 pl-md-0 pr-md-4">
-					<component :is="contentType === 'media' ? MediaAttachment : FileAttachment"
-						v-bind="{ files: attachedFiles }" ref="attachment" @deleteAttach="deleteAttachItem" />
+					<component
+						:is="contentType === 'media' ? MediaAttachment : FileAttachment"
+						v-bind="{ files: attachedFiles }"
+						ref="attachment"
+						@deleteAttach="deleteAttachItem" />
 				</div>
 
 				<v-form class="d-flex align-end mt-2 mt-md-6 mb-3 px-2" @submit.prevent="submitHandler">
-					<v-textarea v-model="subtitle" variant="plain" placeholder="Add description" class="mr-4 mb-1" hide-details
-						style="transform: translateY(-11px);" rows="1" max-rows="4" auto-grow focused @paste="onInputPasted" />
-					<v-btn type="submit" color="light-blue-darken-4" :disabled="!isDialogReady"
-						class="ml-1 mb-3 mb-sm-4 mb-md-2" rounded>Submit</v-btn>
+					<v-textarea
+						v-model="subtitle"
+						variant="plain"
+						placeholder="Add description"
+						class="mr-4 mb-1"
+						hide-details
+						style="transform: translateY(-11px)"
+						rows="1"
+						max-rows="4"
+						auto-grow
+						focused
+						@paste="onInputPasted" />
+					<v-btn
+						type="submit"
+						color="light-blue-darken-4"
+						:disabled="!isDialogReady"
+						class="ml-1 mb-3 mb-sm-4 mb-md-2"
+						rounded
+						>Submit</v-btn
+					>
 				</v-form>
 			</v-card-text>
 		</v-card>
@@ -58,7 +98,7 @@
 import { mdiClose, mdiDotsVertical, mdiPlus, mdiFileMultipleOutline, mdiFolderMultipleImage } from '@mdi/js';
 import FileAttachment from '@/components/chat/attach/FileAttachment.vue';
 import MediaAttachment from '@/components/chat/attach/MediaAttachment.vue';
-import { ref, computed, watchEffect, Ref } from "vue";
+import { ref, computed, watchEffect, Ref } from 'vue';
 import { useVModel } from '@vueuse/core';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { getFileThumbAndSizes } from '@/utils/resizeFile';
@@ -66,12 +106,16 @@ import { Message } from '@/types/db/MessagesTable';
 import { ThumbResult } from '@/utils/resizeFile';
 import { useDisplay } from 'vuetify';
 
-export type AttachedContent = (AttachDialogProps['fileList'][number] & { sizes?: { w: number, h: number }, thumbnail?: ThumbResult, preview?: string })[];
+export type AttachedContent = (AttachDialogProps['fileList'][number] & {
+	sizes?: { w: number; h: number };
+	thumbnail?: ThumbResult;
+	preview?: string;
+})[];
 export interface AttachDialogProps {
 	modelValue?: boolean;
 	subtitleText: string;
 	contentType: 'media' | 'file';
-	fileList: { id: string; fileData: File }[]
+	fileList: { id: string; fileData: File }[];
 }
 const props = withDefaults(defineProps<AttachDialogProps>(), {
 	modelValue: false,
@@ -79,12 +123,12 @@ const props = withDefaults(defineProps<AttachDialogProps>(), {
 });
 
 const emit = defineEmits<{
-	'update:modelValue': [val: boolean],
-	'update:subtitleText': [val: boolean],
-	'add-more-files': [type: Exclude<Message['type'], 'text'>, files: FileList],
-	changeContentType: [],
-	submit: [type: AttachDialogProps['contentType'], content: AttachedContent],
-	close: []
+	'update:modelValue': [val: boolean];
+	'update:subtitleText': [val: boolean];
+	'add-more-files': [type: Exclude<Message['type'], 'text'>, files: FileList];
+	changeContentType: [];
+	submit: [type: AttachDialogProps['contentType'], content: AttachedContent];
+	close: [];
 }>();
 
 const { showMessage } = useSnackbarStore();
@@ -99,8 +143,7 @@ const attachedFiles = ref<AttachedContent>([]);
 const isDialogReady = computed(() => {
 	if (props.contentType === 'media') {
 		return (attachment as Ref<InstanceType<typeof MediaAttachment>>).value?.isImgsReady;
-	}
-	else if (props.contentType === 'file') {
+	} else if (props.contentType === 'file') {
 		return (attachment as Ref<InstanceType<typeof FileAttachment>>).value?.isFilesReady;
 	}
 	return true;
@@ -120,7 +163,7 @@ watchEffect(async () => {
 		try {
 			(await Promise.all(promises)).forEach(item => {
 				attachedFiles.value.push(item);
-			})
+			});
 		} catch (e) {
 			console.error(e);
 		}
@@ -130,7 +173,11 @@ const clearForm = () => {
 	attachedFiles.value = [];
 };
 const submitHandler = () => {
-	emit('submit', props.contentType, attachedFiles.value.map(({ preview, ...f }) => f));
+	emit(
+		'submit',
+		props.contentType,
+		attachedFiles.value.map(({ preview, ...f }) => f)
+	);
 	closeDialog();
 };
 const addMoreFiles = (e: Event) => {
@@ -162,7 +209,7 @@ const deleteAttachItem = (fileId: AttachedContent[number]['id']) => {
 <style lang="scss" scoped>
 // Custom scroll
 $scroll-width: 0.35rem !important;
-@import "@/assets/styles/scroll";
+@import '@/assets/styles/scroll';
 
 .attachments {
 	max-height: 420px;
@@ -173,7 +220,7 @@ $scroll-width: 0.35rem !important;
 	opacity: 55%;
 }
 .add-attachment {
-	transition: all .1s ease-in 0s;
+	transition: all 0.1s ease-in 0s;
 	&:hover {
 		background-color: rgba(255, 255, 255, 0.12);
 	}

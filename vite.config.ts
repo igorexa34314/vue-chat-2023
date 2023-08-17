@@ -15,12 +15,12 @@ export default ({ mode }) => {
 		appType: 'mpa', // disable history fallback
 		base: process.env.VITE_BASE || '/',
 		server: {
-			port: +process.env.VITE_PORT || 3000
+			port: +process.env.VITE_PORT || 3000,
 		},
 		resolve: {
 			alias: {
-				'@': resolve(dirname(fileURLToPath(import.meta.url)), './src')
-			}
+				'@': resolve(dirname(fileURLToPath(import.meta.url)), './src'),
+			},
 		},
 		plugins: [
 			vue({ template: { transformAssetUrls } }),
@@ -33,23 +33,23 @@ export default ({ mode }) => {
 					}
 					return {
 						...route,
-						meta: { auth: true }
+						meta: { auth: true },
 					};
-				}
+				},
 			}),
 			Layouts({
 				layoutsDirs: 'src/layouts',
-				defaultLayout: 'default'
+				defaultLayout: 'default',
 			}),
 			vuetify(),
 			VueI18nPlugin({
 				globalSFCScope: true,
 				// you need to set i18n resource including paths!
-				include: [resolve(dirname(fileURLToPath(import.meta.url)), './src/locales/**')]
-			})
+				include: [resolve(dirname(fileURLToPath(import.meta.url)), './src/locales/**')],
+			}),
 		],
 		define: {
-			'process.env.DEBUG': false
-		}
+			'process.env.DEBUG': false,
+		},
 	});
 };

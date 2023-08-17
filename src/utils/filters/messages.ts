@@ -8,5 +8,9 @@ export const messagesDateFormat = computed(() => (date = new Date()) => {
 });
 
 export const formatFileSize = computed(() => (size: number) => {
-	return size < 1024 ? size + ' bytes' : size < 1048576 ? (size / 1024).toPrecision(4) + ' KB' : (size / 1048576).toPrecision(4) + ' MB';
+	return size < 1024
+		? size + ' bytes'
+		: size < 1048576
+		? (size / 1024).toPrecision(4) + ' KB'
+		: (size / 1048576).toPrecision(4) + ' MB';
 });

@@ -13,5 +13,5 @@ useMeta({ title: 'Register' });
 
 <route lang="yaml">
 meta:
-  layout: empty
+   layout: empty
 </route>

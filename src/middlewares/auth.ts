@@ -12,8 +12,8 @@ export const checkAuth = async (
 			return next({
 				path: '/login',
 				query: {
-					message: 'needAuth'
-				}
+					message: 'needAuth',
+				},
 			});
 		}
 	} else if (to.name === 'login' || to.name === 'register') {

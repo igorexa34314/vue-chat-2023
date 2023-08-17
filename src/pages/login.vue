@@ -13,5 +13,5 @@ useMeta({ title: 'Login' });
 
 <route lang="yaml">
 meta:
-  layout: empty
+   layout: empty
 </route>

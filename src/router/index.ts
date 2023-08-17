@@ -11,7 +11,7 @@ const routes = setupLayouts(generatedRoutes);
 
 const router = createRouter({
 	history,
-	routes
+	routes,
 });
 
 router.beforeEach(checkAuth);

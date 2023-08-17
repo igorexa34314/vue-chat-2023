@@ -1,12 +1,23 @@
 <template>
 	<div v-bind="hoverProps" class="file-icon mx-1 d-flex align-center">
-		<ImageFrame :image="file" rounded="true" :loader="{ size: smAndUp ? '30px' : '26px', iconSize: '18px' }"
-			@loaded="emit('loaded')" max-height="100%" />
+		<ImageFrame
+			:image="file"
+			rounded="true"
+			:loader="{ size: smAndUp ? '30px' : '26px', iconSize: '18px' }"
+			@loaded="emit('loaded')"
+			max-height="100%" />
 
 		<v-fade-transition>
 			<div class="preview-hover" v-if="isHovering" @click="emit('openFile')">
-				<v-icon :icon="mdiEyeOutline" :size="smAndUp ? '22px' : '18px'" variant="text"
-					class="file-icon-btn d-inline-block mx-auto" color="white" density="compact" title="Open" flat
+				<v-icon
+					:icon="mdiEyeOutline"
+					:size="smAndUp ? '22px' : '18px'"
+					variant="text"
+					class="file-icon-btn d-inline-block mx-auto"
+					color="white"
+					density="compact"
+					title="Open"
+					flat
 					:ripple="false" />
 			</div>
 		</v-fade-transition>
@@ -25,8 +36,8 @@ const props = defineProps<{
 	hoverProps: Record<string, unknown>;
 }>();
 const emit = defineEmits<{
-	loaded: [],
-	openFile: []
+	loaded: [];
+	openFile: [];
 }>();
 
 const { smAndUp } = useDisplay();
@@ -39,7 +50,7 @@ const { smAndUp } = useDisplay();
 	position: relative;
 	width: 72px;
 	height: 54px;
-	@media(min-width: 600px) {
+	@media (min-width: 600px) {
 		width: 80px;
 		height: 60px;
 	}

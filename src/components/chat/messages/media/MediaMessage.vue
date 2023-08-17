@@ -4,11 +4,18 @@
 
 		<div class="images-frame" :style="{ 'max-width': `${imageSize.w}px` }">
 			<v-row dense align-content="stretch" no-gutters>
-				<v-col v-for="(img, index) of content.attachments" :cols="calcImageCols(index)"
+				<v-col
+					v-for="(img, index) of content.attachments"
+					:key="img.id"
+					:cols="calcImageCols(index)"
 					:class="{ 'image-col': content.attachments.length > 2 }">
-
-					<ImageFrame :image="img" :key="img.id" :alt="content.text" @open="emit('openInOverlay', img.id)"
-						@loaded="('mediaLoaded')" :width="content.attachments.length > 1 ? imageSize.w : undefined"
+					<ImageFrame
+						:image="img"
+						:key="img.id"
+						:alt="content.text"
+						@open="emit('openInOverlay', img.id)"
+						@loaded="('mediaLoaded')"
+						:width="content.attachments.length > 1 ? imageSize.w : undefined"
 						:max-height="content.attachments.length > 2 ? '400px' : `${imageSize.h}px`" />
 				</v-col>
 			</v-row>
@@ -31,8 +38,8 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-	openInOverlay: [imgId: ImageWithPreviewURL['id']],
-	mediaLoaded: []
+	openInOverlay: [imgId: ImageWithPreviewURL['id']];
+	mediaLoaded: [];
 }>();
 
 const { smAndUp } = useDisplay();

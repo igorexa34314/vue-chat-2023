@@ -1,30 +1,53 @@
 <template>
-	<v-overlay v-if="content.length" v-model="showOverlay" content-class="image-overlay d-flex align-center ma-0"
-		class="fullsize-image__dialog" transition="scale-transition" @click:outside="$emit('close')" close-on-back
+	<v-overlay
+		v-if="content.length"
+		v-model="showOverlay"
+		content-class="image-overlay d-flex align-center ma-0"
+		class="fullsize-image__dialog"
+		transition="scale-transition"
+		@click:outside="$emit('close')"
+		close-on-back
 		scroll-strategy="close">
-		<v-carousel v-model="overlayItem" hide-delimiters hide-delimiter-background height="85vh" show-arrows
+		<v-carousel
+			v-model="overlayItem"
+			hide-delimiters
+			hide-delimiter-background
+			height="85vh"
+			show-arrows
 			:continuous="false">
 			<template #prev="{ props }">
-				<div v-if="smAndUp && overlayItem" class="carousel__control d-flex align-center carousel__control-prev"
+				<div
+					v-if="smAndUp && overlayItem"
+					class="carousel__control d-flex align-center carousel__control-prev"
 					@click="props.onClick">
 					<v-icon :icon="mdiArrowLeft" size="55px" class="carousel-prev-btn" />
 				</div>
 			</template>
 			<template #next="{ props }">
-				<div v-if="smAndUp && overlayItem < content.length - 1"
-					class="carousel__control d-flex align-center carousel__control-next" @click="props.onClick">
+				<div
+					v-if="smAndUp && overlayItem < content.length - 1"
+					class="carousel__control d-flex align-center carousel__control-next"
+					@click="props.onClick">
 					<v-icon :icon="mdiArrowRight" size="55px" class="carousel-next-btn" />
 				</div>
 			</template>
 
 			<v-carousel-item v-for="item of content" :key="item.id" cover>
-				<div class="carousel-image-element d-flex align-center justify-center ma-auto w-100 h-100"
-					style="max-width: 75vw;">
-					<v-card class="fullsize-image__wrapper d-flex align-center justify-center my-0 mx-auto" variant="text"
-						:width="item.raw.sizes?.w" :height="item.raw.sizes?.h" max-height="100%" max-width="100%"
+				<div
+					class="carousel-image-element d-flex align-center justify-center ma-auto w-100 h-100"
+					style="max-width: 75vw">
+					<v-card
+						class="fullsize-image__wrapper d-flex align-center justify-center my-0 mx-auto"
+						variant="text"
+						:width="item.raw.sizes?.w"
+						:height="item.raw.sizes?.h"
+						max-height="100%"
+						max-width="100%"
 						:style="{ transform: `scale(${zoomed ? '2' : '1'})` }">
-						<v-img :src="item.raw.previewURL" :alt="alt || item.fullname" :width="item.raw.sizes?.w" #placeholder>
-							<ImageLoader />
+						<v-img :src="item.raw.previewURL" :alt="alt || item.fullname" :width="item.raw.sizes?.w">
+							<template #placeholder>
+								<ImageLoader />
+							</template>
 						</v-img>
 					</v-card>
 				</div>
@@ -32,18 +55,34 @@
 		</v-carousel>
 
 		<div class="actions__panel d-flex justify-end">
-			<v-btn class="zoom-in__btn" :icon="zoomed ? mdiMagnifyMinusOutline : mdiMagnifyPlusOutline" variant="text"
-				title="Zoom" @click="zoomImage" disabled />
-			<v-btn class="download__btn" :icon="mdiDownload" variant="text"
+			<v-btn
+				class="zoom-in__btn"
+				:icon="zoomed ? mdiMagnifyMinusOutline : mdiMagnifyPlusOutline"
+				variant="text"
+				title="Zoom"
+				@click="zoomImage"
+				disabled />
+			<v-btn
+				class="download__btn"
+				:icon="mdiDownload"
+				variant="text"
 				:href="content[currentItem || 0].raw.previewURL || content[currentItem || 0].raw.downloadURL"
-				:download="content[currentItem || 0].fullname || 'image.png'" title="Download" />
+				:download="content[currentItem || 0].fullname || 'image.png'"
+				title="Download" />
 			<v-btn class="close__btn" :icon="mdiClose" variant="text" @click="closeOverlay" title="Close" />
 		</div>
 	</v-overlay>
 </template>
 
 <script setup lang="ts">
-import { mdiArrowLeft, mdiArrowRight, mdiMagnifyPlusOutline, mdiMagnifyMinusOutline, mdiDownload, mdiClose } from '@mdi/js';
+import {
+	mdiArrowLeft,
+	mdiArrowRight,
+	mdiMagnifyPlusOutline,
+	mdiMagnifyMinusOutline,
+	mdiDownload,
+	mdiClose,
+} from '@mdi/js';
 import ImageLoader from '@/components/chat/ImageLoader.vue';
 import { ref } from 'vue';
 import { useVModel } from '@vueuse/core';
@@ -61,9 +100,9 @@ const props = withDefaults(defineProps<OverlayProps>(), {
 	currentItem: 0,
 });
 const emit = defineEmits<{
-	'update:modelValue': [val: boolean],
-	'update:currentItem': [val: number],
-	close: []
+	'update:modelValue': [val: boolean];
+	'update:currentItem': [val: number];
+	close: [];
 }>();
 
 const { smAndUp } = useDisplay();
@@ -116,7 +155,6 @@ const zoomImage = () => {
 		padding-left: 1.5em;
 		left: 0;
 		transform: translateY(-50%);
-
 	}
 	&-next {
 		padding-right: 1.5em;

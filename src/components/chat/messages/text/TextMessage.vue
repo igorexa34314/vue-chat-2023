@@ -10,6 +10,6 @@
 import { MessageContent } from '@/types/db/MessagesTable';
 
 const props = defineProps<{
-	content: Omit<MessageContent, 'attachments'>
+	content: Omit<MessageContent, 'attachments'>;
 }>();
 </script>

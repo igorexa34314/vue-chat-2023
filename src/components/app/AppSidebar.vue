@@ -1,7 +1,12 @@
 <template>
 	<v-navigation-drawer v-model="drawer" width="320" location="left" class="pa-3">
-		<v-card v-if="userInfo && Object.keys(userInfo).length" class="user-info py-1 bg-blue-grey-darken-4"
-			density="compact" variant="text" to="/profile" draggable="false">
+		<v-card
+			v-if="userInfo && Object.keys(userInfo).length"
+			class="user-info py-1 bg-blue-grey-darken-4"
+			density="compact"
+			variant="text"
+			to="/profile"
+			draggable="false">
 			<template #prepend>
 				<v-avatar :image="userInfo.photoURL || defaultAvatar" />
 			</template>
@@ -17,9 +22,14 @@
 		</div>
 
 		<v-list v-else density="comfortable" class="chat-list mt-3">
-			<v-list-item v-for="chat of getUserChatsInfo" :key="chat.id" :title="setChatName(chat)"
-				:prepend-avatar="setChatAvatar(chat)" :to="{ name: 'chat-chatId', params: { chatId: chat.id } }"
-				class="py-3 mb-3" draggable="false" />
+			<v-list-item
+				v-for="chat of getUserChatsInfo"
+				:key="chat.id"
+				:title="setChatName(chat)"
+				:prepend-avatar="setChatAvatar(chat)"
+				:to="{ name: 'chat-chatId', params: { chatId: chat.id } }"
+				class="py-3 mb-3"
+				draggable="false" />
 		</v-list>
 	</v-navigation-drawer>
 </template>
@@ -39,34 +49,42 @@ const { showMessage } = useSnackbarStore();
 const { getUChats: userChats, getUInfo: userInfo } = storeToRefs(useUserdataStore());
 const loading = ref(true);
 
-const props = withDefaults(defineProps<{
-	modelValue?: boolean;
-}>(), {
-	modelValue: false
-});
+const props = withDefaults(
+	defineProps<{
+		modelValue?: boolean;
+	}>(),
+	{
+		modelValue: false,
+	}
+);
 
 const emit = defineEmits<{
-	'update:modelValue': [value: boolean]
+	'update:modelValue': [value: boolean];
 }>();
 const drawer = useVModel(props, 'modelValue', emit);
 
 // fetchChatsInfo
-const getUserChatsInfo = computedAsync(async () => {
-	if (userChats.value?.length) {
-		return (await Promise.all(userChats.value.map(getChatInfoById)) as ChatInfo[]);
+const getUserChatsInfo = computedAsync(
+	async () => {
+		if (userChats.value?.length) {
+			return (await Promise.all(userChats.value.map(getChatInfoById))) as ChatInfo[];
+		}
+		return [];
+	},
+	undefined,
+	{
+		evaluating: loading,
+		onError: e => {
+			console.error(e);
+			showMessage(messages[e as keyof typeof messages] || (e as string), 'red-darken-3', 2000);
+		},
 	}
-	return [];
-}, undefined, {
-	evaluating: loading,
-	onError: (e) => {
-		console.error(e);
-		showMessage(messages[e as keyof typeof messages] || e as string, 'red-darken-3', 2000);
-	}
-});
+);
 </script>
 
 <style lang="scss" scoped>
-.user-info, .chat-list {
+.user-info,
+.chat-list {
 	:deep(img) {
 		user-select: text;
 		pointer-events: text;

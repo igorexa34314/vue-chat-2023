@@ -1,30 +1,59 @@
 <template>
-	<v-form ref="formEl" @submit.prevent="submitForm" lazy-validation class="overflow-auto pa-4 mt-2"
-		style="position: relative;">
-		<v-text-field v-model.trim="formState.displayName" :rules="validations.name" label="Display name"
-			placeholder="Enter your name" variant="underlined" counter="16" clearable required style="max-width: 600px" />
+	<v-form
+		ref="formEl"
+		@submit.prevent="submitForm"
+		lazy-validation
+		class="overflow-auto pa-4 mt-2"
+		style="position: relative">
+		<v-text-field
+			v-model.trim="formState.displayName"
+			:rules="validations.name"
+			label="Display name"
+			placeholder="Enter your name"
+			variant="underlined"
+			counter="16"
+			clearable
+			required
+			style="max-width: 600px" />
 
 		<v-radio-group v-model="formState.gender" :inline="!xs" label="Gender" class="mt-3 mt-md-6">
-			<v-radio v-for="(gender, index) in genderItems" :key="gender.value" :label="gender.name" :value="gender.value"
-				:color="index === 0 ? 'blue-darken-3' : 'red-darken-3'" class="mr-2" />
+			<v-radio
+				v-for="(gender, index) in genderItems"
+				:key="gender.value"
+				:label="gender.name"
+				:value="gender.value"
+				:color="index === 0 ? 'blue-darken-3' : 'red-darken-3'"
+				class="mr-2" />
 		</v-radio-group>
 
-		<birthday-picker v-model="<Date>formState.birthday_date" class="birthday-picker mt-5" max-width="550" />
+		<birthday-picker v-model="formState.birthday_date" class="birthday-picker mt-5" max-width="550" />
 
-		<div class="mt-3 mt-md-5" style="max-width: 500px;">
+		<div class="mt-3 mt-md-5" style="max-width: 500px">
 			<v-card variant="outlined" max-width="250" class="mb-5" elevation="9">
-				<v-img :lazy-src="defaultAvatar" :src="formState.photoURL || defaultAvatar" alt="Photo URL" cover eager
-					#placeholder>
-					<ImageLoader />
+				<v-img :lazy-src="defaultAvatar" :src="formState.photoURL || defaultAvatar" alt="Photo URL" cover eager>
+					<template #placeholder>
+						<ImageLoader />
+					</template>
 				</v-img>
 			</v-card>
 
 			<div class="mb-4">Upload your avatar</div>
-			<v-file-input v-model="formState.avatar" label="Avatar" :rules="validations.file" variant="solo"
-				placeholder="Upload avatar" accept="image/* " density="comfortable" single-line style="max-width: 550px;" />
+			<v-file-input
+				v-model="formState.avatar"
+				label="Avatar"
+				:rules="validations.file"
+				variant="solo"
+				placeholder="Upload avatar"
+				accept="image/* "
+				density="comfortable"
+				single-line
+				style="max-width: 550px" />
 		</div>
 
-		<v-btn type="submit" color="success" class="btn mt-3 mt-md-5"
+		<v-btn
+			type="submit"
+			color="success"
+			class="btn mt-3 mt-md-5"
 			:disabled="JSON.stringify(uinfo) === JSON.stringify(formState)">
 			Apply
 		</v-btn>
@@ -41,16 +70,17 @@ import { UserInfo } from '@/types/db/UserdataTable';
 import { VForm } from 'vuetify/components';
 import { useDisplay } from 'vuetify';
 
-export interface ProfileForm extends Omit<UserInfo, 'created_at' | 'uid' | 'providerId'> {
+export interface ProfileForm extends Omit<UserInfo, 'created_at' | 'uid' | 'providerId' | 'birthday_date'> {
+	birthday_date: Date;
 	avatar?: File[];
 }
 
 const props = defineProps<{
-	uinfo: ProfileForm
+	uinfo: ProfileForm;
 }>();
 
 const emit = defineEmits<{
-	submit: [data: ProfileForm]
+	submit: [data: ProfileForm];
 }>();
 
 const { xs } = useDisplay();

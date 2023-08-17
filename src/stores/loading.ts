@@ -18,7 +18,9 @@ export const useLoadingStore = defineStore('loading', () => {
 		uploadingState.value.push({ fileId: id, progress: startValue, task });
 	};
 	const updateLoading = (id: string, value: number) => {
-		uploadingState.value = uploadingState.value.map(l => (l.fileId === id ? { ...l, progress: Math.round(value) } : l));
+		uploadingState.value = uploadingState.value.map(l =>
+			l.fileId === id ? { ...l, progress: Math.round(value) } : l
+		);
 	};
 	const finishLoading = (id: string) => {
 		uploadingState.value = uploadingState.value.filter(l => l.fileId !== id);
@@ -28,6 +30,6 @@ export const useLoadingStore = defineStore('loading', () => {
 		getUploadingStateById,
 		setUploading,
 		updateLoading,
-		finishLoading
+		finishLoading,
 	};
 });

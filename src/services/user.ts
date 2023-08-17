@@ -1,15 +1,6 @@
 import { storage, db } from '@/firebase';
 import { useUserdataStore } from '@/stores/userdata';
-import {
-	getDoc,
-	setDoc,
-	onSnapshot,
-	doc,
-	updateDoc,
-	arrayUnion,
-	Timestamp,
-	collection
-} from 'firebase/firestore';
+import { getDoc, setDoc, onSnapshot, doc, updateDoc, arrayUnion, Timestamp, collection } from 'firebase/firestore';
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { getUid } from '@/services/auth';
 import { createSelfChat } from '@/services/chat';
@@ -26,7 +17,7 @@ export const createUser = async ({
 	displayName,
 	phoneNumber,
 	photoURL,
-	metadata
+	metadata,
 }: Omit<UserInfo, 'created_at'>) => {
 	try {
 		const userRef = getUserRef(uid);
@@ -41,11 +32,11 @@ export const createUser = async ({
 					displayName,
 					phoneNumber,
 					photoURL,
-					created_at: Timestamp.fromDate(new Date(metadata.creationTime)) || Timestamp.now()
+					created_at: Timestamp.fromDate(new Date(metadata.creationTime)) || Timestamp.now(),
 					// location: (await navigator.geolocation.getCurrentPosition()) || 'unknown'
 				},
 				chats: [],
-				friends: []
+				friends: [],
 			};
 			await setDoc(getUserRef(uid), userdata, { merge: true });
 			await createSelfChat(uid);
@@ -62,11 +53,11 @@ export const updateUserAvatar = async (avatar: File | File[]) => {
 				`users/${await getUid()}/avatar/${uuidv4() + '.' + avatar.name.split('.').at(-1)}`
 			);
 			await uploadBytes(avatarRef, avatar, {
-				contentType: avatar.type
+				contentType: avatar.type,
 			});
 			const avatarURL = await getDownloadURL(avatarRef);
 			await updateDoc(getUserRef(await getUid()), {
-				'info.photoURL': avatarURL
+				'info.photoURL': avatarURL,
 			});
 		}
 	} catch (e) {
@@ -78,7 +69,7 @@ export const updateUserdata = async (newData: Partial<UserInfo>) => {
 		const infoField = Object.assign(
 			{},
 			...(Object.keys(newData) as (keyof Partial<UserInfo>)[]).map(key => ({
-				[`info.${key}`]: newData[key]
+				[`info.${key}`]: newData[key],
 			}))
 		);
 		await updateDoc(getUserRef(await getUid()), infoField);
@@ -99,8 +90,8 @@ export const fetchAuthUserdata = async () => {
 					info: {
 						created_at: (<Timestamp>created_at)?.toDate(),
 						birthday_date: (<Timestamp>birthday_date)?.toDate(),
-						...rest
-					}
+						...rest,
+					},
 				});
 			}
 		});
@@ -121,7 +112,7 @@ export const getUserdataById = async (uid: UserInfo['uid']) => {
 export const addToFriend = async (uid: UserInfo['uid']) => {
 	try {
 		await updateDoc(getUserRef(await getUid()), {
-			friends: arrayUnion(uid)
+			friends: arrayUnion(uid),
 		});
 	} catch (e) {
 		errorHandler(e);
