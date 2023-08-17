@@ -2,16 +2,11 @@
 	<div v-if="content.attachments.length" class="file-message__wrapper">
 		<TextMessage v-if="content.text.length" v-bind="{ content }" class="message__subtitle mb-sm-3 mb-1" />
 
-		<div
-			v-for="(file, index) in content.attachments"
-			:key="file.id"
-			:class="{ 'mb-1': index !== content.attachments.length - 1 }"
-			class="d-flex align-center">
+		<div v-for="(file, index) in content.attachments" :key="file.id"
+			:class="{ 'mb-1': index !== (content.attachments.length - 1) }" class="d-flex align-center">
 			<v-hover #default="{ isHovering, props: hoverProps }">
-				<component
-					:is="file.thumbnail && file.raw.sizes ? FilePreview : FileExtension"
-					v-bind="{ file, hoverProps, isHovering, loading: isLoading }"
-					@downloadFile="downloadFile(file)"
+				<component :is="file.thumbnail && file.raw.sizes ? FilePreview : FileExtension"
+					v-bind="{ file, hoverProps, isHovering, loading: isLoading }" @downloadFile="downloadFile(file)"
 					@openFile="emit('openInOverlay', file.id)" />
 			</v-hover>
 
@@ -33,12 +28,13 @@ import { downloadFile as downloadFileProcess } from '@/utils/message/fileActions
 import { Message } from '@/stores/messages';
 import { ImageWithPreviewURL } from '@/components/chat/messages/media/ImageFrame.vue';
 
+
 const props = defineProps<{
 	content: Message['content'];
 }>();
 
 const emit = defineEmits<{
-	openInOverlay: [imgId: ImageWithPreviewURL['id']];
+	openInOverlay: [imgId: ImageWithPreviewURL['id']],
 	// mediaLoaded: [media: { id: ImageWithPreviewURL['id']; previewURL: ImageWithPreviewURL['raw']['previewURL'] }]
 }>();
 
@@ -51,20 +47,21 @@ const downloadFile = async (file: Message['content']['attachments'][number]) => 
 			await downloadFileProcess(file);
 		} catch (e) {
 			console.error(e);
-		} finally {
+		}
+		finally {
 			isLoading.value = false;
 		}
 	}
-};
+}
 </script>
 
 <style lang="scss" scoped>
 .file-details {
 	max-width: 360px;
-	@media (max-width: 720px) {
+	@media(max-width: 720px) {
 		max-width: 320px;
 	}
-	@media (max-width: 640px) {
+	@media(max-width: 640px) {
 		max-width: 280px;
 	}
 }

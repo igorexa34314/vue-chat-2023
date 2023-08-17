@@ -9,7 +9,7 @@
 		</v-tabs>
 
 		<v-window v-model="pickedProfileTab">
-			<v-window-item :value="profileTabs[0].value" style="min-height: 100px">
+			<v-window-item :value="profileTabs[0].value" style="min-height: 100px;">
 				<v-container fluid class="pa-2 pa-sm-4">
 					<div v-if="loading"><page-loader /></div>
 					<InfoForm v-if="userInfo && Object.keys(userInfo).length" :uinfo="userInfo" @submit="submitForm" />
@@ -53,7 +53,7 @@ const submitForm = async ({ avatar, ...formData }: ProfileForm) => {
 		showMessage('succesfully_updated');
 	} catch (e) {
 		console.error(e);
-		showMessage(messages[e as keyof typeof messages] || (e as string), 'red-darken-3', 2000);
+		showMessage(messages[e as keyof typeof messages] || e as string, 'red-darken-3', 2000);
 	}
 };
 </script>

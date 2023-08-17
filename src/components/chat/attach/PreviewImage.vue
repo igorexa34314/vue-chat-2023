@@ -1,25 +1,11 @@
 <template>
 	<v-card class="image-wrapper d-flex" height="100%" :max-height="maxHeight">
-		<v-img
-			:aspect-ratio="imgRatio"
-			ref="imgEl"
-			:lazy-src="previewItem.thumbnail?.url"
-			:src="previewItem.preview"
-			:alt="previewItem.fileData.name"
-			cover
-			eager>
-			<template #placeholder>
-				<ImageLoader />
-			</template>
+		<v-img :aspect-ratio="imgRatio" ref="imgEl" :lazy-src="previewItem.thumbnail?.url" :src="previewItem.preview"
+			:alt="previewItem.fileData.name" cover eager #placeholder>
+			<ImageLoader />
 		</v-img>
-		<v-btn
-			color="white"
-			variant="text"
-			position="absolute"
-			:icon="mdiDelete"
-			class="bg-blue-grey-darken-2 delete-media-btn"
-			@click="emit('delete-item', previewItem.id)"
-			density="comfortable"
+		<v-btn color="white" variant="text" position="absolute" :icon="mdiDelete"
+			class="bg-blue-grey-darken-2 delete-media-btn" @click="emit('delete-item', previewItem.id)" density="comfortable"
 			elevation="5" />
 	</v-card>
 </template>
@@ -31,20 +17,17 @@ import { ref } from 'vue';
 import { AttachedContent } from '@/components/chat/attach/AttachDialog.vue';
 import { VImg } from 'vuetify/components';
 
-const props = withDefaults(
-	defineProps<{
-		previewItem: AttachedContent[number];
-		maxHeight?: string | number;
-		imgRatio?: string | number;
-	}>(),
-	{
-		maxHeight: '300px',
-		imgRatio: 1,
-	}
-);
+const props = withDefaults(defineProps<{
+	previewItem: AttachedContent[number]
+	maxHeight?: string | number;
+	imgRatio?: string | number
+}>(), {
+	maxHeight: '300px',
+	imgRatio: 1,
+});
 
 const emit = defineEmits<{
-	'delete-item': [itemId: string];
+	'delete-item': [itemId: string]
 }>();
 
 const imgEl = ref<VImg>();

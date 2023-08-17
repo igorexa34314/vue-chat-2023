@@ -10,7 +10,7 @@ import {
 	deleteDoc,
 	onSnapshot,
 	getDocs,
-	updateDoc,
+	updateDoc
 } from 'firebase/firestore';
 import { limit, query, orderBy, startAfter } from 'firebase/firestore';
 import {
@@ -20,7 +20,7 @@ import {
 	getBlob,
 	getDownloadURL,
 	getBytes,
-	deleteObject,
+	deleteObject
 } from 'firebase/storage';
 import { getUid } from '@/services/auth';
 import { getUserdataById } from '@/services/user';
@@ -67,9 +67,9 @@ export const fetchChatMessages = async (chatId: ChatInfo['id'], lmt: number = 10
 						(async () => ({
 							message: await getFullMessageInfo({
 								...msgData,
-								created_at: (<Timestamp>created_at).toDate(),
+								created_at: (<Timestamp>created_at).toDate()
 							}),
-							changeType: change.type,
+							changeType: change.type
 						}))()
 					);
 				}
@@ -90,11 +90,15 @@ export const fetchChatMessages = async (chatId: ChatInfo['id'], lmt: number = 10
 	}
 };
 
-export const loadMoreChatMessages = async (chatId: ChatInfo['id'], direction: Direction, perPage: number = 10) => {
+export const loadMoreChatMessages = async (
+	chatId: ChatInfo['id'],
+	direction: Direction,
+	perPage: number = 10
+) => {
 	try {
 		const messagesStore = useMessagesStore();
-		const { addMessage } = messagesStore;
-		const { lastVisible } = storeToRefs(messagesStore);
+		const { addMessage, deleteMessages } = messagesStore;
+		const { messages, lastVisible } = storeToRefs(messagesStore);
 		if (lastVisible.value[direction]) {
 			const messagesCol = collection(doc(chatCol, chatId), 'messages');
 			const q = query(
@@ -117,7 +121,9 @@ export const loadMoreChatMessages = async (chatId: ChatInfo['id'], direction: Di
 
 			messagesRef.forEach(doc => {
 				const { created_at, ...msgData } = doc.data() as DBMessage;
-				dbMessagesPromises.push(getFullMessageInfo({ ...msgData, created_at: (<Timestamp>created_at).toDate() }));
+				dbMessagesPromises.push(
+					getFullMessageInfo({ ...msgData, created_at: (<Timestamp>created_at).toDate() })
+				);
 			});
 			(await Promise.all(dbMessagesPromises)).forEach(m => {
 				if (m) addMessage(m, direction === 'top' ? 'start' : 'end');
@@ -140,7 +146,7 @@ export const getMessageSenderInfo = async (senderId: DBMessage['sender_id']) => 
 };
 export const getFullMessageInfo = async (DbMessage: DBMessage) => {
 	try {
-		const { sender_id, content, ...m } = DbMessage;
+		let { sender_id, content, ...m } = DbMessage;
 		const sender = await getMessageSenderInfo(sender_id);
 		if (m.type !== 'text' && content.attachments?.length) {
 			const { text, attachments } = content as MessageContent;
@@ -150,7 +156,7 @@ export const getFullMessageInfo = async (DbMessage: DBMessage) => {
 					messageFileThumb.push(
 						(async () => {
 							return {
-								[file.id]: (await getMessageThumb(file)) as string,
+								[file.id]: (await getMessageThumb(file)) as string
 							} as { [id: string]: string };
 						})()
 					);
@@ -209,7 +215,7 @@ export const createMessage = async (
 		if (attachments && attachments.length) {
 			attachDBContent = {
 				text,
-				attachments: await uploadAttachments(chatId, messageRef, attachments),
+				attachments: await uploadAttachments(chatId, messageRef, attachments)
 			} as unknown as MessageAttachment;
 		}
 		// Add full message data to DB
@@ -218,18 +224,21 @@ export const createMessage = async (
 			type,
 			content: attachDBContent || { text },
 			created_at: Timestamp.now(),
-			sender_id: await getUid(),
+			sender_id: await getUid()
 		});
 	} catch (e) {
 		errorHandler(e);
 	}
 };
-export const updateMessageContent = async (chatId: ChatInfo['id'], { id: mId, content }: EditMessageData) => {
+export const updateMessageContent = async (
+	chatId: ChatInfo['id'],
+	{ id: mId, content }: EditMessageData
+) => {
 	try {
 		const messageRef = doc(collection(doc(chatCol, chatId), 'messages'), mId);
 		// Rewrite text content data to DB
 		await updateDoc(messageRef, {
-			'content.text': content.text,
+			'content.text': content.text
 		});
 	} catch (e) {
 		errorHandler(e);
@@ -246,10 +255,12 @@ const createUploadTask = (
 	const { fileData, id: fileId } = file;
 	const fileRef = storageRef(
 		storage,
-		`chats/${chatId}/messageData/${messageRef.id}/${fileId + '.' + fileData.name.split('.').slice(1).join('.')}`
+		`chats/${chatId}/messageData/${messageRef.id}/${
+			fileId + '.' + fileData.name.split('.').slice(1).join('.')
+		}`
 	);
 	const uploadTask = uploadBytesResumable(fileRef, fileData, {
-		contentType: fileData.type,
+		contentType: fileData.type
 	});
 	setUploading(fileId, uploadTask);
 	uploadTask.on(
@@ -298,20 +309,20 @@ const createUploadTask = (
 					bucket: uploadTask.snapshot.ref.bucket,
 					fullpath: uploadTask.snapshot.ref.fullPath,
 					fullsize: fileData.size,
-					downloadURL,
+					downloadURL
 				} as MessageAttachment['raw'];
 				if (file.sizes) {
 					raw.sizes = file.sizes;
 				}
 				await writeBatch(db)
 					.update(messageRef, {
-						'content.attachments': arrayRemove(DBcontentToUpdate),
+						'content.attachments': arrayRemove(DBcontentToUpdate)
 					})
 					.update(messageRef, {
 						'content.attachments': arrayUnion({
 							...DBcontentToUpdate,
-							raw,
-						} as MessageAttachment),
+							raw
+						} as MessageAttachment)
 					})
 					.commit();
 				finishLoading(fileId);
@@ -332,13 +343,15 @@ const uploadThumb = async <T extends MessageAttachment['thumbnail']>(
 			const { fileData, id, thumbnail } = attach;
 			const thumbRef = storageRef(
 				storage,
-				`chats/${chatId}/messageData/${messageId}/${id + '_thumb.' + fileData.name.split('.').slice(1).join('.')}`
+				`chats/${chatId}/messageData/${messageId}/${
+					id + '_thumb.' + fileData.name.split('.').slice(1).join('.')
+				}`
 			);
 			await uploadString(thumbRef, thumbnail.url, 'data_url');
 			return {
 				bucket: thumbRef.bucket,
 				fullpath: thumbRef.fullPath,
-				fullsize: thumbnail.fullsize,
+				fullsize: thumbnail.fullsize
 			} as T;
 		}
 	} catch (e) {
@@ -362,13 +375,17 @@ const uploadAttachments = async <T extends MessageAttachment>(
 							id,
 							type: fileData.type,
 							fullname: fileData.name,
-							raw: { ...sizes, fullsize: fileData.size },
+							raw: { ...sizes, fullsize: fileData.size }
 						} as Partial<T>;
 						if (file.fileData.type.startsWith('image/') && sizes && thumbnail) {
-							const thumbData = (await uploadThumb(chatId, messageRef.id, file)) as T['thumbnail'];
+							const thumbData = (await uploadThumb(
+								chatId,
+								messageRef.id,
+								file
+							)) as T['thumbnail'];
 							attachContent = {
 								...attachContent,
-								thumbnail: thumbData,
+								thumbnail: thumbData
 							} as Partial<T>;
 						}
 						createUploadTask(chatId, messageRef, file, attachContent);

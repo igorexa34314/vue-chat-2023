@@ -24,7 +24,7 @@ export const useMessagesStore = defineStore('messages', () => {
 
 	const lastVisible = ref<LastVisibleFbRef>({
 		top: null,
-		bottom: null,
+		bottom: null
 	});
 
 	const addMessage = (msg: Message, direction: 'start' | 'end' = 'end') => {
@@ -37,7 +37,9 @@ export const useMessagesStore = defineStore('messages', () => {
 		messages.value = messages.value.map(m => (m.id === newMsg.id ? newMsg : m));
 	};
 	const deleteMessages = (count = 10, direction: 'start' | 'end' = 'end') => {
-		return direction === 'end' ? messages.value.splice(-count, count) : messages.value.splice(0, count);
+		return direction === 'end'
+			? messages.value.splice(-count, count)
+			: messages.value.splice(0, count);
 	};
 	const setAttachPreviewURL = (
 		attachRefInstance: Ref<MessageContentWithPreview['attachments'][number]>,
@@ -61,6 +63,6 @@ export const useMessagesStore = defineStore('messages', () => {
 		modifyMessage,
 		deleteMessageById,
 		deleteMessages,
-		setAttachPreviewURL,
+		setAttachPreviewURL
 	};
 });

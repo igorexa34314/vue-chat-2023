@@ -5,7 +5,7 @@ import {
 	signInWithEmailAndPassword,
 	updateProfile,
 	signInWithPopup,
-	GoogleAuthProvider,
+	GoogleAuthProvider
 } from 'firebase/auth';
 import { getStorage, ref, getDownloadURL } from 'firebase/storage';
 import { getCurrentUser } from 'vuefire';

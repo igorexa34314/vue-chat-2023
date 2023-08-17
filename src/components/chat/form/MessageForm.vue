@@ -1,58 +1,28 @@
 <template>
 	<div class="message-form d-flex flex-row align-end" v-bind="$attrs">
 		<div class="message-textarea flex-fill">
-			<MessageReply
-				v-model="showReply"
-				:m-type="msgToEditState.type"
-				:content="msgToEditState.content"
-				class="reply-wrapper"
-				@go-to-message="emit('scrollToMessage', msgToEditState.id)" />
+			<MessageReply v-model="showReply" :m-type="msgToEditState.type" :content="msgToEditState.content"
+				class="reply-wrapper" @go-to-message="emit('scrollToMessage', msgToEditState.id)" />
 
-			<v-textarea
-				v-model.trim="textareaValue"
-				variant="solo"
-				hide-details
-				@keyup.enter="createMessage('text')"
-				placeholder="Your message"
-				rows="1"
-				max-rows="10"
-				:density="smAndUp ? 'default' : 'comfortable'"
-				auto-grow
-				focused
-				@paste="onInputPasted">
-				<template #append-inner>
-					<AttachMenu ref="attachMenuEl" @attach-file="attachFiles">
-						<template #activator="{ props }">
-							<div class="attach-btn d-flex align-end justify-end ml-sm-4">
-								<v-icon
-									v-bind="props"
-									:icon="mdiAttachment"
-									:size="smAndUp ? 'large' : 'default'"
-									class="attach-icon"
-									:v-ripple="false" />
-							</div>
-						</template>
-					</AttachMenu>
-				</template>
+			<v-textarea v-model.trim="textareaValue" variant="solo" hide-details @keyup.enter="createMessage('text')"
+				placeholder="Your message" rows="1" max-rows="10" :density="smAndUp ? 'default' : 'comfortable'" auto-grow
+				focused @paste="onInputPasted" #append-inner>
+				<AttachMenu ref="attachMenuEl" @attach-file="attachFiles" #activator="{ props }">
+					<div class="attach-btn d-flex align-end justify-end ml-sm-4">
+						<v-icon v-bind="props" :icon="mdiAttachment" :size="smAndUp ? 'large' : 'default'" class="attach-icon"
+							:v-ripple="false" />
+					</div>
+				</AttachMenu>
 			</v-textarea>
 		</div>
 
-		<v-btn
-			:icon="msgToEditState.isEditing ? mdiCheck : mdiSend"
-			:label="msgToEditState.isEditing ? 'Submit' : 'Send'"
-			class="ml-2 ml-sm-3 mb-sm-1"
-			@click="submitHandler" />
+		<v-btn :icon="msgToEditState.isEditing ? mdiCheck : mdiSend" :label="msgToEditState.isEditing ? 'Submit' : 'Send'"
+			class="ml-2 ml-sm-3 mb-sm-1" @click="submitHandler" />
 	</div>
 
-	<AttachDialog
-		v-model="attachDialogState.show"
-		v-model:subtitleText="messageState.text"
-		:contentType="attachDialogState.contentType"
-		:fileList="messageState.attachedFiles"
-		@submit="createMessage"
-		@close="closeDialog"
-		@add-more-files="attachFiles"
-		@change-content-type="changeContentType" />
+	<AttachDialog v-model="attachDialogState.show" v-model:subtitleText="messageState.text"
+		:contentType="attachDialogState.contentType" :fileList="messageState.attachedFiles" @submit="createMessage"
+		@close="closeDialog" @add-more-files="attachFiles" @change-content-type="changeContentType" />
 </template>
 
 <script setup lang="ts">
@@ -70,13 +40,13 @@ import { MessageContent } from '@/types/db/MessagesTable';
 
 export type EditMessageData = Pick<Message, 'id' | 'type' | Partial<'content'>>;
 interface MessageForm extends Omit<MessageContent, 'attachments'> {
-	attachedFiles: AttachDialogProps['fileList'];
-}
+	attachedFiles: AttachDialogProps['fileList']
+};
 
 const emit = defineEmits<{
-	createMessage: [msgType: Message['type'], msgContent: Partial<AttachFormContent>];
-	updateMessage: [mData: EditMessageData];
-	scrollToMessage: [mId: Message['id']];
+	createMessage: [msgType: Message['type'], msgContent: Partial<AttachFormContent>],
+	updateMessage: [mData: EditMessageData],
+	scrollToMessage: [mId: Message['id']],
 }>();
 
 defineOptions({
@@ -97,22 +67,23 @@ const attachDialogState = ref({
 });
 
 const textareaValue = computed({
-	get: () => (!attachDialogState.value.show ? messageState.value.text : ''),
-	set: (val: string) => (messageState.value.text = val),
+	get: () => !attachDialogState.value.show ? messageState.value.text : '',
+	set: (val: string) => messageState.value.text = val,
 });
 
 const submitHandler = () => {
 	if (msgToEditState.value.isEditing) {
 		updateMessage();
-	} else {
+	}
+	else {
 		createMessage('text');
 	}
-};
+}
 const createMessage = (type: Message['type'] = 'text', attachData?: AttachedContent) => {
 	if (messageState.value.text || attachData) {
 		emit('createMessage', type, {
 			text: messageState.value.text,
-			attachments: attachData,
+			attachments: attachData
 		} as AttachFormContent);
 		messageState.value = { text: '', attachedFiles: [] };
 		msgToEditState.value.isEditing = false;
@@ -120,7 +91,8 @@ const createMessage = (type: Message['type'] = 'text', attachData?: AttachedCont
 };
 
 const attachFiles = async (type: Exclude<Message['type'], 'text'>, fileList: FileList) => {
-	if (!fileList?.length) return;
+	if (!fileList?.length)
+		return;
 	if (fileList.length > 10 || messageState.value.attachedFiles.length > 10) {
 		showMessage('You can send only 10 files or less in one message ', 'red-darken-3', 2500);
 		return;
@@ -130,19 +102,18 @@ const attachFiles = async (type: Exclude<Message['type'], 'text'>, fileList: Fil
 		files.push(fileList.item(i) as File);
 	}
 	if (type === 'media' && files.length) {
-		files = files.filter(f => f.type.startsWith('image/') || f.type.startsWith('video/'));
+		files = files.filter(f => f.type.startsWith('image/') || f.type.startsWith('video/'))
 		attachDialogState.value.contentType = 'media';
-	} else if (type === 'file') attachDialogState.value.contentType = 'file';
+	}
+	else if (type === 'file') attachDialogState.value.contentType = 'file';
 	messageState.value.attachedFiles = files.map(f => ({ id: uuidv4(), fileData: f }));
 	attachDialogState.value.show = true;
 };
 const changeContentType = () => {
 	if (attachDialogState.value.contentType === 'media') {
 		attachDialogState.value.contentType = 'file';
-	} else if (
-		attachDialogState.value.contentType === 'file' &&
-		messageState.value.attachedFiles.every(({ fileData }) => fileData.type.startsWith('image/'))
-	) {
+	}
+	else if (attachDialogState.value.contentType === 'file' && messageState.value.attachedFiles.every(({ fileData }) => fileData.type.startsWith('image/'))) {
 		attachDialogState.value.contentType = 'media';
 	}
 };
@@ -183,13 +154,13 @@ const updateMessage = () => {
 };
 const showReply = computed({
 	get: () => msgToEditState.value.isEditing,
-	set: (val: boolean) => (msgToEditState.value.isEditing = val),
+	set: (val: boolean) => msgToEditState.value.isEditing = val,
 });
 const closeDialog = () => {
 	messageState.value.attachedFiles = [];
 };
 defineExpose({
-	editMessage,
+	editMessage
 });
 </script>
 

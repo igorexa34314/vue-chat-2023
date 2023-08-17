@@ -1,9 +1,6 @@
 <template>
 	<v-app-bar color="blue-grey-darken-4" :elevation="7" class="overflow-visible">
-		<v-app-bar-nav-icon
-			variant="text"
-			@click.stop="emit('drawer')"
-			:density="!xs ? 'default' : 'comfortable'"
+		<v-app-bar-nav-icon variant="text" @click.stop="emit('drawer')" :density="!xs ? 'default' : 'comfortable'"
 			class="mr-3 mr-sm-0" />
 
 		<v-toolbar-title v-show="!xs || !searchState.enabled" class="app-title text-truncate">My chat</v-toolbar-title>
@@ -14,22 +11,14 @@
 			<SearchBox v-show="searchState.enabled" ref="searchEl" @blur="searchState.enabled = false" />
 		</v-fade-transition>
 
-		<v-btn
-			v-show="!xs || !searchState.enabled"
-			:icon="mdiMagnify"
-			@click="enableSearch"
-			:density="!xs ? 'default' : 'comfortable'"
-			variant="text" />
+		<v-btn v-show="!xs || !searchState.enabled" :icon="mdiMagnify" @click="enableSearch"
+			:density="!xs ? 'default' : 'comfortable'" variant="text" />
 
 		<!-- <v-btn :icon="mdiFilter"  variant="text" disabled /> -->
 
 		<v-menu draggable="false" width="100%" max-width="180px">
 			<template #activator="{ props }">
-				<v-btn
-					v-bind="props"
-					variant="text"
-					:icon="mdiDotsVertical"
-					class="mr-2"
+				<v-btn v-bind="props" variant="text" :icon="mdiDotsVertical" class="mr-2"
 					:density="!xs ? 'default' : 'comfortable'" />
 			</template>
 			<v-list density="compact">
@@ -52,7 +41,7 @@
 
 <script setup lang="ts">
 import SearchBox from '@/components/UI/SearchBox.vue';
-import { mdiMagnify, mdiDotsVertical, mdiAccountCircleOutline, mdiLogout } from '@mdi/js';
+import { mdiMagnify, mdiFilter, mdiDotsVertical, mdiAccountCircleOutline, mdiLogout } from '@mdi/js';
 import messages from '@/utils/messages.json';
 import { ref, nextTick } from 'vue';
 import { useRouter } from 'vue-router/auto';
@@ -64,20 +53,20 @@ const { push } = useRouter();
 const { showMessage } = useSnackbarStore();
 
 const emit = defineEmits<{
-	drawer: [];
+	drawer: [],
 }>();
 
 const { xs } = useDisplay();
 const searchEl = ref<InstanceType<typeof SearchBox>>();
 const searchState = ref({
 	enabled: false,
-	text: '',
+	text: ''
 });
 
 const enableSearch = () => {
 	searchState.value.enabled = true;
 	nextTick(() => {
-		searchEl.value?.$el?.focus();
+		searchEl.value?.$el?.focus()
 	});
 };
 const exit = async () => {

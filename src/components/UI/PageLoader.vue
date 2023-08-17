@@ -4,11 +4,12 @@
 	</div>
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+</script>
 
 <style lang="scss" scoped>
-$loader-primary: #0288d1;
-$loader-secondary: #fdd835;
+$loader-primary: #0288D1;
+$loader-secondary: #FDD835;
 .page-loader {
 	position: absolute;
 	top: 50%;

@@ -6,8 +6,8 @@ export const copyToClipboard = async (imageToCopy: Blob | string, imageType?: st
 		} else {
 			await navigator.clipboard.write([new ClipboardItem({ [imageType || imageToCopy.type]: imageToCopy })]);
 		}
-	} catch (error) {
-		console.log(error);
+	} catch (e) {
+		throw e;
 	}
 };
 

@@ -15,8 +15,8 @@ app.use(VueFire, {
 	firebaseApp,
 	modules: [
 		// we will see other modules later on
-		VueFireAuth(),
-	],
+		VueFireAuth()
+	]
 });
 app.component('page-loader', PageLoader);
 app.use(vuetify).use(vueI18n).use(router).use(createPinia()).use(createMetaManager()).mount('#app');

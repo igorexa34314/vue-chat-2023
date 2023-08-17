@@ -14,7 +14,7 @@ export const getFileThumbAndSizes = <T extends { id: string; fileData: File }>(
 	options: ThumbSizeOptions = {
 		maxWidth: 40,
 		maxHeight: 40,
-		quality: 0.6,
+		quality: 0.6
 	}
 ) => {
 	const calculateThumbSize = (img: HTMLImageElement) => {
@@ -53,17 +53,12 @@ export const getFileThumbAndSizes = <T extends { id: string; fileData: File }>(
 
 					const resultUrl = canvas.toDataURL(file.fileData.type, options.quality),
 						result: ThumbResult = {
-							url: resultUrl,
+							url: resultUrl
 						};
 					canvas.toBlob(
 						blob => {
 							result.fullsize = blob?.size;
-							res({
-								...file,
-								preview,
-								thumbnail: result,
-								sizes: { w: image.naturalWidth, h: image.naturalHeight },
-							} as T & {
+							res({ ...file, preview, thumbnail: result, sizes: { w: image.naturalWidth, h: image.naturalHeight } } as T & {
 								sizes: { w: number; h: number };
 								thumbnail: ThumbResult;
 								preview?: string;

@@ -10,17 +10,17 @@ import { ref, computed } from 'vue';
 import { AttachedContent } from '@/components/chat/attach/AttachDialog.vue';
 
 const props = defineProps<{
-	files: AttachedContent;
+	files: AttachedContent
 }>();
 const emit = defineEmits<{
-	deleteAttach: [imgId: AttachedContent[number]['id']];
+	deleteAttach: [imgId: AttachedContent[number]['id']]
 }>();
 
 const prevEl = ref<InstanceType<typeof PreviewFile>[]>();
-
+	
 const isFilesReady = computed(() => {
 	const imgsEl = prevEl.value?.filter(el => el.imgEl).map(el => el.imgEl);
-	return imgsEl?.length ? imgsEl.every(img => img?.state === 'loaded') : true;
+	return imgsEl?.length ? imgsEl.every(img => img?.state === 'loaded') : true
 });
 
 defineExpose({ isFilesReady });

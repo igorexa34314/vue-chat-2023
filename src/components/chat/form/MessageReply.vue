@@ -1,21 +1,13 @@
 <template>
 	<Transition :css="false" @before-enter="onBeforeEnter" @enter="onEnter" @leave="onLeave">
-		<v-alert
-			v-show="modelValue"
-			v-bind="$attrs"
-			class="reply-wrapper py-2"
-			color="grey-darken-4"
-			density="compact"
-			variant="flat"
-			rounded="0"
-			elevation="0">
+		<v-alert v-show="modelValue" v-bind="$attrs" class="reply-wrapper py-2" color="grey-darken-4" density="compact"
+			variant="flat" rounded="0" elevation="0">
 			<template #prepend>
 				<v-icon :icon="mdiPencil" />
 			</template>
 			<template #text>
 				<div class="reply-original d-flex align-center pa-2" @click="emit('goToMessage')">
-					<div
-						class="reply-original-media d-flex align-center"
+					<div class="reply-original-media d-flex align-center"
 						v-if="getImagesFromEditMsg && getImagesFromEditMsg.length">
 						<v-img :src="getImagesFromEditMsg.at(-1)" aspect-ratio="1" width="48px" height="100%" cover />
 					</div>
@@ -40,22 +32,19 @@ import { mdiPencil, mdiClose } from '@mdi/js';
 import { Message } from '@/stores/messages';
 import { gsap } from 'gsap';
 
-const props = withDefaults(
-	defineProps<{
-		modelValue?: boolean;
-		mType?: Message['type'];
-		content: Message['content'] | null;
-	}>(),
-	{
-		modelValue: false,
-		mType: 'text',
-	}
-);
+const props = withDefaults(defineProps<{
+	modelValue?: boolean;
+	mType?: Message['type']
+	content: Message['content'] | null;
+}>(), {
+	modelValue: false,
+	mType: 'text'
+});
 
 const emit = defineEmits<{
-	'update:modelValue': [val: boolean];
-	goToMessage: [];
-	cancel: [];
+	'update:modelValue': [val: boolean],
+	goToMessage: [],
+	cancel: []
 }>();
 
 defineOptions({
@@ -63,23 +52,22 @@ defineOptions({
 });
 
 const getTextFromEditMsg = computed(() => {
-	return props.mType === 'text'
-		? props.content?.text
-		: !getImagesFromEditMsg.value || !getImagesFromEditMsg.value.length
-		? props.content?.attachments.at(-1)?.fullname
-		: (getImagesFromEditMsg.value.length === 1 ? 'Photo' : 'Album') + ', ' + props.content?.text;
+	return props.mType === 'text' ?
+		props.content?.text :
+		!getImagesFromEditMsg.value || !getImagesFromEditMsg.value.length ?
+			props.content?.attachments.at(-1)?.fullname :
+			(getImagesFromEditMsg.value.length === 1 ? 'Photo' : 'Album') +
+			', ' + props.content?.text;
 });
-const getImagesFromEditMsg = computed(
-	() => props.content?.attachments?.filter(item => item.raw.previewURL).map(img => img.raw.previewURL)
-);
+const getImagesFromEditMsg = computed(() => props.content?.attachments?.filter(item => item.raw.previewURL).map(img => img.raw.previewURL));
 const cancelReply = () => {
 	emit('update:modelValue', false);
 	emit('cancel');
-};
+}
 
 const onBeforeEnter = (el: Element) => {
 	// 	gsap.set(el, { autoAlpha: 0 })
-};
+}
 
 const onEnter = (el: Element, done: () => void) => {
 	gsap.from(el, {
@@ -88,8 +76,8 @@ const onEnter = (el: Element, done: () => void) => {
 		top: '2px',
 		ease: 'power2',
 		onComplete: done,
-	});
-};
+	})
+}
 
 const onLeave = (el: Element, done: () => void) => {
 	gsap.to(el, {
@@ -98,8 +86,8 @@ const onLeave = (el: Element, done: () => void) => {
 		top: '2px',
 		ease: 'power2',
 		onComplete: done,
-	});
-};
+	})
+}
 </script>
 
 <style lang="scss" scoped>
@@ -108,7 +96,7 @@ const onLeave = (el: Element, done: () => void) => {
 		border-radius: 0.75rem 0.75rem 0 0 !important;
 	}
 	&-type {
-		color: #7e57c2;
+		color: #7E57C2;
 	}
 	&-original {
 		cursor: pointer;
@@ -118,8 +106,7 @@ const onLeave = (el: Element, done: () => void) => {
 		&:hover {
 			background-color: rgba(255, 255, 255, 0.2);
 		}
-		&-content-wrapper {
-		}
+		&-content-wrapper {}
 		&-media {
 			flex: 0 0 48px;
 			height: 48px;
