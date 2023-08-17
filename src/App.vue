@@ -24,6 +24,7 @@ const AppName = import.meta.env.VITE_APP_NAME || 'My Chat';
 </script>
 
 <style lang="scss">
+@import '@/assets/styles/main';
 @import '@/assets/styles/scroll';
 
 .v-divider {

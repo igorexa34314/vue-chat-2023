@@ -37,7 +37,7 @@ import PassField from '@/components/UI/PassField.vue';
 import messages from '@/utils/messages.json';
 import validations from '@/utils/validations';
 import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter } from 'vue-router/auto';
 import { loginWithEmail, signInWithGoogle } from '@/services/auth';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { googleImg } from '@/globals';

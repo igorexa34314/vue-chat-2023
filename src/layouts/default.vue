@@ -22,7 +22,7 @@ import { useUserdataStore } from '@/stores/userdata';
 const drawer = ref(true);
 
 // Fetching all auth userdata
-const { state: unsub, isLoading } = useAsyncState(fetchAuthUserdata, undefined, {});
+const { state: unsub, isLoading } = useAsyncState(fetchAuthUserdata, null, {});
 const { $reset } = useUserdataStore();
 
 provide(globalLoadingKey, isLoading);
@@ -36,5 +36,6 @@ onUnmounted(() => {
 
 <route lang="yaml">
 meta:
+	auth: true
    requiresAuth: true
 </route>

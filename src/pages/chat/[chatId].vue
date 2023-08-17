@@ -110,7 +110,7 @@ import { getChatInfoById, ChatInfo } from '@/services/chat';
 import { createMessage as createDBMessage, updateMessageContent as updateDBMessageContent } from '@/services/message';
 import { ref, computed, onUnmounted, nextTick, watchEffect, toRef } from 'vue';
 import { useMeta } from 'vue-meta';
-import { useRoute } from 'vue-router';
+import { useRoute } from 'vue-router/auto';
 import { useChatScroll } from '@/composables/useChatScroll';
 import { loadMoreChatMessages } from '@/services/message';
 // import { useDropZone } from '@vueuse/core';
@@ -129,7 +129,7 @@ import { useDisplay } from 'vuetify';
 gsap.registerPlugin(ScrollToPlugin);
 
 const { getUChats: userChats } = storeToRefs(useUserdataStore());
-const route = useRoute();
+const route = useRoute('/chat/[chatId]');
 const { showMessage } = useSnackbarStore();
 const messagesStore = useMessagesStore();
 const { xs } = useDisplay();
@@ -140,7 +140,7 @@ const srollEl = ref<VInfiniteScroll>();
 const loading = ref(false);
 const messages = computed(() => messagesStore.messages);
 let unsub: Unsubscribe | undefined;
-const chatId = toRef(() => route.params.chatId as string);
+const chatId = toRef(() => route.params.chatId);
 const uid = useCurrentUser().value?.uid;
 
 // const attachDialog = ref(false);

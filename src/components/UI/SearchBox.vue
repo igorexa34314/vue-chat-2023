@@ -60,7 +60,7 @@ import { ref, computed } from 'vue';
 import { VTextField } from 'vuetify/components';
 import { mdiMessageText } from '@mdi/js';
 import { searchClient } from '@/plugins/searchClient';
-import { useRouter } from 'vue-router';
+import { useRouter } from 'vue-router/auto';
 import { UserInfo } from '@/types/db/UserdataTable';
 import { joinPrivateChat } from '@/services/chat';
 import { useSnackbarStore } from '@/stores/snackbar';
@@ -100,13 +100,15 @@ const uid = computed(() => userdataStore.getUInfo?.uid);
 const goToChat = async (uid: string) => {
 	try {
 		const chatId = await joinPrivateChat(uid);
-		push({ name: 'chat-chatId', params: { chatId } });
+		if (chatId) {
+			push({ name: '/chat/[chatId]', params: { chatId } });
+		}
 	} catch (e) {
 		showMessage(messages[e as keyof typeof messages] || (e as string), 'red-darken-3', 2000);
 	}
 };
 const openUserProfile = (uid: string) => {
-	push({ name: 'user-userId', params: { userId: uid } });
+	push({ name: '/user/[userId]', params: { userId: uid } });
 };
 
 defineExpose({

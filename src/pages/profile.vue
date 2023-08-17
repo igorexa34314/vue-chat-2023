@@ -29,7 +29,9 @@ import { ref, inject } from 'vue';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { useMeta } from 'vue-meta';
 import { globalLoadingKey } from '@/injection-keys';
+import { definePage } from 'vue-router/auto';
 
+definePage({ alias: '/' });
 useMeta({ title: 'My profile' });
 
 const { getUInfo: userInfo } = storeToRefs(useUserdataStore());

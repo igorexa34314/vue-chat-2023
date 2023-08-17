@@ -7,11 +7,8 @@
 <script setup lang="ts">
 import LoginForm from '@/components/auth/LoginForm.vue';
 import { useMeta } from 'vue-meta';
+import { definePage } from 'vue-router/auto';
 
+definePage({ meta: { layout: 'empty' } });
 useMeta({ title: 'Login' });
 </script>
-
-<route lang="yaml">
-meta:
-   layout: empty
-</route>

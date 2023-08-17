@@ -59,7 +59,7 @@ import validations from '@/utils/validations';
 import messages from '@/utils/messages.json';
 import { ref } from 'vue';
 import { registerWithEmail, signInWithGoogle } from '@/services/auth';
-import { useRouter } from 'vue-router';
+import { useRouter } from 'vue-router/auto';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { googleImg } from '@/globals';
 import { VForm } from 'vuetify/components';

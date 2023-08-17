@@ -26,7 +26,7 @@
 				class="mr-2" />
 		</v-radio-group>
 
-		<birthday-picker v-model="formState.birthday_date" class="birthday-picker mt-5" max-width="550" />
+		<birthday-picker v-model="birthdayPickerDate" class="birthday-picker mt-5" max-width="550" />
 
 		<div class="mt-3 mt-md-5" style="max-width: 500px">
 			<v-card variant="outlined" max-width="250" class="mb-5" elevation="9">
@@ -64,14 +64,13 @@
 import ImageLoader from '@/components/chat/ImageLoader.vue';
 import BirthdayPicker from '@/components/UI/BirthdayPicker.vue';
 import validations from '@/utils/validations';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { defaultAvatar } from '@/globals';
 import { UserInfo } from '@/types/db/UserdataTable';
 import { VForm } from 'vuetify/components';
 import { useDisplay } from 'vuetify';
 
-export interface ProfileForm extends Omit<UserInfo, 'created_at' | 'uid' | 'providerId' | 'birthday_date'> {
-	birthday_date: Date;
+export interface ProfileForm extends Omit<UserInfo, 'created_at' | 'uid' | 'providerId'> {
 	avatar?: File[];
 }
 
@@ -86,6 +85,11 @@ const emit = defineEmits<{
 const { xs } = useDisplay();
 const formEl = ref<VForm>();
 const formState = ref<ProfileForm>({ ...props.uinfo });
+
+const birthdayPickerDate = computed<Date>({
+	get: () => new Date(formState.value.birthday_date as Date),
+	set: val => (formState.value.birthday_date = val),
+});
 
 const genderItems = [
 	{ name: 'Male', value: 'male' },

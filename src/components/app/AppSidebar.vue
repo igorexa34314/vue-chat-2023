@@ -5,7 +5,7 @@
 			class="user-info py-1 bg-blue-grey-darken-4"
 			density="compact"
 			variant="text"
-			to="/profile"
+			@click="push('/profile')"
 			draggable="false">
 			<template #prepend>
 				<v-avatar :image="userInfo.photoURL || defaultAvatar" />
@@ -27,7 +27,7 @@
 				:key="chat.id"
 				:title="setChatName(chat)"
 				:prepend-avatar="setChatAvatar(chat)"
-				:to="{ name: 'chat-chatId', params: { chatId: chat.id } }"
+				@click="push({ name: '/chat/[chatId]', params: { chatId: chat.id } })"
 				class="py-3 mb-3"
 				draggable="false" />
 		</v-list>
@@ -44,8 +44,10 @@ import { useSnackbarStore } from '@/stores/snackbar';
 import { useUserdataStore } from '@/stores/userdata';
 import { setChatName, setChatAvatar } from '@/utils/chat';
 import { defaultAvatar } from '@/globals';
+import { useRouter } from 'vue-router/auto';
 
 const { showMessage } = useSnackbarStore();
+const { push } = useRouter();
 const { getUChats: userChats, getUInfo: userInfo } = storeToRefs(useUserdataStore());
 const loading = ref(true);
 
@@ -71,7 +73,7 @@ const getUserChatsInfo = computedAsync(
 		}
 		return [];
 	},
-	undefined,
+	[],
 	{
 		evaluating: loading,
 		onError: e => {

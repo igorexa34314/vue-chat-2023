@@ -51,7 +51,7 @@ import FileMessage from '@/components/chat/messages/file/FileMessage.vue';
 import TextMessage from '@/components/chat/messages/text/TextMessage.vue';
 import { useDisplay } from 'vuetify';
 import { computed } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter } from 'vue-router/auto';
 import { messagesDateFormat } from '@/utils/filters/messages';
 import { defaultAvatar } from '@/globals';
 import { ImageWithPreviewURL } from '@/components/chat/messages/media/ImageFrame.vue';
@@ -80,7 +80,7 @@ const messageComponent = computed(() =>
 	props.type === 'media' ? MediaMessage : props.type === 'file' ? FileMessage : TextMessage
 );
 const openUserProfile = () => {
-	push({ name: 'user-userId', params: { userId: props.sender.id } });
+	push({ name: '/user/[userId]', params: { userId: props.sender.id } });
 };
 </script>
 

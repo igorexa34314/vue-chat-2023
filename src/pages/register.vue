@@ -7,11 +7,8 @@
 <script setup lang="ts">
 import RegisterForm from '@/components/auth/RegisterForm.vue';
 import { useMeta } from 'vue-meta';
+import { definePage } from 'vue-router/auto';
 
+definePage({ meta: { layout: 'empty' } });
 useMeta({ title: 'Register' });
 </script>
-
-<route lang="yaml">
-meta:
-   layout: empty
-</route>

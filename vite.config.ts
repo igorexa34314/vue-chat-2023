@@ -1,11 +1,11 @@
 import { defineConfig, loadEnv } from 'vite';
-import { resolve, dirname } from 'node:path';
+import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import vue from '@vitejs/plugin-vue';
 import vuetify, { transformAssetUrls } from 'vite-plugin-vuetify';
 import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite';
+import VueRouter from 'unplugin-vue-router/vite';
 import Layouts from 'vite-plugin-vue-layouts';
-import Pages from 'vite-plugin-pages';
 
 // https://vitejs.dev/config/
 export default ({ mode }) => {
@@ -24,18 +24,10 @@ export default ({ mode }) => {
 		},
 		plugins: [
 			vue({ template: { transformAssetUrls } }),
-			Pages({
-				dirs: 'src/pages',
+			VueRouter({
+				routesFolder: 'src/pages',
 				exclude: ['**/components/*.vue'],
-				extendRoute(route) {
-					if (route.path === '/login' || route.path === '/register') {
-						return route;
-					}
-					return {
-						...route,
-						meta: { auth: true },
-					};
-				},
+				dts: './src/typed-router.d.ts',
 			}),
 			Layouts({
 				layoutsDirs: 'src/layouts',

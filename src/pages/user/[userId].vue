@@ -62,7 +62,7 @@ import { mdiHelp, mdiGenderMale, mdiGenderFemale, mdiMessageText, mdiAccountPlus
 import messages from '@/utils/messages.json';
 import { computed, toRef, ref, watchEffect } from 'vue';
 import { getUserdataById, addToFriend as addFriend } from '@/services/user';
-import { useRoute, useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router/auto';
 import { getUid } from '@/services/auth';
 import { joinPrivateChat } from '@/services/chat';
 import { useMeta } from 'vue-meta';
@@ -73,11 +73,11 @@ import { useDisplay } from 'vuetify';
 
 const { xs } = useDisplay();
 const { showMessage } = useSnackbarStore();
-const route = useRoute();
+const route = useRoute('/user/[userId]');
 const { push } = useRouter();
 
 const userdata = ref<UserData>();
-const userId = toRef(() => route.params.userId as string | null);
+const userId = toRef(() => route.params.userId);
 watchEffect(async () => {
 	if (userId.value) {
 		userdata.value = await getUserdataById(userId.value);
@@ -99,7 +99,9 @@ const goToChat = async () => {
 	try {
 		if (userId.value) {
 			const chatId = await joinPrivateChat(userId.value);
-			push({ name: 'chat-chatId', params: { chatId } });
+			if (chatId) {
+				push({ name: '/chat/[chatId]', params: { chatId } });
+			}
 		}
 	} catch (e) {
 		showMessage(messages[e as keyof typeof messages] || (e as string), 'red-darken-3', 2000);

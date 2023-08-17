@@ -8,7 +8,7 @@
 
 <script setup lang="ts">
 import messages from '@/utils/messages.json';
-import { useRoute } from 'vue-router';
+import { useRoute } from 'vue-router/auto';
 import { useSnackbarStore } from '@/stores/snackbar';
 
 const route = useRoute();

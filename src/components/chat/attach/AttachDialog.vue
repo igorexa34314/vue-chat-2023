@@ -31,7 +31,7 @@
 						<v-list-item style="cursor: pointer" class="add-attachment pa-0">
 							<label for="add-more" style="cursor: pointer; padding: 4px 0.7em" class="d-block">
 								<v-icon :icon="mdiPlus" class="mr-3" />
-								<span>Добавить еще</span>
+								<span>Add more</span>
 								<input
 									id="add-more"
 									type="file"
