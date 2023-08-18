@@ -17,7 +17,7 @@
 		"@vueuse/core": "^10.3.0",
 		"algoliasearch": "^4.19.1",
 		"base64-arraybuffer": "^1.0.2",
-		"firebase": "^10.1.0",
+		"firebase": "^10.2.0",
 		"gsap": "^3.12.2",
 		"instantsearch.js": "^4.56.9",
 		"pinia": "^2.1.6",
