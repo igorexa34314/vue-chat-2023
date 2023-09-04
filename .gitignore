@@ -34,7 +34,10 @@ dist-ssr
 !.yarn/sdks
 !.yarn/versions
 
-#Firebase
+# Firebase
 firebase/
 .firebase/
 .vercel
+
+# rollup-plugin-visualizer
+bundle-stats.html

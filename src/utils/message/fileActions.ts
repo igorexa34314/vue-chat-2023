@@ -1,6 +1,6 @@
+import { storage } from '@/firebase';
 import { Message } from '@/stores/messages';
 import { ref as storageRef, getBlob } from 'firebase/storage';
-import { useFirebaseStorage } from 'vuefire';
 
 export const setDownloadLink = (filename: string, url: string) => {
 	const link = document.createElement('a');
@@ -13,7 +13,6 @@ export const downloadFile = async (file: Message['content']['attachments'][numbe
 	try {
 		let url = '';
 		if (!file.raw.previewURL) {
-			const storage = useFirebaseStorage();
 			const blobFile = await getBlob(storageRef(storage, file.raw.fullpath));
 			url = URL.createObjectURL(blobFile);
 		} else {

@@ -9,7 +9,7 @@
 		</v-tabs>
 
 		<v-window v-model="pickedProfileTab">
-			<v-window-item :value="profileTabs[0].value" style="min-height: 100px;">
+			<v-window-item :value="profileTabs[0].value" style="min-height: 100px">
 				<v-container fluid class="pa-2 pa-sm-4">
 					<div v-if="loading"><page-loader /></div>
 					<InfoForm v-if="userInfo && Object.keys(userInfo).length" :uinfo="userInfo" @submit="submitForm" />
@@ -21,6 +21,7 @@
 
 <script setup lang="ts">
 import InfoForm, { ProfileForm } from '@/components/profile/InfoForm.vue';
+import { VTabs, VTab, VWindow, VWindowItem, VContainer } from 'vuetify/components';
 import messages from '@/utils/messages.json';
 import { storeToRefs } from 'pinia';
 import { updateUserdata, updateUserAvatar } from '@/services/user';
@@ -53,7 +54,7 @@ const submitForm = async ({ avatar, ...formData }: ProfileForm) => {
 		showMessage('succesfully_updated');
 	} catch (e) {
 		console.error(e);
-		showMessage(messages[e as keyof typeof messages] || e as string, 'red-darken-3', 2000);
+		showMessage(messages[e as keyof typeof messages] || (e as string), 'red-darken-3', 2000);
 	}
 };
 </script>

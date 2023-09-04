@@ -7,6 +7,7 @@
 </template>
 
 <script setup lang="ts">
+import { VLayout, VMain } from 'vuetify/components';
 import messages from '@/utils/messages.json';
 import { useRoute } from 'vue-router/auto';
 import { useSnackbarStore } from '@/stores/snackbar';

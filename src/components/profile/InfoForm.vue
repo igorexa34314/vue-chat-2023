@@ -67,7 +67,7 @@ import validations from '@/utils/validations';
 import { ref, computed } from 'vue';
 import { defaultAvatar } from '@/globals';
 import { UserInfo } from '@/types/db/UserdataTable';
-import { VForm } from 'vuetify/components';
+import { VForm, VTextField, VRadioGroup, VRadio, VFileInput } from 'vuetify/components';
 import { useDisplay } from 'vuetify';
 
 export interface ProfileForm extends Omit<UserInfo, 'created_at' | 'uid' | 'providerId'> {

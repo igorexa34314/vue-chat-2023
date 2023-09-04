@@ -5,15 +5,27 @@
 			<v-card-title>
 				<v-row align="center" justify="space-between">
 					<v-col cols="10" class="d-flex align-center">
-						<v-img :lazy-src="defaultAvatar" :src="(userdata?.info?.photoURL)?.toString()" alt="Фото"
-							:max-width="xs ? '80px' : '100px'" class="mr-5" eager :width="xs ? 'auto' : '100%'" />
+						<v-img
+							:lazy-src="defaultAvatar"
+							:src="userdata?.info?.photoURL?.toString()"
+							alt="Фото"
+							:max-width="xs ? '80px' : '100px'"
+							class="mr-5"
+							eager
+							:width="xs ? 'auto' : '100%'" />
 						<div class="">
 							<h2 class="mb-2">{{ userdata?.info?.displayName }}</h2>
 							<div class="d-flex align-center mt-2">
 								<span class="text-subtitle-1 mr-2">Пол:</span>
 								<small>
 									<v-icon
-										:icon="userdata?.info?.gender === 'unknown' ? mdiHelp : userdata?.info?.gender === 'male' ? mdiGenderMale : mdiGenderFemale" />
+										:icon="
+											userdata?.info?.gender === 'unknown'
+												? mdiHelp
+												: userdata?.info?.gender === 'male'
+												? mdiGenderMale
+												: mdiGenderFemale
+										" />
 								</small>
 							</div>
 						</div>
@@ -27,8 +39,14 @@
 						</v-tooltip>
 						<v-tooltip location="bottom">
 							<template #activator="{ props }">
-								<v-btn v-bind="props" size="x-large" variant="text" :icon="mdiAccountPlusOutline" class="ml-2"
-									@click="addToFriend" disabled />
+								<v-btn
+									v-bind="props"
+									size="x-large"
+									variant="text"
+									:icon="mdiAccountPlusOutline"
+									class="ml-2"
+									@click="addToFriend"
+									disabled />
 							</template>
 							<span class="text-subtitle-2 font-weight-medium">Добавить в друзья</span>
 						</v-tooltip>
@@ -41,6 +59,7 @@
 
 <script setup lang="ts">
 import { mdiHelp, mdiGenderMale, mdiGenderFemale, mdiMessageText, mdiAccountPlusOutline } from '@mdi/js';
+import { VTooltip } from 'vuetify/components';
 import messages from '@/utils/messages.json';
 import { computed, toRef, ref, watchEffect } from 'vue';
 import { getUserdataById, addToFriend as addFriend } from '@/services/user';
@@ -68,12 +87,14 @@ watchEffect(async () => {
 const uid = await getUid();
 
 //Dynamic page title
-useMeta(computed(() => {
-	if (userdata && Object.keys(userdata).length) {
-		return { title: `${userdata.value?.info.displayName}` || 'User' }
-	}
-	return { title: 'User' }
-}));
+useMeta(
+	computed(() => {
+		if (userdata && Object.keys(userdata).length) {
+			return { title: `${userdata.value?.info.displayName}` || 'User' };
+		}
+		return { title: 'User' };
+	})
+);
 
 const goToChat = async () => {
 	try {
@@ -84,12 +105,12 @@ const goToChat = async () => {
 			}
 		}
 	} catch (e) {
-		showMessage(messages[e as keyof typeof messages] || e as string, 'red-darken-3', 2000);
+		showMessage(messages[e as keyof typeof messages] || (e as string), 'red-darken-3', 2000);
 	}
 };
 const addToFriend = async () => {
 	if (userId.value) {
 		await addFriend(userId.value);
 	}
-}
+};
 </script>

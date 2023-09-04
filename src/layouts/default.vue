@@ -11,6 +11,7 @@
 </template>
 
 <script setup lang="ts">
+import { VLayout, VMain } from 'vuetify/components';
 import AppNavbar from '@/components/app/AppNavbar.vue';
 import AppSidebar from '@/components/app/AppSidebar.vue';
 import { ref, onUnmounted, provide } from 'vue';

@@ -17,6 +17,7 @@
 </template>
 
 <script setup lang="ts">
+import { VFadeTransition } from 'vuetify/components';
 import ImageLoader from '@/components/chat/ImageLoader.vue';
 import { useDisplay } from 'vuetify';
 import { mdiFile, mdiDownload } from '@mdi/js';

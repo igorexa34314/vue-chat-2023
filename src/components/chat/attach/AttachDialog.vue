@@ -95,6 +95,7 @@
 </template>
 
 <script setup lang="ts">
+import { VDialog, VMenu, VTextarea } from 'vuetify/components';
 import { mdiClose, mdiDotsVertical, mdiPlus, mdiFileMultipleOutline, mdiFolderMultipleImage } from '@mdi/js';
 import FileAttachment from '@/components/chat/attach/FileAttachment.vue';
 import MediaAttachment from '@/components/chat/attach/MediaAttachment.vue';

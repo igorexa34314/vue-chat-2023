@@ -1,8 +1,15 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
+import {
+	initializeAuth,
+	indexedDBLocalPersistence,
+	browserLocalPersistence,
+	browserSessionPersistence,
+	browserPopupRedirectResolver,
+} from 'firebase/auth';
+import { initializeFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
-import { getAnalytics } from 'firebase/analytics';
+import { initializeAnalytics } from 'firebase/analytics';
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -14,13 +21,19 @@ export const firebaseApp = initializeApp({
 	messagingSenderId: import.meta.env.VITE_FB_MESSAGING_SENDER_ID,
 	appId: import.meta.env.VITE_FB_APP_ID,
 	measurementId: import.meta.env.VITE_FB_MEASUREMENT_ID,
-	storageBucket: import.meta.env.VITE_FB_STORAGE_BUCKET
+	storageBucket: import.meta.env.VITE_FB_STORAGE_BUCKET,
 });
 
-// Initialize Cloud Firestore and get a reference to the service
-export const db = getFirestore(firebaseApp);
+// Initialize Firebase Authentication and get a reference to the service
+export const auth = initializeAuth(firebaseApp, {
+	persistence: [indexedDBLocalPersistence, browserLocalPersistence, browserSessionPersistence],
+	popupRedirectResolver: browserPopupRedirectResolver,
+});
+
+// Initialize Firestore and get a reference to the service
+export const db = initializeFirestore(firebaseApp, {});
 
 // Initialize Cloud Storage and get a reference to the service
 export const storage = getStorage(firebaseApp);
 
-const analytics = getAnalytics(firebaseApp);
+export const analytics = initializeAnalytics(firebaseApp);

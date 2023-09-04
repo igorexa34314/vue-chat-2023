@@ -21,22 +21,22 @@
 </template>
 
 <script setup lang="ts">
+import { VTextField } from 'vuetify/components';
 import { mdiEye, mdiEyeOff } from '@mdi/js';
 import { ref } from 'vue';
 import validations from '@/utils/validations';
 import { useVModel } from '@vueuse/core';
 
-type Password = string;
-type Variant = "filled" | "outlined" | "plain" | "underlined" | "solo";
+type Password = VTextField['modelValue'];
 interface PassFieldProps {
 	modelValue?: Password;
 	repeater?: boolean;
-	label?: string;
+	label?: VTextField['label'];
 	repeaterLabel?: string;
-	placeholder?: string;
-	repeaterPlaceholder?: string;
+	placeholder?: VTextField['placeholder'];
+	repeaterPlaceholder?: VTextField['placeholder'];
 	rules?: ((v: Password) => boolean | string)[];
-	variant?: Variant;
+	variant?: VTextField['variant'];
 	repeaterClass?: string;
 }
 const props = withDefaults(defineProps<PassFieldProps>(), {

@@ -21,7 +21,7 @@ export const useChatScroll = (
 	// Hiding scroll when inactive
 	const { arrivedState, isScrolling } = useScroll(scrollEl, {
 		offset: { bottom: 600 },
-		behavior: 'smooth'
+		behavior: 'smooth',
 	});
 	const { bottom } = toRefs(arrivedState);
 
@@ -48,13 +48,13 @@ export const useChatScroll = (
 			if (behavior !== 'smooth') {
 				scrollEl.value?.scrollTo({
 					top: scrollEl.value?.scrollHeight,
-					behavior
+					behavior,
 				});
 			} else {
 				gsap.to(scrollEl.value, {
 					scrollTo: { y: 'max' },
 					duration: 1,
-					ease: 'power2.out'
+					ease: 'power2.out',
 				});
 			}
 		}
@@ -86,6 +86,6 @@ export const useChatScroll = (
 		isScrollOnBottom: bottom,
 		onLoad,
 		scrollSide,
-		scrollBottom
+		scrollBottom,
 	};
 };

@@ -35,6 +35,7 @@
 </template>
 
 <script setup lang="ts">
+import { VNavigationDrawer } from 'vuetify/lib/components/index.mjs';
 import messages from '@/utils/messages.json';
 import { ref } from 'vue';
 import { computedAsync, useVModel } from '@vueuse/core';

@@ -6,6 +6,7 @@
 
 <script setup lang="ts">
 import RegisterForm from '@/components/auth/RegisterForm.vue';
+import { VContainer } from 'vuetify/components';
 import { useMeta } from 'vue-meta';
 import { definePage } from 'vue-router/auto';
 
