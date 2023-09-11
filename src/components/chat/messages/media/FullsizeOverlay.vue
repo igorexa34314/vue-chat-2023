@@ -5,7 +5,7 @@
 		content-class="image-overlay d-flex align-center ma-0"
 		class="fullsize-image__dialog"
 		transition="scale-transition"
-		@click:outside="$emit('close')"
+		@click:outside="emit('close')"
 		close-on-back
 		scroll-strategy="close">
 		<v-carousel

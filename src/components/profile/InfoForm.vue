@@ -26,11 +26,11 @@
 				class="mr-2" />
 		</v-radio-group>
 
-		<birthday-picker v-model="birthdayPickerDate" class="birthday-picker mt-5" max-width="550" />
+		<birthday-picker v-model="formState.birthday_date" class="birthday-picker mt-5" max-width="550" />
 
 		<div class="mt-3 mt-md-5" style="max-width: 500px">
 			<v-card variant="outlined" max-width="250" class="mb-5" elevation="9">
-				<v-img :lazy-src="defaultAvatar" :src="formState.photoURL || defaultAvatar" alt="Photo URL" cover eager>
+				<v-img :lazy-src="defaultAvatar" :src="info.photoURL || defaultAvatar" alt="Photo URL" cover eager>
 					<template #placeholder>
 						<ImageLoader />
 					</template>
@@ -50,13 +50,7 @@
 				style="max-width: 550px" />
 		</div>
 
-		<v-btn
-			type="submit"
-			color="success"
-			class="btn mt-3 mt-md-5"
-			:disabled="JSON.stringify(uinfo) === JSON.stringify(formState)">
-			Apply
-		</v-btn>
+		<v-btn type="submit" color="success" class="btn mt-3 mt-md-5">Apply</v-btn>
 	</v-form>
 </template>
 
@@ -64,31 +58,33 @@
 import ImageLoader from '@/components/chat/ImageLoader.vue';
 import BirthdayPicker from '@/components/UI/BirthdayPicker.vue';
 import validations from '@/utils/validations';
-import { ref, computed } from 'vue';
-import { defaultAvatar } from '@/globals';
+import { ref, toRefs } from 'vue';
+import { defaultAvatar } from '@/global-vars';
 import { UserInfo } from '@/types/db/UserdataTable';
 import { VForm, VTextField, VRadioGroup, VRadio, VFileInput } from 'vuetify/components';
 import { useDisplay } from 'vuetify';
 
-export interface ProfileForm extends Omit<UserInfo, 'created_at' | 'uid' | 'providerId'> {
-	avatar?: File[];
+export interface ProfileForm extends Pick<UserInfo, 'displayName' | 'gender' | 'birthday_date'> {
+	birthday_date: Date;
+	avatar: File[];
 }
 
 const props = defineProps<{
-	uinfo: ProfileForm;
+	uinfo: UserInfo;
 }>();
 
 const emit = defineEmits<{
 	submit: [data: ProfileForm];
 }>();
 
+const { uinfo: info } = toRefs(props);
 const { xs } = useDisplay();
 const formEl = ref<VForm>();
-const formState = ref<ProfileForm>({ ...props.uinfo });
-
-const birthdayPickerDate = computed<Date>({
-	get: () => new Date(formState.value.birthday_date as Date),
-	set: val => (formState.value.birthday_date = val),
+const formState = ref<ProfileForm>({
+	displayName: info.value.displayName || '',
+	gender: info.value.gender || 'unknown',
+	birthday_date: (info.value.birthday_date as Date | undefined) || new Date(),
+	avatar: [],
 });
 
 const genderItems = [

@@ -14,17 +14,17 @@ export const useUserdataStore = defineStore('userdata', () => {
 	const setUserInfo = (info: UserInfo) => {
 		userdata.value = { ...userdata.value, info };
 	};
-	const getUdata = computed(() => userdata.value);
-	const getUInfo = computed(() => userdata.value?.info);
-	const getUChats = computed(() => userdata.value?.chats);
+	const getUdata = computed(() => userdata.value ?? null);
+	const getUserInfo = computed(() => userdata.value?.info ?? null);
+	const getUserChats = computed(() => userdata.value?.chats ?? []);
 
 	return {
 		userdata,
 		getUdata,
-		getUInfo,
-		getUChats,
+		getUserInfo,
+		getUserChats,
 		$reset,
 		setUserInfo,
-		setUserData
+		setUserData,
 	};
 });

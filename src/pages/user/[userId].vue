@@ -62,13 +62,13 @@ import { mdiHelp, mdiGenderMale, mdiGenderFemale, mdiMessageText, mdiAccountPlus
 import { VTooltip } from 'vuetify/components';
 import messages from '@/utils/messages.json';
 import { computed, toRef, ref, watchEffect } from 'vue';
-import { getUserdataById, addToFriend as addFriend } from '@/services/user';
+import { UserService } from '@/services/user';
 import { useRoute, useRouter } from 'vue-router/auto';
-import { getUid } from '@/services/auth';
-import { joinPrivateChat } from '@/services/chat';
+import { AuthService } from '@/services/auth';
+import { ChatService } from '@/services/chat';
 import { useMeta } from 'vue-meta';
 import { useSnackbarStore } from '@/stores/snackbar';
-import { defaultAvatar } from '@/globals';
+import { defaultAvatar } from '@/global-vars';
 import { UserData } from '@/types/db/UserdataTable';
 import { useDisplay } from 'vuetify';
 
@@ -81,10 +81,10 @@ const userdata = ref<UserData>();
 const userId = toRef(() => route.params.userId);
 watchEffect(async () => {
 	if (userId.value) {
-		userdata.value = await getUserdataById(userId.value);
+		userdata.value = await UserService.getUserdataById(userId.value);
 	}
 });
-const uid = await getUid();
+const uid = await AuthService.getUid();
 
 //Dynamic page title
 useMeta(
@@ -99,7 +99,7 @@ useMeta(
 const goToChat = async () => {
 	try {
 		if (userId.value) {
-			const chatId = await joinPrivateChat(userId.value);
+			const chatId = await ChatService.joinPrivateChat(userId.value);
 			if (chatId) {
 				push({ name: '/chat/[chatId]', params: { chatId } });
 			}
@@ -110,7 +110,7 @@ const goToChat = async () => {
 };
 const addToFriend = async () => {
 	if (userId.value) {
-		await addFriend(userId.value);
+		await UserService.addToFriend(userId.value);
 	}
 };
 </script>

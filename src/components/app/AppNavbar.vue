@@ -39,7 +39,7 @@
 						<v-icon :icon="mdiAccountCircleOutline" class="mr-6" />
 					</template>
 				</v-list-item>
-				<v-list-item density="compact" @click="exit" draggable="false">
+				<v-list-item density="compact" @click="logout" draggable="false">
 					<v-list-item-title>Logout</v-list-item-title>
 					<template #prepend>
 						<v-icon :icon="mdiLogout" class="mr-6" />
@@ -57,7 +57,7 @@ import { mdiMagnify, mdiFilter, mdiDotsVertical, mdiAccountCircleOutline, mdiLog
 import messages from '@/utils/messages.json';
 import { ref, nextTick } from 'vue';
 import { useRouter } from 'vue-router/auto';
-import { logout } from '@/services/auth';
+import { AuthService } from '@/services/auth';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { useDisplay } from 'vuetify';
 
@@ -81,9 +81,9 @@ const enableSearch = () => {
 		searchEl.value?.$el?.focus();
 	});
 };
-const exit = async () => {
+const logout = async () => {
 	try {
-		await logout();
+		await AuthService.logout();
 	} catch (e) {
 		showMessage(messages[e as keyof typeof messages] || (e as string), 'red-darken-3', 2000);
 	}

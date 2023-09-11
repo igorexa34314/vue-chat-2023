@@ -101,18 +101,16 @@ import sbMessages from '@/utils/messages.json';
 import MessageItem from '@/components/chat/messages/MessageItem.vue';
 import MessageForm, { EditMessageData } from '@/components/chat/form/MessageForm.vue';
 import ContextMenu from '@/components/chat/ContextMenu.vue';
-import { fetchChatMessages, AttachFormContent } from '@/services/message';
+import { MessagesService, AttachFormContent } from '@/services/message';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { useUserdataStore } from '@/stores/userdata';
 import { useMessagesStore, Message } from '@/stores/messages';
-import { getUid } from '@/services/auth';
-import { getChatInfoById, ChatInfo } from '@/services/chat';
-import { createMessage as createDBMessage, updateMessageContent as updateDBMessageContent } from '@/services/message';
+import { AuthService } from '@/services/auth';
+import { ChatService, ChatInfo } from '@/services/chat';
 import { ref, computed, onUnmounted, nextTick, watchEffect, toRef } from 'vue';
 import { useMeta } from 'vue-meta';
 import { useRoute } from 'vue-router/auto';
 import { useChatScroll } from '@/composables/useChatScroll';
-import { loadMoreChatMessages } from '@/services/message';
 import { useDropZone } from '@vueuse/core';
 import { storeToRefs } from 'pinia';
 import { setChatName } from '@/utils/chat';
@@ -127,7 +125,7 @@ import { useDisplay } from 'vuetify';
 
 gsap.registerPlugin(ScrollToPlugin);
 
-const { getUChats: userChats } = storeToRefs(useUserdataStore());
+const { getUserChats: userChats } = storeToRefs(useUserdataStore());
 const route = useRoute('/chat/[chatId]');
 const { showMessage } = useSnackbarStore();
 const messagesStore = useMessagesStore();
@@ -140,14 +138,14 @@ const loading = ref(false);
 const messages = computed(() => messagesStore.messages);
 let unsub: Unsubscribe | undefined;
 const chatId = toRef(() => route.params.chatId);
-const uid = await getUid();
+const uid = await AuthService.getUid();
 
 const attachDialog = ref(false);
 
 const { isScrollOnBottom, scrollBottom, onLoad, scrollSide } = useChatScroll(
 	toRef(() => srollEl.value?.$el),
 	async direction => {
-		await loadMoreChatMessages(chatId.value, direction);
+		await MessagesService.loadMoreMessages(chatId.value, direction);
 	}
 );
 
@@ -182,8 +180,8 @@ watchEffect(async onCleanup => {
 	if (chatId.value) {
 		try {
 			loading.value = true;
-			chatInfo.value = await getChatInfoById(chatId.value);
-			unsub = await fetchChatMessages(chatId.value);
+			chatInfo.value = await ChatService.getChatInfoById(chatId.value);
+			unsub = await MessagesService.fetchMessages(chatId.value);
 		} catch (e) {
 			console.error(e);
 		} finally {
@@ -202,7 +200,7 @@ const allowTransition = ref(false);
 const createMessage = async (type: Message['type'] = 'text', content: Partial<AttachFormContent>) => {
 	try {
 		allowTransition.value = true;
-		await createDBMessage(chatId.value, type, content);
+		await MessagesService.createMessage(chatId.value, type, content);
 	} catch (e) {
 		showMessage(sbMessages[e as keyof typeof sbMessages] || (e as string), 'red-darken-3', 2000);
 	} finally {
@@ -211,7 +209,7 @@ const createMessage = async (type: Message['type'] = 'text', content: Partial<At
 };
 const updateMessage = async ({ id, type, content }: EditMessageData) => {
 	try {
-		await updateDBMessageContent(chatId.value, { id, type, content });
+		await MessagesService.updateMessage(chatId.value, { id, type, content });
 	} catch (e) {
 		showMessage(sbMessages[e as keyof typeof sbMessages] || (e as string), 'red-darken-3', 2000);
 	}

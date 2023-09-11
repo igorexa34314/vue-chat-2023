@@ -24,7 +24,7 @@ import InfoForm, { ProfileForm } from '@/components/profile/InfoForm.vue';
 import { VTabs, VTab, VWindow, VWindowItem, VContainer } from 'vuetify/components';
 import messages from '@/utils/messages.json';
 import { storeToRefs } from 'pinia';
-import { updateUserdata, updateUserAvatar } from '@/services/user';
+import { UserService } from '@/services/user';
 import { useUserdataStore } from '@/stores/userdata';
 import { ref, inject } from 'vue';
 import { useSnackbarStore } from '@/stores/snackbar';
@@ -35,7 +35,7 @@ import { definePage } from 'vue-router/auto';
 definePage({ alias: '/' });
 useMeta({ title: 'My profile' });
 
-const { getUInfo: userInfo } = storeToRefs(useUserdataStore());
+const { getUserInfo: userInfo } = storeToRefs(useUserdataStore());
 const { showMessage } = useSnackbarStore();
 const loading = inject(globalLoadingKey);
 const profileTabs = [
@@ -47,9 +47,9 @@ const pickedProfileTab = ref(profileTabs[0].value);
 
 const submitForm = async ({ avatar, ...formData }: ProfileForm) => {
 	try {
-		await updateUserdata(formData);
+		await UserService.updateUserdata(formData);
 		if (avatar?.length) {
-			await updateUserAvatar(avatar[0]);
+			await UserService.updateUserAvatar(avatar[0]);
 		}
 		showMessage('succesfully_updated');
 	} catch (e) {

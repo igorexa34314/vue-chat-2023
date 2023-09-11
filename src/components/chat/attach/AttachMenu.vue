@@ -1,7 +1,7 @@
 <template>
 	<v-menu>
-		<template #activator="{ props }">
-			<slot name="activator" :props="props"></slot>
+		<template #activator="{ props, isActive }">
+			<slot name="activator" v-bind="{ props, isActive }"></slot>
 		</template>
 		<v-list density="compact" class="attach-menu" :width="smAndUp ? '180px' : 'auto'">
 			<v-list-item
@@ -40,6 +40,10 @@ interface AttachMenu {
 
 const emit = defineEmits<{
 	'attach-file': [type: Exclude<Message['type'], 'text'>, files: FileList];
+}>();
+
+const slots = defineSlots<{
+	activator: VMenu['$slots']['activator'];
 }>();
 
 const { smAndUp } = useDisplay();

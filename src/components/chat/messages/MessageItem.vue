@@ -31,13 +31,9 @@
 					:class="{ 'pr-2 pr-sm-3': type === 'file' }"
 					@openInOverlay="(imgId: ImageWithPreviewURL['id']) => emit('openInOverlay', imgId)" />
 
-				<i18n-d
-					tag="small"
-					:value="created_at"
-					:format="messagesDateFormat(created_at as Date)"
-					scope="global"
-					:class="{ 'mt-2': type !== 'file' }"
-					class="message__time d-block text-end mt-1 mt-sm-2" />
+				<small :class="{ 'mt-2': type !== 'file' }" class="message__time d-block text-end mt-1 mt-sm-2">{{
+					d(created_at, { key: messagesDateFormat(created_at) })
+				}}</small>
 			</v-card-text>
 		</v-card>
 
@@ -53,9 +49,10 @@ import { useDisplay } from 'vuetify';
 import { computed } from 'vue';
 import { useRouter } from 'vue-router/auto';
 import { messagesDateFormat } from '@/utils/filters/messages';
-import { defaultAvatar } from '@/globals';
+import { defaultAvatar } from '@/global-vars';
 import { ImageWithPreviewURL } from '@/components/chat/messages/media/ImageFrame.vue';
 import { Message } from '@/stores/messages';
+import { useI18n } from 'vue-i18n';
 
 interface MessageItemProps {
 	type: Message['type'];
@@ -74,6 +71,7 @@ const emit = defineEmits<{
 	contextmenu: [event: MouseEvent];
 }>();
 
+const { d } = useI18n();
 const { xs, smAndUp } = useDisplay();
 const { push } = useRouter();
 const messageComponent = computed(() =>

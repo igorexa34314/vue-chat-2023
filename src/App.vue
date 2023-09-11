@@ -25,7 +25,6 @@ const AppName = import.meta.env.VITE_APP_NAME || 'My Chat';
 
 <style lang="scss">
 @import '@/assets/styles/main';
-@import '@/assets/styles/scroll';
 
 .v-divider {
 	--v-border-opacity: 0.6 !important;

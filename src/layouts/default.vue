@@ -15,15 +15,17 @@ import { VLayout, VMain } from 'vuetify/components';
 import AppNavbar from '@/components/app/AppNavbar.vue';
 import AppSidebar from '@/components/app/AppSidebar.vue';
 import { ref, onUnmounted, provide } from 'vue';
-import { fetchAuthUserdata } from '@/services/user';
+import { UserService } from '@/services/user';
 import { useAsyncState } from '@vueuse/core';
 import { globalLoadingKey } from '@/injection-keys';
 import { useUserdataStore } from '@/stores/userdata';
+import { definePage } from 'vue-router/auto';
 
+definePage({ meta: { auth: true, requiresAuth: true } });
 const drawer = ref(true);
 
 // Fetching all auth userdata
-const { state: unsub, isLoading } = useAsyncState(fetchAuthUserdata, null, {});
+const { state: unsub, isLoading } = useAsyncState(UserService.fetchAuthUser, null, {});
 const { $reset } = useUserdataStore();
 
 provide(globalLoadingKey, isLoading);
@@ -34,9 +36,3 @@ onUnmounted(() => {
 	$reset();
 });
 </script>
-
-<route lang="yaml">
-meta:
-	auth: true
-   requiresAuth: true
-</route>

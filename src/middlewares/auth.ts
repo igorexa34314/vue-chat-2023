@@ -1,22 +1,13 @@
-import { auth } from '@/firebase';
+import { AuthService } from '@/services/auth';
 import { NavigationGuardWithThis } from 'vue-router/auto';
 
 export const checkAuth: NavigationGuardWithThis<undefined> = async (to, from, next) => {
-	const currentUser = auth.currentUser;
+	const currentUser = await AuthService.getCurrentUser();
 
-	if (to.meta.auth || to.meta.requiresAuth) {
-		if (!currentUser) {
-			return next({
-				path: '/login',
-				query: {
-					message: 'needAuth',
-				},
-			});
-		}
-	} else if (to.name === 'login' || to.name === 'register') {
-		if (currentUser) {
-			return next({ path: '/profile' });
-		}
-	}
-	return next();
+	const requireAuth = to.matched.some(record => record.meta.auth || record.meta.requiresAuth);
+	if (requireAuth && !currentUser) {
+		return next({ path: '/login', query: { message: 'needAuth' } });
+	} else if (!requireAuth && currentUser) {
+		return next({ path: '/profile' });
+	} else return next();
 };

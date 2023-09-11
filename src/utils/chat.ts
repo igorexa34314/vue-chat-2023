@@ -1,6 +1,6 @@
 import { computed } from 'vue';
 import { useUserdataStore } from '@/stores/userdata';
-import { defaultAvatar, savedMessages } from '@/globals';
+import { defaultAvatar, savedMessages } from '@/global-vars';
 import { ChatInfo } from '@/services/chat';
 
 export const setChatName = computed(() => (chat: ChatInfo) => {

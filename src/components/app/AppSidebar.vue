@@ -13,9 +13,11 @@
 			<template #title>{{ userInfo.displayName || 'Unknown' }}</template>
 		</v-card>
 
+		<v-skeleton-loader v-else type="list-item-avatar" width="100%" color="navbar" max-width="240px" />
+
 		<v-divider thickness="2" class="mt-2" />
 
-		<div v-if="loading"><page-loader /></div>
+		<div v-if="isLoading"><page-loader /></div>
 
 		<div v-else-if="!getUserChatsInfo.length" class="mt-4 pa-3">
 			<p class="text-h6 text-center">No chats</p>
@@ -35,22 +37,22 @@
 </template>
 
 <script setup lang="ts">
-import { VNavigationDrawer } from 'vuetify/lib/components/index.mjs';
+import { VSkeletonLoader } from 'vuetify/labs/VSkeletonLoader';
+import { VNavigationDrawer } from 'vuetify/components';
 import messages from '@/utils/messages.json';
-import { ref } from 'vue';
-import { computedAsync, useVModel } from '@vueuse/core';
-import { getChatInfoById, ChatInfo } from '@/services/chat';
+import { watch } from 'vue';
+import { useAsyncState, useVModel } from '@vueuse/core';
+import { ChatService, ChatInfo } from '@/services/chat';
 import { storeToRefs } from 'pinia';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { useUserdataStore } from '@/stores/userdata';
 import { setChatName, setChatAvatar } from '@/utils/chat';
-import { defaultAvatar } from '@/globals';
+import { defaultAvatar } from '@/global-vars';
 import { useRouter } from 'vue-router/auto';
 
 const { showMessage } = useSnackbarStore();
 const { push } = useRouter();
-const { getUChats: userChats, getUInfo: userInfo } = storeToRefs(useUserdataStore());
-const loading = ref(true);
+const { getUserChats: userChats, getUserInfo: userInfo } = storeToRefs(useUserdataStore());
 
 const props = withDefaults(
 	defineProps<{
@@ -67,21 +69,29 @@ const emit = defineEmits<{
 const drawer = useVModel(props, 'modelValue', emit);
 
 // fetchChatsInfo
-const getUserChatsInfo = computedAsync(
-	async () => {
-		if (userChats.value?.length) {
-			return (await Promise.all(userChats.value.map(getChatInfoById))) as ChatInfo[];
-		}
-		return [];
+const {
+	state: getUserChatsInfo,
+	isLoading,
+	execute: refreshChats,
+} = useAsyncState(() => Promise.all(userChats.value.map(ChatService.getChatInfoById)) as Promise<ChatInfo[]>, [], {
+	immediate: false,
+	onError: e => {
+		console.error(e);
+		showMessage(messages[e as keyof typeof messages] || (e as string), 'red-darken-3', 2000);
 	},
-	[],
-	{
-		evaluating: loading,
-		onError: e => {
-			console.error(e);
-			showMessage(messages[e as keyof typeof messages] || (e as string), 'red-darken-3', 2000);
-		},
-	}
+	onSuccess: () => {
+		console.log('fetching');
+	},
+});
+
+watch(
+	() => userChats.value.length,
+	async newLength => {
+		if (newLength) {
+			await refreshChats();
+		}
+	},
+	{ immediate: true }
 );
 </script>
 
