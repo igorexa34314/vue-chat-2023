@@ -2,6 +2,7 @@ import { createRouter, createWebHistory, createMemoryHistory } from 'vue-router/
 import { RouteNamedMap } from 'vue-router/auto/routes';
 import { setupLayouts } from 'virtual:generated-layouts';
 import { checkAuth } from '@/middlewares/auth';
+import { valalidateEnterName } from '@/middlewares/enterName';
 
 const history = import.meta.env.SSR
 	? createMemoryHistory(import.meta.env.BASE_URL)
@@ -10,6 +11,10 @@ const history = import.meta.env.SSR
 const router = createRouter({
 	history,
 	extendRoutes: routes => {
+		const enterNameRoute = routes.find(route => route.name === '/enter-name');
+		if (enterNameRoute) {
+			enterNameRoute.beforeEnter = valalidateEnterName;
+		}
 		const authRoutes: (keyof RouteNamedMap)[] = ['/login', '/register'];
 		routes.map(route => {
 			if (!authRoutes.includes(route.name as keyof RouteNamedMap)) {

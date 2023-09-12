@@ -6,6 +6,7 @@
 			<v-row dense align-content="stretch" no-gutters>
 				<v-col
 					v-for="(img, index) of content.attachments"
+					:key="img.id"
 					:cols="calcImageCols(index)"
 					:class="{ 'image-col': content.attachments.length > 2 }">
 					<ImageFrame

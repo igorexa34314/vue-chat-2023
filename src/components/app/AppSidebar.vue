@@ -1,8 +1,8 @@
 <template>
-	<v-navigation-drawer v-model="drawer" width="320" location="left" class="pa-3">
+	<v-navigation-drawer v-model="drawer" width="320" location="left" class="app-sidebar pl-3 pr-0">
 		<v-card
 			v-if="userInfo && Object.keys(userInfo).length"
-			class="user-info py-1 bg-blue-grey-darken-4"
+			class="user-info py-1 mt-3 bg-blue-grey-darken-4"
 			density="compact"
 			variant="text"
 			@click="push('/profile')"
@@ -19,11 +19,7 @@
 
 		<div v-if="isLoading"><page-loader /></div>
 
-		<div v-else-if="!getUserChatsInfo.length" class="mt-4 pa-3">
-			<p class="text-h6 text-center">No chats</p>
-		</div>
-
-		<v-list v-else density="comfortable" class="chat-list mt-3">
+		<v-list v-else-if="isReady && getUserChatsInfo.length" density="comfortable" class="chat-list mt-3">
 			<v-list-item
 				v-for="chat of getUserChatsInfo"
 				:key="chat.id"
@@ -33,6 +29,10 @@
 				class="py-3 mb-3"
 				draggable="false" />
 		</v-list>
+
+		<div v-else class="mt-4 pa-3">
+			<p class="text-h6 text-center">No chats</p>
+		</div>
 	</v-navigation-drawer>
 </template>
 
@@ -72,15 +72,13 @@ const drawer = useVModel(props, 'modelValue', emit);
 const {
 	state: getUserChatsInfo,
 	isLoading,
+	isReady,
 	execute: refreshChats,
 } = useAsyncState(() => Promise.all(userChats.value.map(ChatService.getChatInfoById)) as Promise<ChatInfo[]>, [], {
 	immediate: false,
 	onError: e => {
 		console.error(e);
 		showMessage(messages[e as keyof typeof messages] || (e as string), 'red-darken-3', 2000);
-	},
-	onSuccess: () => {
-		console.log('fetching');
 	},
 });
 
@@ -101,6 +99,13 @@ watch(
 	:deep(img) {
 		user-select: text;
 		pointer-events: text;
+	}
+}
+.app-sidebar {
+	--v-scroll-width: 0.4rem;
+	--v-scroll-bg: transparent;
+	&:hover {
+		--v-scroll-bg: rgba(255, 255, 255, 0.2);
 	}
 }
 </style>

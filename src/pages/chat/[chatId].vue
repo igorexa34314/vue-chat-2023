@@ -26,7 +26,7 @@
 								:type="m.type"
 								:content="m.content"
 								:sender="m.sender"
-								:created_at="<Date>m.created_at"
+								:created_at="m.created_at"
 								@contextmenu="(e: MouseEvent) => openCtxMenu(e, { mId: m.id, mType: m.type })"
 								:id="`message-${m.id}`"
 								:data-message-id="m.id"
@@ -52,7 +52,7 @@
 
 						<FullsizeOverlay
 							v-model="overlayState.show"
-							:content="<ImageWithPreviewURL[]>getAllMedia"
+							:content="getAllMedia"
 							v-model:currentItem="overlayState.currentImage"
 							@close="overlayClosed" />
 					</div>
@@ -247,7 +247,7 @@ onUnmounted(() => {
 	unsub?.();
 	resetMsgStore();
 });
-const getAllMedia = computed(() =>
+const getAllMedia = computed<ImageWithPreviewURL[]>(() =>
 	messages.value.filter(m => m.type !== 'text').flatMap(m => m.content.attachments.filter(f => f.raw?.previewURL))
 );
 const overlayState = ref({

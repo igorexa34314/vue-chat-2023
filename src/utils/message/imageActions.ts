@@ -1,13 +1,9 @@
 export const copyToClipboard = async (imageToCopy: Blob | string, imageType?: string) => {
-	try {
-		if (!(imageToCopy instanceof Blob)) {
-			const blob = (await createBlobFromImageUrl(imageToCopy, imageType)) || new Blob();
-			await navigator.clipboard.write([new ClipboardItem({ [imageType || blob.type]: blob })]);
-		} else {
-			await navigator.clipboard.write([new ClipboardItem({ [imageType || imageToCopy.type]: imageToCopy })]);
-		}
-	} catch (e) {
-		throw e;
+	if (!(imageToCopy instanceof Blob)) {
+		const blob = (await createBlobFromImageUrl(imageToCopy, imageType)) || new Blob();
+		await navigator.clipboard.write([new ClipboardItem({ [imageType || blob.type]: blob })]);
+	} else {
+		await navigator.clipboard.write([new ClipboardItem({ [imageType || imageToCopy.type]: imageToCopy })]);
 	}
 };
 

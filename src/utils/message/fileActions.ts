@@ -10,19 +10,15 @@ export const setDownloadLink = (filename: string, url: string) => {
 };
 
 export const downloadFile = async (file: Message['content']['attachments'][number]) => {
-	try {
-		let url = '';
-		if (!file.raw.previewURL) {
-			const blobFile = await getBlob(storageRef(storage, file.raw.fullpath));
-			url = URL.createObjectURL(blobFile);
-		} else {
-			url = file.raw.previewURL;
-		}
-		setDownloadLink(file.fullname, url);
-		if (!file.raw.previewURL) {
-			URL.revokeObjectURL(url);
-		}
-	} catch (e) {
-		throw e;
+	let url = '';
+	if (!file.raw.previewURL) {
+		const blobFile = await getBlob(storageRef(storage, file.raw.fullpath));
+		url = URL.createObjectURL(blobFile);
+	} else {
+		url = file.raw.previewURL;
+	}
+	setDownloadLink(file.fullname, url);
+	if (!file.raw.previewURL) {
+		URL.revokeObjectURL(url);
 	}
 };

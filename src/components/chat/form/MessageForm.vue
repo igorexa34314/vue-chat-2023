@@ -19,18 +19,21 @@
 				:density="smAndUp ? 'default' : 'comfortable'"
 				auto-grow
 				focused
-				@paste="onInputPasted"
-				#append-inner>
-				<AttachMenu ref="attachMenuEl" @attach-file="attachFiles" #activator="{ props }">
-					<div class="attach-btn d-flex align-end justify-end ml-sm-4">
-						<v-icon
-							v-bind="props"
-							:icon="mdiAttachment"
-							:size="smAndUp ? 'large' : 'default'"
-							class="attach-icon"
-							:v-ripple="false" />
-					</div>
-				</AttachMenu>
+				@paste="onInputPasted">
+				<template #append-inner>
+					<AttachMenu ref="attachMenuEl" @attach-file="attachFiles">
+						<template #activator="{ props }">
+							<div class="attach-btn d-flex align-end justify-end ml-sm-4">
+								<v-icon
+									v-bind="props"
+									:icon="mdiAttachment"
+									:size="smAndUp ? 'large' : 'default'"
+									class="attach-icon"
+									:v-ripple="false" />
+							</div>
+						</template>
+					</AttachMenu>
+				</template>
 			</v-textarea>
 		</div>
 

@@ -8,7 +8,7 @@
 			<v-card-text class="mt-3">
 				<LocalLogin @success="onLoginSuccess" @error="onLoginError" />
 			</v-card-text>
-			
+
 			<v-card-actions class="flex-column justify-center">
 				<div class="providers d-flex">
 					<GoogleProvider @error="onLoginError" />
@@ -25,8 +25,7 @@ import GoogleProvider from '@/components/auth/providers/GoogleProvider.vue';
 import messages from '@/utils/messages.json';
 import { VContainer } from 'vuetify/components';
 import { useMeta } from 'vue-meta';
-import { definePage } from 'vue-router/auto';
-import { useRouter } from 'vue-router/auto';
+import { useRouter, definePage } from 'vue-router/auto';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { useDisplay } from 'vuetify';
 

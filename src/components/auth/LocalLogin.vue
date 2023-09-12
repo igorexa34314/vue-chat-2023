@@ -22,9 +22,10 @@ import validations from '@/utils/validations';
 import { ref } from 'vue';
 import { AuthService } from '@/services/auth';
 import { VForm, VTextField } from 'vuetify/components';
+import { User } from 'firebase/auth';
 
 const emit = defineEmits<{
-	success: [];
+	success: [user?: User];
 	error: [err: unknown];
 }>();
 
@@ -40,8 +41,8 @@ const submitForm = async () => {
 	if (valid) {
 		try {
 			loading.value = true;
-			await AuthService.loginWithEmail(formState.value);
-			emit('success');
+			const user = await AuthService.loginWithEmail(formState.value);
+			emit('success', user);
 		} catch (e) {
 			emit('error', e);
 		} finally {

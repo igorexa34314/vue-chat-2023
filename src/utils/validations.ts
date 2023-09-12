@@ -1,7 +1,23 @@
 export default {
-	name: [(v: string) => !!v || 'Введите имя', (v: string) => (v && v.length >= 2 && v.length <= 16) || 'Имя должно быть в пределах от 2 до 16 символов'],
-	email: [(v: string) => !!v || 'Введите почту', (v: string) => /.+@.+\..+/.test(v) || 'Введите корректную почту'],
-	terms: [(v: string) => !!v || 'Вы должны согласиться с правилами'],
-	password: [(v: string) => !!v || 'Введите пароль', (v: string) => (v && v.length >= 6 && v.length <= 32) || 'Пароль должен быть в пределах от 6 до 32 символов'],
-	file: [(v: FileList | File[]) => (v.length ? v[0].size <= 2097152 || 'Размер файла должен быть менее 2 мегабайт' : true)]
+	name: [
+		(v: string) => !!v || 'Enter display name',
+		(v: string) => (v && v.length >= 2 && v.length <= 16) || 'Display name should be from 2 to 32 characters',
+	],
+	firstname: [
+		(v: string) => !!v || 'Enter firstname',
+		(v: string) => (v && v.length >= 2 && v.length <= 16) || 'Firstname should be from 2 to 32 characters',
+	],
+	lastname: [
+		(v: string) => !!v || 'Enter lastname',
+		(v: string) => (v && v.length >= 2 && v.length <= 16) || 'Lastname should be from 2 to 32 characters',
+	],
+	email: [(v: string) => !!v || 'Enter email', (v: string) => /.+@.+\..+/.test(v) || 'Введите корректную почту'],
+	terms: [(v: string) => !!v || 'You should agree with rules'],
+	password: [
+		(v: string) => !!v || 'Enter password',
+		(v: string) => (v && v.length >= 6 && v.length <= 32) || 'Password should be from 6 to 32 characters',
+	],
+	file: [
+		(v: FileList | File[]) => (v.length ? v[0].size <= 2097152 || 'File size size should be less than 2 mib' : true),
+	],
 };

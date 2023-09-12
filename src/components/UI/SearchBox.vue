@@ -17,37 +17,39 @@
 				single-line
 				autofocus />
 
-			<div v-if="currentRefinement" v-for="index in indices" :key="index.indexId" class="search-hits w-100">
-				<v-list v-if="index.hits?.length">
-					<v-list-item
-						v-for="hit in index.hits.filter(h => h.info.uid !== uid)"
-						:key="hit.objectID"
-						@click="
-							() => {
-								openUserProfile(hit.info.uid);
-								refine('');
-							}
-						">
-						<v-list-item-title>{{ hit.info.displayName }}</v-list-item-title>
-						<template #prepend>
-							<v-avatar :image="hit.info.photoURL || defaultAvatar" />
-						</template>
-						<template #append>
-							<v-btn
-								v-bind="props"
-								size="large"
-								variant="text"
-								:icon="mdiMessageText"
-								@click="
-									() => {
-										goToChat(hit.info.uid);
-										refine('');
-									}
-								"
-								density="comfortable" />
-						</template>
-					</v-list-item>
-				</v-list>
+			<div v-if="currentRefinement">
+				<div v-for="index in indices" :key="index.indexId" class="search-hits w-100">
+					<v-list v-if="index.hits?.length">
+						<v-list-item
+							v-for="hit in index.hits.filter(h => h.info.uid !== uid)"
+							:key="hit.objectID"
+							@click="
+								() => {
+									openUserProfile(hit.info.uid);
+									refine('');
+								}
+							">
+							<v-list-item-title>{{ hit.info.displayName }}</v-list-item-title>
+							<template #prepend>
+								<v-avatar :image="hit.info.photoURL || defaultAvatar" />
+							</template>
+							<template #append>
+								<v-btn
+									v-bind="props"
+									size="large"
+									variant="text"
+									:icon="mdiMessageText"
+									@click="
+										() => {
+											goToChat(hit.info.uid);
+											refine('');
+										}
+									"
+									density="comfortable" />
+							</template>
+						</v-list-item>
+					</v-list>
+				</div>
 			</div>
 		</ais-autocomplete>
 	</ais-instant-search>

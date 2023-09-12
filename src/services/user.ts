@@ -1,9 +1,9 @@
 import { storage, db } from '@/firebase';
 import { useUserdataStore } from '@/stores/userdata';
-import { getDoc, setDoc, onSnapshot, doc, updateDoc, arrayUnion, Timestamp, collection } from 'firebase/firestore';
+import { getDoc, onSnapshot, doc, updateDoc, arrayUnion, Timestamp, collection } from 'firebase/firestore';
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { AuthService } from '@/services/auth';
-import { ChatService } from '@/services/chat';
+import { updateProfile } from 'firebase/auth';
 import { v4 as uuidv4 } from 'uuid';
 import { fbErrorHandler as errorHandler } from '@/utils/errorHandler';
 import { UserData, UserInfo } from '@/types/db/UserdataTable';
@@ -49,34 +49,6 @@ export class UserService {
 		}
 	}
 
-	static async createUser({ uid, email, displayName, phoneNumber, photoURL, metadata }: Omit<UserInfo, 'created_at'>) {
-		try {
-			const userRef = UserService.getUserRef(uid);
-			const user = await getDoc(userRef);
-			if (user.exists()) {
-				await UserService.updateUserdata({ displayName, photoURL, phoneNumber });
-			} else {
-				const userdata = {
-					info: {
-						uid,
-						email,
-						displayName,
-						phoneNumber,
-						photoURL,
-						created_at: Timestamp.fromDate(new Date(metadata.creationTime)) || Timestamp.now(),
-						// location: (await navigator.geolocation.getCurrentPosition()) || 'unknown'
-					},
-					chats: [],
-					friends: [],
-				};
-				await setDoc(UserService.getUserRef(uid), userdata, { merge: true });
-				await ChatService.createSelfChat(uid);
-			}
-		} catch (e) {
-			errorHandler(e, 'Error adding document: ');
-		}
-	}
-
 	static async updateUserAvatar(avatar: File | File[]) {
 		try {
 			if (avatar instanceof File) {
@@ -97,8 +69,19 @@ export class UserService {
 		}
 	}
 
-	static async updateUserdata(newData: Partial<UserInfo>) {
+	static async updateUserInfo(newData: Partial<UserInfo>) {
 		try {
+			if (newData.displayName || newData.photoURL) {
+				const user = await AuthService.getCurrentUser();
+				if (!user) {
+					throw new Error('User unauthenticated');
+				}
+				updateProfile(user, {
+					displayName: newData.displayName ?? user.displayName,
+					photoURL: newData.photoURL ?? user.photoURL,
+				});
+			}
+
 			const infoField = Object.assign(
 				{},
 				...(Object.keys(newData) as (keyof Partial<UserInfo>)[]).map(key => ({

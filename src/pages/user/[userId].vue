@@ -89,7 +89,7 @@ const uid = await AuthService.getUid();
 //Dynamic page title
 useMeta(
 	computed(() => {
-		if (userdata && Object.keys(userdata).length) {
+		if (userdata.value && Object.keys(userdata).length) {
 			return { title: `${userdata.value?.info.displayName}` || 'User' };
 		}
 		return { title: 'User' };

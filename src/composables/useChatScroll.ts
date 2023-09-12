@@ -1,4 +1,4 @@
-import { computed, Ref, toRefs, nextTick, watchEffect } from 'vue';
+import { computed, Ref, toRefs, nextTick } from 'vue';
 import { useScroll, watchPausable } from '@vueuse/core';
 import { useMessagesStore, Direction } from '@/stores/messages';
 import { VInfiniteScroll } from 'vuetify/labs/VInfiniteScroll';

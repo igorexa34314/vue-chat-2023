@@ -1,6 +1,6 @@
 <template>
 	<v-layout class="app">
-		<AppNavbar @drawer="drawer = !drawer" />
+		<AppNavbar @drawer="drawer = !drawer" @logout="logout" />
 
 		<AppSidebar v-model="drawer" />
 
@@ -14,17 +14,22 @@
 import { VLayout, VMain } from 'vuetify/components';
 import AppNavbar from '@/components/app/AppNavbar.vue';
 import AppSidebar from '@/components/app/AppSidebar.vue';
+import messages from '@/utils/messages.json';
 import { ref, onUnmounted, provide } from 'vue';
 import { UserService } from '@/services/user';
 import { useAsyncState } from '@vueuse/core';
 import { globalLoadingKey } from '@/injection-keys';
 import { useUserdataStore } from '@/stores/userdata';
-import { definePage } from 'vue-router/auto';
+import { useRouter, definePage } from 'vue-router/auto';
+import { useSnackbarStore } from '@/stores/snackbar';
+import { AuthService } from '@/services/auth';
 
 definePage({ meta: { auth: true, requiresAuth: true } });
 const drawer = ref(true);
 
 // Fetching all auth userdata
+const { push } = useRouter();
+const { showMessage } = useSnackbarStore();
 const { state: unsub, isLoading } = useAsyncState(UserService.fetchAuthUser, null, {});
 const { $reset } = useUserdataStore();
 
@@ -35,4 +40,13 @@ onUnmounted(() => {
 	unsub.value?.();
 	$reset();
 });
+
+const logout = async () => {
+	try {
+		await AuthService.logout();
+		push('/login');
+	} catch (e) {
+		showMessage(messages[e as keyof typeof messages] || (e as string), 'red-darken-3', 2000);
+	}
+};
 </script>

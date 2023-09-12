@@ -47,7 +47,7 @@ const pickedProfileTab = ref(profileTabs[0].value);
 
 const submitForm = async ({ avatar, ...formData }: ProfileForm) => {
 	try {
-		await UserService.updateUserdata(formData);
+		await UserService.updateUserInfo(formData);
 		if (avatar?.length) {
 			await UserService.updateUserAvatar(avatar[0]);
 		}

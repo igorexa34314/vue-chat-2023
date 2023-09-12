@@ -7,18 +7,20 @@
 <script setup lang="ts">
 import { googleLogo } from '@/global-vars';
 import { AuthService } from '@/services/auth';
+import { User } from 'firebase/auth';
 
 const emit = defineEmits<{
-	success: [];
+	success: [user?: User];
 	error: [err: unknown];
 }>();
 
-const signInWithGoogleProvider = () => {
-	AuthService.signInWithGoogle()
-		.then(() => emit('success'))
-		.catch(e => {
-			console.error(e);
-			emit('error', e);
-		});
+const signInWithGoogleProvider = async () => {
+	try {
+		const user = await AuthService.signInWithGoogle();
+		emit('success', user);
+	} catch (err) {
+		console.error(err);
+		emit('error', err);
+	}
 };
 </script>

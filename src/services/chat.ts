@@ -64,25 +64,6 @@ export class ChatService {
 		}
 	}
 
-	static async createSelfChat(uid: UserInfo['uid']): Promise<ChatInfo['id'] | undefined> {
-		try {
-			const newChatRef = doc(ChatService.chatCol);
-			await setDoc(newChatRef, {
-				id: newChatRef.id,
-				name: 'Saved messages',
-				type: 'self',
-				members: [uid],
-				created_at: Timestamp.fromDate(new Date()),
-			});
-			await updateDoc(UserService.getUserRef(uid), {
-				chats: arrayUnion(newChatRef.id),
-			});
-			return newChatRef.id;
-		} catch (e) {
-			errorHandler(e);
-		}
-	}
-
 	static async joinPrivateChat(companionId: UserInfo['uid']): Promise<ChatInfo['id'] | undefined> {
 		try {
 			const senderId = (await AuthService.getUid()) as UserInfo['uid'];
@@ -100,16 +81,22 @@ export class ChatService {
 			const chat = await getDoc(doc(ChatService.chatCol, chatId));
 			if (chat.exists()) {
 				const { members, ...data } = chat.data() as ChatInfo;
-				const membersInfo = <ChatInfo['members']>(
-					await Promise.all(chat.data().members.map(UserService.getUserdataById))
-				).map((m: UserData) => ({
-					uid: m.info.uid,
-					displayName: m.info.displayName,
-					photoURL: m.info.photoURL,
-				}));
+				if (members) {
+					const membersInfo = <ChatInfo['members']>(
+						await Promise.all(chat.data().members.map(UserService.getUserdataById))
+					).map((m: UserData) => ({
+						uid: m.info.uid,
+						displayName: m.info.displayName,
+						photoURL: m.info.photoURL,
+					}));
+					return {
+						...data,
+						members: membersInfo,
+						created_at: chat.data().created_at.toDate(),
+					} as ChatInfo;
+				}
 				return {
 					...data,
-					members: membersInfo,
 					created_at: chat.data().created_at.toDate(),
 				} as ChatInfo;
 			}

@@ -4,15 +4,12 @@ import {
 	signOut,
 	createUserWithEmailAndPassword,
 	signInWithEmailAndPassword,
-	updateProfile,
 	GoogleAuthProvider,
 	signInWithRedirect,
 	getRedirectResult,
 	onAuthStateChanged,
 } from 'firebase/auth';
-import { auth, storage } from '@/firebase';
-import { ref, getDownloadURL } from 'firebase/storage';
-import { UserService } from '@/services/user';
+import { auth } from '@/firebase';
 import { fbErrorHandler } from '@/utils/errorHandler';
 
 interface UserCredentials {
@@ -21,23 +18,30 @@ interface UserCredentials {
 	displayName?: string;
 }
 
+let currentUser: User | null = null;
+
 export class AuthService {
 	static getCurrentUser() {
 		return new Promise((resolve: (user: User | null) => void, reject: ErrorFn) => {
-			const unsubscribe = onAuthStateChanged(
-				auth,
-				user => {
-					unsubscribe();
-					resolve(user);
-				},
-				reject
-			);
+			if (currentUser) {
+				resolve(currentUser);
+			} else {
+				const unsubscribe = onAuthStateChanged(
+					auth,
+					user => {
+						unsubscribe();
+						currentUser = user;
+						resolve(user);
+					},
+					reject
+				);
+			}
 		});
 	}
 
 	static async getUid() {
 		const user = await AuthService.getCurrentUser();
-		if (!user || !user.uid) {
+		if (!user) {
 			throw new Error('User unauthenticated');
 		}
 		return user.uid;
@@ -46,7 +50,7 @@ export class AuthService {
 	static async signInWithGoogle() {
 		try {
 			const user = await this.signInWithProvider(new GoogleAuthProvider());
-			await UserService.createUser(user);
+			return user;
 		} catch (e) {
 			fbErrorHandler(e);
 		}
@@ -60,28 +64,22 @@ export class AuthService {
 			throw new Error('User unauthenticated');
 		}
 		// await sendEmailVerification(creds.user);
-		await UserService.createUser(creds.user);
 		return creds.user;
 	}
 
-	static async registerWithEmail({ email, password, displayName }: UserCredentials) {
+	static async registerWithEmail({ email, password }: UserCredentials) {
 		try {
-			const avatarURL = await getDownloadURL(ref(storage, 'assets/default_user_avatar.jpg'));
 			const user = (await createUserWithEmailAndPassword(auth, email, password)).user;
-			await updateProfile(user, { displayName, photoURL: avatarURL });
-			await UserService.createUser(user);
-			return user.uid;
+			return user;
 		} catch (e) {
-			fbErrorHandler(e);
+			return fbErrorHandler(e);
 		}
 	}
 
 	static async loginWithEmail({ email, password }: UserCredentials) {
 		try {
-			await signInWithEmailAndPassword(auth, email, password);
-			if (auth.currentUser) {
-				await UserService.createUser(auth.currentUser);
-			}
+			const creds = await signInWithEmailAndPassword(auth, email, password);
+			return creds.user;
 		} catch (e) {
 			fbErrorHandler(e);
 		}
@@ -90,6 +88,7 @@ export class AuthService {
 	static async logout() {
 		try {
 			await signOut(auth);
+			currentUser = null;
 		} catch (e) {
 			fbErrorHandler(e);
 		}

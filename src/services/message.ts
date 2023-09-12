@@ -144,7 +144,7 @@ export class MessagesService {
 
 	private static async getFullMessageInfo(DbMessage: DBMessage) {
 		try {
-			let { sender_id, content, ...m } = DbMessage;
+			const { sender_id, content, ...m } = DbMessage;
 			const sender = await this.getMessageSenderInfo(sender_id);
 			if (m.type !== 'text' && content.attachments?.length) {
 				const { text, attachments } = content as MessageContent;

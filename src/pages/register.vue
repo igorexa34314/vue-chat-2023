@@ -25,10 +25,10 @@ import LocalRegister from '@/components/auth/LocalRegister.vue';
 import messages from '@/utils/messages.json';
 import { VContainer } from 'vuetify/components';
 import { useMeta } from 'vue-meta';
-import { definePage } from 'vue-router/auto';
-import { useRouter } from 'vue-router/auto';
+import { definePage, useRouter } from 'vue-router/auto';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { useDisplay } from 'vuetify';
+import { User } from 'firebase/auth';
 
 definePage({ meta: { layout: 'empty' } });
 useMeta({ title: 'Register' });
@@ -37,9 +37,13 @@ const { xs } = useDisplay();
 const { push } = useRouter();
 const { showMessage } = useSnackbarStore();
 
-const onRegisterSuccess = async () => {
-	showMessage('sign_in_success');
-	push('/profile');
+const onRegisterSuccess = async (user?: User) => {
+	if (user?.providerId === 'firebase')
+		push({ name: '/enter-name', query: { tokenId: (await user.getIdTokenResult()).claims.sub } });
+	else {
+		showMessage('sign_in_success');
+		push('/profile');
+	}
 };
 const onRegisterError = async (e: unknown) => {
 	showMessage(messages[e as keyof typeof messages] || (e as string), 'red-darken-3', 2000);

@@ -19,12 +19,13 @@
 			cover
 			draggable="false"
 			:aspect-ratio="aspectRatio || (image.raw.sizes ? image.raw.sizes!.w / image.raw.sizes!.h : 1)"
-			:height="height || calcImageSize.h"
-			#placeholder>
-			<ImageLoader
-				v-bind="loader"
-				:model-value="getUploadingStateById(image.id)?.progress"
-				@cancel="cancelImageLoading(image.id)" />
+			:height="height || calcImageSize.h">
+			<template #placeholder>
+				<ImageLoader
+					v-bind="loader"
+					:model-value="getUploadingStateById(image.id)?.progress"
+					@cancel="cancelImageLoading(image.id)" />
+			</template>
 		</v-img>
 
 		<!-- <canvas></canvas> -->
@@ -76,7 +77,9 @@ watchEffect(async () => {
 			const previewURL = await MessagesService.loadPreviewbyFullpath(props.image.raw);
 			setAttachPreviewURL(toRef(props, 'image'), previewURL as string);
 		}
-	} catch (e) {}
+	} catch (e) {
+		console.log(e);
+	}
 });
 const cancelImageLoading = (imgId: string) => {
 	getUploadingStateById.value(imgId)?.task.cancel();

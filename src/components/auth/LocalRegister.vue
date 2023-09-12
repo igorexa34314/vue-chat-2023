@@ -1,17 +1,6 @@
 <template>
 	<v-form ref="formEl" lazy-validation @submit.prevent="submitForm">
 		<v-text-field
-			v-model.trim="formState.displayName"
-			:rules="validations.name"
-			label="Display name"
-			placeholder="Enter your display name"
-			class=""
-			variant="underlined"
-			counter="16"
-			clearable
-			required />
-
-		<v-text-field
 			v-model.trim="formState.email"
 			:rules="validations.email"
 			label="Email"
@@ -21,16 +10,12 @@
 			clearable
 			required />
 
-		<pass-field v-model="formState.password" class="mt-4" repeater />
+		<pass-field v-model="formState.password" class="mt-3" repeater />
 
-		<v-checkbox
-			v-model="formState.agreeTerms"
-			:rules="validations.terms"
-			required
-			density="compact"
-			class="mt-3"
-			#label>
-			<div class="">Agree with <a href="https://uml.ua/pro-licej/himn/" target="_blank">rules</a></div>
+		<v-checkbox v-model="formState.agreeTerms" :rules="validations.terms" required density="compact" class="mt-3">
+			<template #label>
+				<div class="">Agree with <a href="https://uml.ua/pro-licej/himn/" target="_blank">rules</a></div>
+			</template>
 		</v-checkbox>
 
 		<v-btn type="submit" color="success" class="btn mt-4" v-bind="{ loading }">Register</v-btn>
@@ -43,16 +28,16 @@ import validations from '@/utils/validations';
 import { ref } from 'vue';
 import { AuthService } from '@/services/auth';
 import { VForm, VTextField, VCheckbox } from 'vuetify/components';
+import { User } from 'firebase/auth';
 
 const emit = defineEmits<{
-	success: [];
+	success: [user?: User];
 	error: [err: unknown];
 }>();
 
 const formEl = ref<VForm>();
 const loading = ref(false);
 const formState = ref({
-	displayName: '',
 	password: '',
 	email: '',
 	agreeTerms: false,
@@ -64,8 +49,8 @@ const submitForm = async () => {
 		const { agreeTerms, ...formData } = formState.value;
 		try {
 			loading.value = true;
-			await AuthService.registerWithEmail(formData);
-			emit('success');
+			const user = await AuthService.registerWithEmail(formData);
+			emit('success', user);
 		} catch (e) {
 			emit('error', e);
 		} finally {

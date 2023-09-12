@@ -39,7 +39,7 @@
 						<v-icon :icon="mdiAccountCircleOutline" class="mr-6" />
 					</template>
 				</v-list-item>
-				<v-list-item density="compact" @click="logout" draggable="false">
+				<v-list-item density="compact" @click="emit('logout')" draggable="false">
 					<v-list-item-title>Logout</v-list-item-title>
 					<template #prepend>
 						<v-icon :icon="mdiLogout" class="mr-6" />
@@ -54,18 +54,15 @@
 import { VAppBar, VAppBarNavIcon, VAppBarTitle, VFadeTransition, VMenu } from 'vuetify/components';
 import SearchBox from '@/components/UI/SearchBox.vue';
 import { mdiMagnify, mdiFilter, mdiDotsVertical, mdiAccountCircleOutline, mdiLogout } from '@mdi/js';
-import messages from '@/utils/messages.json';
 import { ref, nextTick } from 'vue';
 import { useRouter } from 'vue-router/auto';
-import { AuthService } from '@/services/auth';
-import { useSnackbarStore } from '@/stores/snackbar';
 import { useDisplay } from 'vuetify';
 
 const { push } = useRouter();
-const { showMessage } = useSnackbarStore();
 
 const emit = defineEmits<{
 	drawer: [];
+	logout: [];
 }>();
 
 const { xs } = useDisplay();
@@ -80,13 +77,5 @@ const enableSearch = () => {
 	nextTick(() => {
 		searchEl.value?.$el?.focus();
 	});
-};
-const logout = async () => {
-	try {
-		await AuthService.logout();
-	} catch (e) {
-		showMessage(messages[e as keyof typeof messages] || (e as string), 'red-darken-3', 2000);
-	}
-	push('/login');
 };
 </script>

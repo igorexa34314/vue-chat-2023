@@ -44,8 +44,10 @@
 						max-height="100%"
 						max-width="100%"
 						:style="{ transform: `scale(${zoomed ? '2' : '1'})` }">
-						<v-img :src="item.raw.previewURL" :alt="alt || item.fullname" :width="item.raw.sizes?.w" #placeholder>
-							<ImageLoader />
+						<v-img :src="item.raw.previewURL" :alt="alt || item.fullname" :width="item.raw.sizes?.w">
+							<template #placeholder>
+								<ImageLoader />
+							</template>
 						</v-img>
 					</v-card>
 				</div>
