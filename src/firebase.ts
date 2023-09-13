@@ -8,6 +8,7 @@ import {
 	browserPopupRedirectResolver,
 } from 'firebase/auth';
 import { initializeFirestore } from 'firebase/firestore';
+import { getFunctions } from 'firebase/functions';
 import { getStorage } from 'firebase/storage';
 import { initializeAnalytics } from 'firebase/analytics';
 // TODO: Add SDKs for Firebase products that you want to use
@@ -35,5 +36,7 @@ export const db = initializeFirestore(firebaseApp, {});
 
 // Initialize Cloud Storage and get a reference to the service
 export const storage = getStorage(firebaseApp);
+
+export const functions = getFunctions(firebaseApp, 'europe-central2');
 
 export const analytics = initializeAnalytics(firebaseApp);

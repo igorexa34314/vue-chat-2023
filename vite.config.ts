@@ -27,7 +27,7 @@ export default ({ mode }) => {
 			VueRouter({
 				routesFolder: 'src/pages',
 				exclude: ['**/components/*.vue'],
-				dts: './src/typed-router.d.ts',
+				dts: './src/types/typed-router.d.ts',
 			}),
 			vue({ template: { transformAssetUrls } }),
 			Layouts({

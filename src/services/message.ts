@@ -87,7 +87,7 @@ export class MessagesService {
 				}
 			});
 		} catch (e) {
-			errorHandler(e);
+			return errorHandler(e);
 		}
 	}
 
@@ -129,7 +129,7 @@ export class MessagesService {
 					messagesRef.size >= perPage ? messagesRef.docs[messagesRef.docs.length - 1] : null;
 			}
 		} catch (e) {
-			errorHandler(e);
+			return errorHandler(e);
 		}
 	}
 
@@ -138,7 +138,7 @@ export class MessagesService {
 			const { displayName, photoURL } = (await UserService.getUserdataById(senderId))?.info as UserInfo;
 			return { id: senderId, displayName, photoURL } as Message['sender'];
 		} catch (e) {
-			errorHandler(e);
+			return errorHandler(e);
 		}
 	}
 
@@ -168,7 +168,7 @@ export class MessagesService {
 			}
 			return { ...m, sender, content: { text: content.text } } as Message;
 		} catch (e) {
-			errorHandler(e);
+			return errorHandler(e);
 		}
 	}
 
@@ -181,7 +181,7 @@ export class MessagesService {
 					return `data:${file.type};base64,${encode(blobFile)}`;
 				}
 			} catch (e) {
-				errorHandler(e);
+				return errorHandler(e);
 			}
 		}
 	}
@@ -195,7 +195,7 @@ export class MessagesService {
 				}
 			}
 		} catch (e) {
-			errorHandler(e);
+			return errorHandler(e);
 		}
 	}
 
@@ -221,7 +221,7 @@ export class MessagesService {
 				sender_id: await AuthService.getUid(),
 			});
 		} catch (e) {
-			errorHandler(e);
+			return errorHandler(e);
 		}
 	}
 
@@ -317,7 +317,7 @@ export class MessagesService {
 						.commit();
 					finishLoading(fileId);
 				} catch (e) {
-					errorHandler(e);
+					return errorHandler(e);
 				}
 			}
 		);
@@ -345,7 +345,7 @@ export class MessagesService {
 				} as T;
 			}
 		} catch (e) {
-			errorHandler(e);
+			return errorHandler(e);
 		}
 	}
 
@@ -382,7 +382,7 @@ export class MessagesService {
 				return (await Promise.all(docRefPromises)) as Awaited<T>;
 			}
 		} catch (e) {
-			errorHandler(e);
+			return errorHandler(e);
 		}
 	}
 }

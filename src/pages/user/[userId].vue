@@ -35,7 +35,7 @@
 							<template #activator="{ props }">
 								<v-btn v-bind="props" size="x-large" variant="text" :icon="mdiMessageText" @click="goToChat" />
 							</template>
-							<span class="text-subtitle-2 font-weight-medium">Перейти в сообщения</span>
+							<span class="text-subtitle-2 font-weight-medium">Send message</span>
 						</v-tooltip>
 						<v-tooltip location="bottom">
 							<template #activator="{ props }">
@@ -45,10 +45,10 @@
 									variant="text"
 									:icon="mdiAccountPlusOutline"
 									class="ml-2"
-									@click="addToFriend"
-									disabled />
+									disabled
+									@click="addToFriend" />
 							</template>
-							<span class="text-subtitle-2 font-weight-medium">Добавить в друзья</span>
+							<span class="text-subtitle-2 font-weight-medium">Add to friend</span>
 						</v-tooltip>
 					</v-col>
 				</v-row>

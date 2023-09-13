@@ -24,7 +24,7 @@
 
 			<v-card-text
 				class="message__content pb-1 pr-3"
-				:class="type === 'file' ? 'pl-2 pt-2' : type === 'media' ? 'pl-3 pt-3' : ''">
+				:class="{ 'pl-2 pt-2': type === 'file', 'pl-3 pt-3': type === 'media' }">
 				<component
 					:is="messageComponent"
 					v-bind="{ content }"

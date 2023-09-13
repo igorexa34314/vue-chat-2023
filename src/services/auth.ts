@@ -52,19 +52,19 @@ export class AuthService {
 			const user = await this.signInWithProvider(new GoogleAuthProvider());
 			return user;
 		} catch (e) {
-			fbErrorHandler(e);
+			return fbErrorHandler(e);
+		}
+	}
+
+	static async handleRedirectResult() {
+		const result = await getRedirectResult(auth);
+		if (result?.user) {
+			currentUser = result.user;
 		}
 	}
 
 	private static async signInWithProvider(provider: any) {
-		await signInWithRedirect(auth, provider);
-		// After the page redirects back
-		const creds = await getRedirectResult(auth);
-		if (!creds) {
-			throw new Error('User unauthenticated');
-		}
-		// await sendEmailVerification(creds.user);
-		return creds.user;
+		return signInWithRedirect(auth, provider);
 	}
 
 	static async registerWithEmail({ email, password }: UserCredentials) {
@@ -81,7 +81,7 @@ export class AuthService {
 			const creds = await signInWithEmailAndPassword(auth, email, password);
 			return creds.user;
 		} catch (e) {
-			fbErrorHandler(e);
+			return fbErrorHandler(e);
 		}
 	}
 
@@ -90,7 +90,7 @@ export class AuthService {
 			await signOut(auth);
 			currentUser = null;
 		} catch (e) {
-			fbErrorHandler(e);
+			return fbErrorHandler(e);
 		}
 	}
 }

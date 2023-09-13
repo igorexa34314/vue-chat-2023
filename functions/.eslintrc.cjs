@@ -22,11 +22,11 @@ module.exports = {
   ],
   plugins: ['@typescript-eslint', 'import'],
   rules: {
-    'max-len': 0,
-    'linebreak-style': 0,
-    'object-curly-spacing': 0,
-    'import/no-unresolved': 0,
-    indent: ['error', 2],
-    'no-unused-vars': 0,
+    'max-len': 'off',
+    'linebreak-style': 'off',
+    'object-curly-spacing': 'off',
+    'import/no-unresolved': 'off',
+    indent: 'off',
+    'no-unused-vars': 'off',
   },
 };

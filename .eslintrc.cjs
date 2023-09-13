@@ -3,7 +3,6 @@ require('@rushstack/eslint-patch/modern-module-resolution');
 
 module.exports = {
 	root: true,
-	ignorePatterns: ['/functions/**'],
 	extends: [
 		'plugin:vue/vue3-essential',
 		'eslint:recommended',
@@ -16,4 +15,5 @@ module.exports = {
 	rules: {
 		'vue/multi-word-component-names': 'off',
 	},
+	ignorePatterns: ['functions/*'],
 };

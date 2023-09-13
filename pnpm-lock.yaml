@@ -39,8 +39,8 @@ dependencies:
     specifier: ^9.4.0
     version: 9.4.0(vue@3.3.4)
   vue-instantsearch:
-    specifier: ^4.10.10
-    version: 4.10.10(algoliasearch@4.20.0)(vue@3.3.4)
+    specifier: ^4.10.11
+    version: 4.10.11(algoliasearch@4.20.0)(vue@3.3.4)
   vue-meta:
     specifier: 3.0.0-alpha.10
     version: 3.0.0-alpha.10(vue@3.3.4)
@@ -48,8 +48,8 @@ dependencies:
     specifier: ^4.2.4
     version: 4.2.4(vue@3.3.4)
   vuetify:
-    specifier: ^3.3.15
-    version: 3.3.15(typescript@5.2.2)(vite-plugin-vuetify@1.0.2)(vue-i18n@9.4.0)(vue@3.3.4)
+    specifier: ^3.3.16
+    version: 3.3.16(typescript@5.2.2)(vite-plugin-vuetify@1.0.2)(vue-i18n@9.4.0)(vue@3.3.4)
 
 devDependencies:
   '@intlify/unplugin-vue-i18n':
@@ -102,10 +102,10 @@ devDependencies:
     version: 0.8.0(vite@4.4.9)(vue-router@4.2.4)(vue@3.3.4)
   vite-plugin-vuetify:
     specifier: ^1.0.2
-    version: 1.0.2(vite@4.4.9)(vue@3.3.4)(vuetify@3.3.15)
+    version: 1.0.2(vite@4.4.9)(vue@3.3.4)(vuetify@3.3.16)
   vue-tsc:
-    specifier: ^1.8.10
-    version: 1.8.10(typescript@5.2.2)
+    specifier: ^1.8.11
+    version: 1.8.11(typescript@5.2.2)
 
 packages:
 
@@ -1431,8 +1431,8 @@ packages:
       - supports-color
     dev: true
 
-  /@vue/language-core@1.8.10(typescript@5.2.2):
-    resolution: {integrity: sha512-db8PtM4ZZr7SYNH30XpKxUYnUBYaTvcuJ4c2whKK04fuAjbtjAIZ2al5GzGEfUlesmvkpgdbiSviRXUxgD9Omw==}
+  /@vue/language-core@1.8.11(typescript@5.2.2):
+    resolution: {integrity: sha512-+MZOBGqGwfld6hpo0DB47x8eNM0dNqk15ZdfOhj19CpvuYuOWCeVdOEGZunKDyo3QLkTn3kLOSysJzg7FDOQBA==}
     peerDependencies:
       typescript: '*'
     peerDependenciesMeta:
@@ -1489,16 +1489,16 @@ packages:
   /@vue/shared@3.3.4:
     resolution: {integrity: sha512-7OjdcV8vQ74eiz1TZLzZP4JwqM5fA94K6yntPS5Z25r9HDuGNzaGdgvwKYq6S+MxwF0TFRwe50fIR/MYnakdkQ==}
 
-  /@vue/typescript@1.8.10(typescript@5.2.2):
-    resolution: {integrity: sha512-vPSpTXMk4chYwvyTGjM891cKgnx2r6vtbdANOp2mRU31f4HYGyLrZBlGgiua7SaO2cLjUg8y91OipJe0t8OFhA==}
+  /@vue/typescript@1.8.11(typescript@5.2.2):
+    resolution: {integrity: sha512-skUmMDiPUUtu1flPmf2YybF+PX8IzBtMioQOaNn6Ck/RhdrPJGj1AX/7s3Buf9G6ln+/KHR1XQuti/FFxw5XVA==}
     dependencies:
       '@volar/typescript': 1.10.1
-      '@vue/language-core': 1.8.10(typescript@5.2.2)
+      '@vue/language-core': 1.8.11(typescript@5.2.2)
     transitivePeerDependencies:
       - typescript
     dev: true
 
-  /@vuetify/loader-shared@1.7.1(vue@3.3.4)(vuetify@3.3.15):
+  /@vuetify/loader-shared@1.7.1(vue@3.3.4)(vuetify@3.3.16):
     resolution: {integrity: sha512-kLUvuAed6RCvkeeTNJzuy14pqnkur8lTuner7v7pNE/kVhPR97TuyXwBSBMR1cJeiLiOfu6SF5XlCYbXByEx1g==}
     peerDependencies:
       vue: ^3.0.0
@@ -1507,7 +1507,7 @@ packages:
       find-cache-dir: 3.3.2
       upath: 2.0.1
       vue: 3.3.4
-      vuetify: 3.3.15(typescript@5.2.2)(vite-plugin-vuetify@1.0.2)(vue-i18n@9.4.0)(vue@3.3.4)
+      vuetify: 3.3.16(typescript@5.2.2)(vite-plugin-vuetify@1.0.2)(vue-i18n@9.4.0)(vue@3.3.4)
 
   /@vueuse/core@10.4.1(vue@3.3.4):
     resolution: {integrity: sha512-DkHIfMIoSIBjMgRRvdIvxsyboRZQmImofLyOHADqiVbQVilP8VVHDhBX2ZqoItOgu7dWa8oXiNnScOdPLhdEXg==}
@@ -1561,8 +1561,8 @@ packages:
       uri-js: 4.4.1
     dev: true
 
-  /algoliasearch-helper@3.14.0(algoliasearch@4.20.0):
-    resolution: {integrity: sha512-gXDXzsSS0YANn5dHr71CUXOo84cN4azhHKUbg71vAWnH+1JBiR4jf7to3t3JHXknXkbV0F7f055vUSBKrltHLQ==}
+  /algoliasearch-helper@3.14.1(algoliasearch@4.20.0):
+    resolution: {integrity: sha512-TZihm6eisSqgLWOXpISAUFXAolJvEpa1gkTjUUEDmVl+TTiQuNvzLQ/osOiqIXzx6QSS4Pd6Ry+SKKOwiqJ17g==}
     peerDependencies:
       algoliasearch: '>= 3.1 < 6'
     dependencies:
@@ -2334,8 +2334,8 @@ packages:
     resolution: {integrity: sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ==}
     dev: true
 
-  /instantsearch.js@4.56.10(algoliasearch@4.20.0):
-    resolution: {integrity: sha512-ViW2JGUgxcDaQ9/3CRBPrw0fK63XalsZnZhohYgdVZLAdacgGUPO8txWLJ5g2477XHtMS1T4sTYlyCyDIcCQ8A==}
+  /instantsearch.js@4.56.11(algoliasearch@4.20.0):
+    resolution: {integrity: sha512-SEV2qCee/lTPIa4B18ajV+ICkWCnQOyrQZE1HITXIOLpmwWpHEV5wjB3rxaW7bIY1DsQ+6p6DpWLVSMRYXPiNA==}
     peerDependencies:
       algoliasearch: '>= 3.1 < 6'
     dependencies:
@@ -2347,7 +2347,7 @@ packages:
       '@types/hogan.js': 3.0.1
       '@types/qs': 6.9.8
       algoliasearch: 4.20.0
-      algoliasearch-helper: 3.14.0(algoliasearch@4.20.0)
+      algoliasearch-helper: 3.14.1(algoliasearch@4.20.0)
       hogan.js: 3.0.2
       htm: 3.1.1
       preact: 10.17.1
@@ -3204,18 +3204,18 @@ packages:
       - supports-color
     dev: true
 
-  /vite-plugin-vuetify@1.0.2(vite@4.4.9)(vue@3.3.4)(vuetify@3.3.15):
+  /vite-plugin-vuetify@1.0.2(vite@4.4.9)(vue@3.3.4)(vuetify@3.3.16):
     resolution: {integrity: sha512-MubIcKD33O8wtgQXlbEXE7ccTEpHZ8nPpe77y9Wy3my2MWw/PgehP9VqTp92BLqr0R1dSL970Lynvisx3UxBFw==}
     engines: {node: '>=12'}
     peerDependencies:
       vite: ^2.7.0 || ^3.0.0 || ^4.0.0
       vuetify: ^3.0.0-beta.4
     dependencies:
-      '@vuetify/loader-shared': 1.7.1(vue@3.3.4)(vuetify@3.3.15)
+      '@vuetify/loader-shared': 1.7.1(vue@3.3.4)(vuetify@3.3.16)
       debug: 4.3.4
       upath: 2.0.1
       vite: 4.4.9(@types/node@20.6.0)(sass@1.66.1)
-      vuetify: 3.3.15(typescript@5.2.2)(vite-plugin-vuetify@1.0.2)(vue-i18n@9.4.0)(vue@3.3.4)
+      vuetify: 3.3.16(typescript@5.2.2)(vite-plugin-vuetify@1.0.2)(vue-i18n@9.4.0)(vue@3.3.4)
     transitivePeerDependencies:
       - supports-color
       - vue
@@ -3300,8 +3300,8 @@ packages:
       '@vue/devtools-api': 6.5.0
       vue: 3.3.4
 
-  /vue-instantsearch@4.10.10(algoliasearch@4.20.0)(vue@3.3.4):
-    resolution: {integrity: sha512-tOBkxp5QCiRQScd+vV6yECNIXMKf06cB6hAQuwcMlqlQhZPCuf7FWalCII/8zScqv5F/9xZXNNqdN7JHAGJycA==}
+  /vue-instantsearch@4.10.11(algoliasearch@4.20.0)(vue@3.3.4):
+    resolution: {integrity: sha512-lLUS6tMc9wAhSyHvmnOMjOrrPsumnZuINqTFeAYyOEzdgjmy1+77a2M/PuyQrsoI7XRTa3ZRV33DzviBr+RLsQ==}
     peerDependencies:
       '@vue/server-renderer': ^3.1.2
       algoliasearch: '>= 3.32.0 < 5'
@@ -3314,7 +3314,7 @@ packages:
         optional: true
     dependencies:
       algoliasearch: 4.20.0
-      instantsearch.js: 4.56.10(algoliasearch@4.20.0)
+      instantsearch.js: 4.56.11(algoliasearch@4.20.0)
       mitt: 2.1.0
       vue: 3.3.4
     dev: false
@@ -3342,14 +3342,14 @@ packages:
       he: 1.2.0
     dev: true
 
-  /vue-tsc@1.8.10(typescript@5.2.2):
-    resolution: {integrity: sha512-ptpTFFDoHQgkWJF7i5iERxooiQzOGtG1uKTfmAUuS3qPuSQGq+Ky/S8BFHhnFGwoOxq/PjmGN2QSZEfg1rtzQA==}
+  /vue-tsc@1.8.11(typescript@5.2.2):
+    resolution: {integrity: sha512-BzfiMdPqDHBlysx4g26NkfVHSQwGD/lTRausmxN9sFyjXz34OWfsbkh0YsVkX84Hu65In1fFlxHiG39Tr4Vojg==}
     hasBin: true
     peerDependencies:
       typescript: '*'
     dependencies:
-      '@vue/language-core': 1.8.10(typescript@5.2.2)
-      '@vue/typescript': 1.8.10(typescript@5.2.2)
+      '@vue/language-core': 1.8.11(typescript@5.2.2)
+      '@vue/typescript': 1.8.11(typescript@5.2.2)
       semver: 7.5.4
       typescript: 5.2.2
     dev: true
@@ -3363,8 +3363,8 @@ packages:
       '@vue/server-renderer': 3.3.4(vue@3.3.4)
       '@vue/shared': 3.3.4
 
-  /vuetify@3.3.15(typescript@5.2.2)(vite-plugin-vuetify@1.0.2)(vue-i18n@9.4.0)(vue@3.3.4):
-    resolution: {integrity: sha512-n7GYBO31k8vA9UfvRwLNyBlkq1WoN3IJ9wNnIBFeV4axleSjFAzzR4WUw7rgj6Ba3q6N2hxXoyxJM21tseQTfQ==}
+  /vuetify@3.3.16(typescript@5.2.2)(vite-plugin-vuetify@1.0.2)(vue-i18n@9.4.0)(vue@3.3.4):
+    resolution: {integrity: sha512-vVfUroT5lSU+yOZAf7JlGm2j3dCR4BQml8Al27+/Uh0YW+97/CyUqOzo6IzMCt/bXLvnRerJ5fCAJtQYWnwfLA==}
     engines: {node: ^12.20 || >=14.13}
     peerDependencies:
       typescript: '>=4.7'
@@ -3383,7 +3383,7 @@ packages:
         optional: true
     dependencies:
       typescript: 5.2.2
-      vite-plugin-vuetify: 1.0.2(vite@4.4.9)(vue@3.3.4)(vuetify@3.3.15)
+      vite-plugin-vuetify: 1.0.2(vite@4.4.9)(vue@3.3.4)(vuetify@3.3.16)
       vue: 3.3.4
       vue-i18n: 9.4.0(vue@3.3.4)
 

@@ -35,12 +35,6 @@ const { $reset } = useUserdataStore();
 
 provide(globalLoadingKey, isLoading);
 
-// Unsubscribe from receiving userdata realtime firebase and reseting store
-onUnmounted(() => {
-	unsub.value?.();
-	$reset();
-});
-
 const logout = async () => {
 	try {
 		await AuthService.logout();
@@ -49,4 +43,10 @@ const logout = async () => {
 		showMessage(messages[e as keyof typeof messages] || (e as string), 'red-darken-3', 2000);
 	}
 };
+
+// Unsubscribe from receiving userdata realtime firebase and reseting store
+onUnmounted(() => {
+	unsub.value?.();
+	$reset();
+});
 </script>

@@ -1,8 +1,12 @@
-export interface ChatInfo {
+import { UserInfo } from '@/types/db/UserdataTable';
+export type ChatType = 'saved' | 'private' | 'group' | 'public';
+
+export interface ChatInfo<T extends ChatType = ChatType> {
 	id: string;
 	name: string;
 	avatar: string | null;
-	type: 'self' | 'private' | 'group';
+	type: T;
 	created_at: Date;
-	members: string[];
+	created_by: UserInfo['uid'];
+	members: T extends 'saved' ? never : UserInfo['uid'][];
 }

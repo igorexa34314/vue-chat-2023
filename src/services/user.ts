@@ -1,6 +1,7 @@
-import { storage, db } from '@/firebase';
+import { storage, db, functions } from '@/firebase';
+import { httpsCallable } from 'firebase/functions';
 import { useUserdataStore } from '@/stores/userdata';
-import { getDoc, onSnapshot, doc, updateDoc, arrayUnion, Timestamp, collection } from 'firebase/firestore';
+import { getDoc, onSnapshot, doc, updateDoc, Timestamp, collection } from 'firebase/firestore';
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { AuthService } from '@/services/auth';
 import { updateProfile } from 'firebase/auth';
@@ -34,7 +35,7 @@ export class UserService {
 				}
 			});
 		} catch (e) {
-			errorHandler(e);
+			return errorHandler(e);
 		}
 	}
 
@@ -45,7 +46,7 @@ export class UserService {
 				return udata.data() as UserData;
 			}
 		} catch (e) {
-			errorHandler(e);
+			return errorHandler(e);
 		}
 	}
 
@@ -65,7 +66,7 @@ export class UserService {
 				});
 			}
 		} catch (e) {
-			errorHandler(e);
+			return errorHandler(e);
 		}
 	}
 
@@ -90,17 +91,18 @@ export class UserService {
 			);
 			await updateDoc(UserService.getUserRef(await AuthService.getUid()), infoField);
 		} catch (e) {
-			errorHandler(e);
+			return errorHandler(e);
 		}
 	}
 
-	static async addToFriend(uid: UserInfo['uid']) {
+	static async addToFriend(userId: UserInfo['uid']) {
 		try {
-			await updateDoc(UserService.getUserRef(await AuthService.getUid()), {
-				friends: arrayUnion(uid),
-			});
+			const addToFriendById = httpsCallable<{ userId: string }, { success: true }>(functions, 'addToFriendById');
+
+			const res = await addToFriendById({ userId });
+			return res.data;
 		} catch (e) {
-			errorHandler(e);
+			return errorHandler(e);
 		}
 	}
 }

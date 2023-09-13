@@ -9,7 +9,7 @@
 				:value="currentRefinement"
 				ref="searchEl"
 				v-bind="$attrs"
-				@input="refine(($event.target as HTMLInputElement)?.value)"
+				@update:model-value="refine"
 				variant="solo"
 				placeholder="Search"
 				density="compact"
