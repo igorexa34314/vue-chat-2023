@@ -1,4 +1,4 @@
-import { defineConfig, loadEnv } from 'vite';
+import { defineConfig, loadEnv, ConfigEnv } from 'vite';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import vue from '@vitejs/plugin-vue';
@@ -9,7 +9,7 @@ import Layouts from 'vite-plugin-vue-layouts';
 import { visualizer } from 'rollup-plugin-visualizer';
 
 // https://vitejs.dev/config/
-export default ({ mode }) => {
+export default ({ mode }: ConfigEnv) => {
 	process.env = { ...process.env, ...loadEnv(mode, process.cwd()) };
 
 	return defineConfig({

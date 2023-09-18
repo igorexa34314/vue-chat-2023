@@ -20,7 +20,7 @@
 </template>
 
 <script setup lang="ts">
-import InfoForm, { ProfileForm } from '@/components/profile/InfoForm.vue';
+import InfoForm, { IProfileForm } from '@/components/profile/InfoForm.vue';
 import { VTabs, VTab, VWindow, VWindowItem, VContainer } from 'vuetify/components';
 import messages from '@/utils/messages.json';
 import { storeToRefs } from 'pinia';
@@ -45,7 +45,7 @@ const profileTabs = [
 ];
 const pickedProfileTab = ref(profileTabs[0].value);
 
-const submitForm = async ({ avatar, ...formData }: ProfileForm) => {
+const submitForm = async ({ avatar, ...formData }: IProfileForm) => {
 	try {
 		await UserService.updateUserInfo(formData);
 		if (avatar?.length) {

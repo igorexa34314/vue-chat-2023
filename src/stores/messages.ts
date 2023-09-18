@@ -1,21 +1,8 @@
 import { defineStore } from 'pinia';
 import { ref, Ref } from 'vue';
-import { UserInfo } from '@/types/db/UserdataTable';
 import { DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
-import { Message as DBMessage, MessageAttachment, MessageContent } from '@/types/db/MessagesTable';
+import { Message, MediaAttachment } from '@/services/message';
 
-export interface MessageContentWithPreview extends Omit<MessageContent, 'attachments'> {
-	attachments: (Omit<MessageAttachment, 'thumbnail' | 'raw'> & {
-		thumbnail: string;
-		raw: MessageAttachment['raw'] & { previewURL?: string };
-	})[];
-}
-
-export interface Message extends Omit<DBMessage, 'sender_id' | 'created_at' | 'content'> {
-	content: MessageContentWithPreview;
-	sender: { id: UserInfo['uid'] } & Pick<UserInfo, 'displayName' | 'photoURL'>;
-	created_at: Date;
-}
 export type Direction = 'top' | 'bottom';
 export type LastVisibleFbRef = Record<Direction, QueryDocumentSnapshot<DocumentData> | null>;
 
@@ -24,7 +11,7 @@ export const useMessagesStore = defineStore('messages', () => {
 
 	const lastVisible = ref<LastVisibleFbRef>({
 		top: null,
-		bottom: null
+		bottom: null,
 	});
 
 	const addMessage = (msg: Message, direction: 'start' | 'end' = 'end') => {
@@ -37,14 +24,9 @@ export const useMessagesStore = defineStore('messages', () => {
 		messages.value = messages.value.map(m => (m.id === newMsg.id ? newMsg : m));
 	};
 	const deleteMessages = (count = 10, direction: 'start' | 'end' = 'end') => {
-		return direction === 'end'
-			? messages.value.splice(-count, count)
-			: messages.value.splice(0, count);
+		return direction === 'end' ? messages.value.splice(-count, count) : messages.value.splice(0, count);
 	};
-	const setAttachPreviewURL = (
-		attachRefInstance: Ref<MessageContentWithPreview['attachments'][number]>,
-		previewURL: string
-	) => {
+	const setAttachPreviewURL = (attachRefInstance: Ref<MediaAttachment>, previewURL: string) => {
 		if (previewURL) {
 			attachRefInstance.value.raw.previewURL = previewURL;
 		}
@@ -63,6 +45,6 @@ export const useMessagesStore = defineStore('messages', () => {
 		modifyMessage,
 		deleteMessageById,
 		deleteMessages,
-		setAttachPreviewURL
+		setAttachPreviewURL,
 	};
 });

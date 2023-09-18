@@ -38,18 +38,17 @@
 import { VAlert } from 'vuetify/components';
 import { computed } from 'vue';
 import { mdiPencil, mdiClose } from '@mdi/js';
-import { Message } from '@/stores/messages';
+import { MessageContent } from '@/services/message';
 import { gsap } from 'gsap';
+import { AttachmentType } from '@/types/db/MessagesTable';
 
 const props = withDefaults(
 	defineProps<{
 		modelValue?: boolean;
-		mType?: Message['type'];
-		content: Message['content'] | null;
+		content: MessageContent | null;
 	}>(),
 	{
 		modelValue: false,
-		mType: 'text',
 	}
 );
 
@@ -64,14 +63,17 @@ defineOptions({
 });
 
 const getTextFromEditMsg = computed(() => {
-	return props.mType === 'text'
+	return props.content?.type === 'text'
 		? props.content?.text
 		: !getImagesFromEditMsg.value || !getImagesFromEditMsg.value.length
-		? props.content?.attachments.at(-1)?.fullname
+		? (props.content as MessageContent<AttachmentType> | null)?.attachments.at(-1)?.fullname
 		: (getImagesFromEditMsg.value.length === 1 ? 'Photo' : 'Album') + ', ' + props.content?.text;
 });
 const getImagesFromEditMsg = computed(
-	() => props.content?.attachments?.filter(item => item.raw.previewURL).map(img => img.raw.previewURL)
+	() =>
+		(props.content as MessageContent<AttachmentType> | null)?.attachments
+			?.filter(item => item.raw.previewURL)
+			.map(img => img.raw.previewURL)
 );
 const cancelReply = () => {
 	emit('update:modelValue', false);

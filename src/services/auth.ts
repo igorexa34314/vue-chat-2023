@@ -15,7 +15,6 @@ import { fbErrorHandler } from '@/utils/errorHandler';
 interface UserCredentials {
 	email: string;
 	password: string;
-	displayName?: string;
 }
 
 let currentUser: User | null = null;

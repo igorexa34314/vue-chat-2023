@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import { UserData, UserInfo } from '@/types/db/UserdataTable';
+import { UserData, UserInfo } from '@/services/user';
 
 export const useUserdataStore = defineStore('userdata', () => {
 	const userdata = ref<UserData | null>();

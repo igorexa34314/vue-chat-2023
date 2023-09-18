@@ -63,7 +63,7 @@
 					<component
 						:is="contentType === 'media' ? MediaAttachment : FileAttachment"
 						v-bind="{ files: attachedFiles }"
-						ref="attachment"
+						ref="attachComponent"
 						@deleteAttach="deleteAttachItem" />
 				</div>
 
@@ -99,77 +99,72 @@ import { VDialog, VMenu, VTextarea } from 'vuetify/components';
 import { mdiClose, mdiDotsVertical, mdiPlus, mdiFileMultipleOutline, mdiFolderMultipleImage } from '@mdi/js';
 import FileAttachment from '@/components/chat/attach/FileAttachment.vue';
 import MediaAttachment from '@/components/chat/attach/MediaAttachment.vue';
-import { ref, computed, watchEffect, Ref } from 'vue';
+import { ref, computed, watch, Ref } from 'vue';
 import { useVModel } from '@vueuse/core';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { getFileThumbAndSizes } from '@/utils/resizeFile';
-import { Message } from '@/types/db/MessagesTable';
-import { ThumbResult } from '@/utils/resizeFile';
+import { AttachmentType } from '@/types/db/MessagesTable';
 import { useDisplay } from 'vuetify';
+import { FormAttachment } from '@/services/message';
 
-export type AttachedContent = (AttachDialogProps['fileList'][number] & {
-	sizes?: { w: number; h: number };
-	thumbnail?: ThumbResult;
-	preview?: string;
-})[];
-export interface AttachDialogProps {
-	modelValue?: boolean;
-	subtitleText: string;
-	contentType: 'media' | 'file';
-	fileList: { id: string; fileData: File }[];
-}
-const props = withDefaults(defineProps<AttachDialogProps>(), {
-	modelValue: false,
-	subtitle: '',
-});
+export type AttachedContent<T extends AttachmentType = 'media'> = FormAttachment<T> & {
+	preview: T extends 'media' ? string : never;
+};
+
+const props = withDefaults(
+	defineProps<{
+		modelValue?: boolean;
+		contentType: AttachmentType;
+		subtitleText: string;
+		fileList: FormAttachment[];
+	}>(),
+	{
+		modelValue: false,
+		subtitleText: '',
+	}
+);
 
 const emit = defineEmits<{
 	'update:modelValue': [val: boolean];
 	'update:subtitleText': [val: boolean];
-	'add-more-files': [type: Exclude<Message['type'], 'text'>, files: FileList];
+	'add-more-files': [type: AttachmentType, files: FileList];
 	changeContentType: [];
-	submit: [type: AttachDialogProps['contentType'], content: AttachedContent];
+	submit: [type: AttachmentType, content: FormAttachment[]];
 	close: [];
 }>();
 
 const { showMessage } = useSnackbarStore();
 const { mobile } = useDisplay();
 
-const attachment = ref<InstanceType<typeof MediaAttachment> | InstanceType<typeof FileAttachment>>();
+type AttachComponent<T extends AttachmentType = AttachmentType> = InstanceType<
+	T extends 'media' ? typeof MediaAttachment : typeof FileAttachment
+>;
+const attachComponent = ref<AttachComponent>();
 const dialog = useVModel(props, 'modelValue', emit);
 const subtitle = useVModel(props, 'subtitleText', emit);
 
-const attachedFiles = ref<AttachedContent>([]);
-
+const attachedFiles = ref([]) as Ref<AttachedContent[]>;
 const isDialogReady = computed(() => {
 	if (props.contentType === 'media') {
-		return (attachment as Ref<InstanceType<typeof MediaAttachment>>).value?.isImgsReady;
+		return (attachComponent.value as AttachComponent<'media'> | undefined)?.isImgsReady;
 	} else if (props.contentType === 'file') {
-		return (attachment as Ref<InstanceType<typeof FileAttachment>>).value?.isFilesReady;
+		return (attachComponent.value as AttachComponent<'file'> | undefined)?.isFilesReady;
 	}
 	return true;
 });
 
-watchEffect(async () => {
-	if (props.fileList.length) {
-		const promises: Promise<AttachedContent[number]>[] = [];
-		for (const fileItem of props.fileList) {
-			if (fileItem.fileData.size > 3145728) {
-				showMessage('Maximum file size - 3 Mb', 'red-darken-3', 2500);
-				closeDialog();
-				return;
-			}
-			promises.push(getFileThumbAndSizes(fileItem));
-		}
-		try {
-			(await Promise.all(promises)).forEach(item => {
-				attachedFiles.value.push(item);
-			});
-		} catch (e) {
-			console.error(e);
-		}
+watch(
+	() => props.fileList.length,
+	async newLength => {
+		if (newLength) {
+			if (props.fileList.every(f => f.fileData.size <= 3145728)) {
+				Promise.all(props.fileList.map(file => getFileThumbAndSizes(file)))
+					.then(result => (attachedFiles.value = result as AttachedContent[]))
+					.catch(err => console.error(err));
+			} else showMessage('Maximum file size - 3 Mb', 'red-darken-3', 2500);
+		} else closeDialog();
 	}
-});
+);
 const clearForm = () => {
 	attachedFiles.value = [];
 };
@@ -199,7 +194,7 @@ const closeDialog = () => {
 	clearForm();
 	emit('close');
 };
-const deleteAttachItem = (fileId: AttachedContent[number]['id']) => {
+const deleteAttachItem = (fileId: AttachedContent['id']) => {
 	attachedFiles.value = attachedFiles.value.filter(file => file.id !== fileId);
 	if (!attachedFiles.value.length) {
 		closeDialog();

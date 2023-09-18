@@ -28,12 +28,13 @@
 import { mdiDelete } from '@mdi/js';
 import ImageLoader from '@/components/chat/ImageLoader.vue';
 import { ref } from 'vue';
-import { AttachedContent } from '@/components/chat/attach/AttachDialog.vue';
 import { VImg } from 'vuetify/components';
+import { AttachedContent } from '@/components/chat/attach/AttachDialog.vue';
+import { MediaAttachment } from '@/services/message';
 
 const props = withDefaults(
 	defineProps<{
-		previewItem: AttachedContent[number];
+		previewItem: AttachedContent;
 		maxHeight?: string | number;
 		imgRatio?: string | number;
 	}>(),
@@ -44,7 +45,7 @@ const props = withDefaults(
 );
 
 const emit = defineEmits<{
-	'delete-item': [itemId: string];
+	'delete-item': [itemId: MediaAttachment['id']];
 }>();
 
 const imgEl = ref<VImg>();

@@ -32,6 +32,7 @@ export const createUserProfileTrigger = region('europe-central2')
           uid: user.uid,
           displayName: user.displayName || user.email?.split('@').at(0) || `user-${user.uid.split('-').at(0)}`,
           gender: 'unknown',
+          email: user.email ?? '',
           phoneNumber: user.phoneNumber || null,
           photoURL: user.photoURL || null,
           birthday_date: null,
@@ -58,9 +59,12 @@ export const createSavedChatTrigger = onDocumentCreated(
     await newChatDoc.create({
       id: newChatDoc.id,
       name: 'Saved messages',
+      avatar: null,
+      description: '',
       type: 'saved',
       created_by: event.params.uid,
       created_at: FieldValue.serverTimestamp(),
+      updated_at: null,
     });
     logger.info(`New saved chat for ${event.params.uid} created`);
   }
@@ -156,10 +160,13 @@ const createPrivateChat = async ({ creatorId, companionId }: { creatorId: string
   const chatInfo = {
     id: newChatDoc.id,
     name: 'Private chat',
+    description: '',
     type: 'private',
+    avatar: null,
     members: [creatorId, companionId],
     created_by: creatorId,
     created_at: FieldValue.serverTimestamp(),
+    updated_at: null,
   };
   await newChatDoc.create(chatInfo);
 

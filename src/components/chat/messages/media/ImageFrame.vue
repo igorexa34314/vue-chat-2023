@@ -10,7 +10,7 @@
 		v-ripple="false"
 		height="100%">
 		<v-img
-			:lazy-src="image.thumbnail"
+			:lazy-src="image.thumbnail ?? ''"
 			:src="image.raw?.previewURL || image.raw?.downloadURL"
 			:alt="alt || image.fullname"
 			width="100%"
@@ -41,15 +41,13 @@ import { useDisplay } from 'vuetify';
 import { useLoadingStore } from '@/stores/loading';
 import { useMessagesStore } from '@/stores/messages';
 import { VImg, VCard } from 'vuetify/components';
-import { MessageContentWithPreview } from '@/stores/messages';
+import { MessageAttachment } from '@/services/message';
 import { computed } from 'vue';
 import { maxMessageMedia, maxMessageMediaSm } from '@/global-vars';
 
-export type ImageWithPreviewURL = MessageContentWithPreview['attachments'][number];
-
 const props = withDefaults(
 	defineProps<{
-		image: ImageWithPreviewURL;
+		image: MessageAttachment<'media'>;
 		width?: string | number | VCard['width'];
 		maxHeight?: string | number | VCard['maxHeight'];
 		height?: string | number | VCard['height'];

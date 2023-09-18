@@ -1,35 +1,55 @@
+import { timestampToDate } from './../utils/helpers';
 import { storage, db, functions } from '@/firebase';
 import { httpsCallable } from 'firebase/functions';
 import { useUserdataStore } from '@/stores/userdata';
-import { getDoc, onSnapshot, doc, updateDoc, Timestamp, collection } from 'firebase/firestore';
+import {
+	getDoc,
+	onSnapshot,
+	doc,
+	updateDoc,
+	collection,
+	where,
+	documentId,
+	query,
+	getDocs,
+	CollectionReference,
+} from 'firebase/firestore';
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { AuthService } from '@/services/auth';
 import { updateProfile } from 'firebase/auth';
 import { v4 as uuidv4 } from 'uuid';
 import { fbErrorHandler as errorHandler } from '@/utils/errorHandler';
-import { UserData, UserInfo } from '@/types/db/UserdataTable';
+import { UserData as DBUserData, UserInfo as DBUserInfo } from '@/types/db/UserdataTable';
+import { ParsedTimestamps } from '@/types/db/helpers';
+
+export interface UserInfo extends ParsedTimestamps<DBUserInfo> {}
+export interface UserData extends Omit<DBUserData, 'info'> {
+	info: UserInfo;
+}
+export type PublicUserInfo = Pick<UserInfo, 'uid' | 'displayName' | 'photoURL'>;
 
 export class UserService {
-	static usersCol = collection(db, 'users');
+	static usersCol = collection(db, 'users') as CollectionReference<DBUserData>;
 
-	static getUserRef(uid: UserInfo['uid']) {
+	static getUserDocRef(uid: DBUserInfo['uid']) {
 		return doc(UserService.usersCol, uid);
 	}
 
 	static async fetchAuthUser() {
 		try {
-			const userRef = UserService.getUserRef(await AuthService.getUid());
-			return onSnapshot(userRef, udata => {
-				if (udata && udata.exists()) {
+			const userDocRef = UserService.getUserDocRef(await AuthService.getUid());
+			return onSnapshot(userDocRef, userSnapshot => {
+				if (userSnapshot && userSnapshot.exists()) {
 					const { setUserData } = useUserdataStore();
-					const { info, ...data } = udata.data() as UserData;
-					const { birthday_date, created_at, ...rest } = info as UserInfo;
+					const { info, ...udata } = userSnapshot.data();
+					const { birthday_date, created_at, updated_at, ...uinfo } = info;
 					setUserData({
-						...data,
+						...udata,
 						info: {
-							created_at: (<Timestamp>created_at)?.toDate(),
-							birthday_date: (<Timestamp>birthday_date)?.toDate(),
-							...rest,
+							...uinfo,
+							created_at: created_at.toDate(),
+							birthday_date: birthday_date?.toDate() ?? null,
+							updated_at: updated_at?.toDate() ?? null,
 						},
 					});
 				}
@@ -39,15 +59,32 @@ export class UserService {
 		}
 	}
 
-	static async getUserdataById(uid: UserInfo['uid']) {
+	static async getUserInfoById(uid: DBUserInfo['uid']) {
 		try {
-			const udata = await getDoc(UserService.getUserRef(uid));
-			if (udata && udata.exists()) {
-				return udata.data() as UserData;
+			const userSnapshot = await getDoc(UserService.getUserDocRef(uid));
+			if (userSnapshot && userSnapshot.exists()) {
+				const { created_at, updated_at, birthday_date, ...info } = userSnapshot.data().info;
+				return {
+					...info,
+					...timestampToDate({ created_at, updated_at, birthday_date }),
+				} as UserInfo;
 			}
 		} catch (e) {
 			return errorHandler(e);
 		}
+	}
+
+	static async getUsersbyIds(...userIds: UserInfo['uid'][]) {
+		const usersData: PublicUserInfo[] = [];
+		const q = query(this.usersCol, where(documentId(), 'in', userIds));
+		const usersSnapshot = await getDocs(q);
+
+		usersSnapshot.forEach(doc => {
+			const { uid, displayName, photoURL } = doc.data().info;
+			usersData.push({ uid, displayName, photoURL });
+		});
+
+		return usersData;
 	}
 
 	static async updateUserAvatar(avatar: File | File[]) {
@@ -61,7 +98,7 @@ export class UserService {
 					contentType: avatar.type,
 				});
 				const avatarURL = await getDownloadURL(avatarRef);
-				await updateDoc(UserService.getUserRef(await AuthService.getUid()), {
+				await updateDoc(UserService.getUserDocRef(await AuthService.getUid()), {
 					'info.photoURL': avatarURL,
 				});
 			}
@@ -89,13 +126,13 @@ export class UserService {
 					[`info.${key}`]: newData[key],
 				}))
 			);
-			await updateDoc(UserService.getUserRef(await AuthService.getUid()), infoField);
+			await updateDoc(UserService.getUserDocRef(await AuthService.getUid()), infoField);
 		} catch (e) {
 			return errorHandler(e);
 		}
 	}
 
-	static async addToFriend(userId: UserInfo['uid']) {
+	static async addToFriend(userId: DBUserInfo['uid']) {
 		try {
 			const addToFriendById = httpsCallable<{ userId: string }, { success: true }>(functions, 'addToFriendById');
 

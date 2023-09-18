@@ -1,5 +1,5 @@
 import { storage } from '@/firebase';
-import { Message } from '@/stores/messages';
+import { MessageAttachment } from '@/services/message';
 import { ref as storageRef, getBlob } from 'firebase/storage';
 
 export const setDownloadLink = (filename: string, url: string) => {
@@ -9,7 +9,7 @@ export const setDownloadLink = (filename: string, url: string) => {
 	link.click();
 };
 
-export const downloadFile = async (file: Message['content']['attachments'][number]) => {
+export const downloadFile = async (file: MessageAttachment) => {
 	let url = '';
 	if (!file.raw.previewURL) {
 		const blobFile = await getBlob(storageRef(storage, file.raw.fullpath));

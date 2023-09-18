@@ -29,10 +29,10 @@ import { VFadeTransition } from 'vuetify/components';
 import ImageFrame from '@/components/chat/messages/media/ImageFrame.vue';
 import { mdiEyeOutline } from '@mdi/js';
 import { useDisplay } from 'vuetify';
-import { Message } from '@/stores/messages';
+import { MessageAttachment } from '@/services/message';
 
 const props = defineProps<{
-	file: Message['content']['attachments'][number];
+	file: MessageAttachment;
 	isHovering: Boolean;
 	hoverProps: Record<string, unknown>;
 }>();

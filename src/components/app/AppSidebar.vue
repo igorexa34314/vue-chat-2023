@@ -2,7 +2,7 @@
 	<v-navigation-drawer v-model="drawer" width="320" location="left" class="app-sidebar pl-3 pr-0">
 		<v-card
 			v-if="userInfo && Object.keys(userInfo).length"
-			class="user-info py-1 mt-3 bg-blue-grey-darken-4"
+			class="user-info py-1 mt-3 bg-blue-grey-darken-4 pr-2"
 			density="compact"
 			variant="text"
 			@click="push('/profile')"
@@ -19,16 +19,7 @@
 
 		<div v-if="isLoading"><page-loader /></div>
 
-		<v-list v-else-if="isReady && getUserChatsInfo.length" density="comfortable" class="chat-list mt-3">
-			<v-list-item
-				v-for="chat of getUserChatsInfo"
-				:key="chat.id"
-				:title="setChatName(chat)"
-				:prepend-avatar="setChatAvatar(chat)"
-				@click="push({ name: '/chat/[chatId]', params: { chatId: chat.id } })"
-				class="py-3 mb-3"
-				draggable="false" />
-		</v-list>
+		<ChatList v-else-if="isReady && getUserChatsInfo.length" :chats="getUserChatsInfo" />
 
 		<div v-else class="mt-4 pa-3">
 			<p class="text-h6 text-center">No chats</p>
@@ -37,16 +28,16 @@
 </template>
 
 <script setup lang="ts">
+import ChatList from '@/components/chat/ChatList.vue';
 import { VSkeletonLoader } from 'vuetify/labs/VSkeletonLoader';
 import { VNavigationDrawer } from 'vuetify/components';
 import messages from '@/utils/messages.json';
 import { watch } from 'vue';
 import { useAsyncState, useVModel } from '@vueuse/core';
-import { ChatService, ChatInfo } from '@/services/chat';
+import { ChatService } from '@/services/chat';
 import { storeToRefs } from 'pinia';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { useUserdataStore } from '@/stores/userdata';
-import { setChatName, setChatAvatar } from '@/utils/chat';
 import { defaultAvatar } from '@/global-vars';
 import { useRouter } from 'vue-router/auto';
 
@@ -74,7 +65,7 @@ const {
 	isLoading,
 	isReady,
 	execute: refreshChats,
-} = useAsyncState(() => Promise.all(userChats.value.map(ChatService.getChatInfoById)) as Promise<ChatInfo[]>, [], {
+} = useAsyncState(() => ChatService.getUserChatsInfo(...userChats.value), [], {
 	immediate: false,
 	onError: e => {
 		console.error(e);
@@ -94,8 +85,7 @@ watch(
 </script>
 
 <style lang="scss" scoped>
-.user-info,
-.chat-list {
+.user-info {
 	:deep(img) {
 		user-select: text;
 		pointer-events: text;

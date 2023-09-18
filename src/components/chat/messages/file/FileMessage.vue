@@ -31,21 +31,20 @@ import FilePreview from '@/components/chat/messages/file/FilePreview.vue';
 import { ref } from 'vue';
 import { formatFileSize } from '@/utils/filters/messages';
 import { downloadFile as downloadFileProcess } from '@/utils/message/fileActions';
-import { Message } from '@/stores/messages';
-import { ImageWithPreviewURL } from '@/components/chat/messages/media/ImageFrame.vue';
+import { MessageAttachment, MessageContent } from '@/services/message';
 
 const props = defineProps<{
-	content: Message['content'];
+	content: MessageContent<'file'>;
 }>();
 
 const emit = defineEmits<{
-	openInOverlay: [imgId: ImageWithPreviewURL['id']];
-	// mediaLoaded: [media: { id: ImageWithPreviewURL['id']; previewURL: ImageWithPreviewURL['raw']['previewURL'] }]
+	openInOverlay: [imgId: MessageAttachment<'media'>['id']];
+	// mediaLoaded: [media: { id: MessageAttachment<'media'>['id']; previewURL: MessageAttachment<'media'>['raw']['previewURL'] }]
 }>();
 
 const isLoading = ref(false);
 
-const downloadFile = async (file: Message['content']['attachments'][number]) => {
+const downloadFile = async (file: MessageAttachment) => {
 	if (!isLoading.value) {
 		try {
 			isLoading.value = true;

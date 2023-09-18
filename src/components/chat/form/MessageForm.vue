@@ -3,7 +3,6 @@
 		<div class="message-textarea flex-fill">
 			<MessageReply
 				v-model="showReply"
-				:m-type="msgToEditState.type"
 				:content="msgToEditState.content"
 				class="reply-wrapper"
 				@go-to-message="emit('scrollToMessage', msgToEditState.id)" />
@@ -61,21 +60,20 @@ import { VTextarea } from 'vuetify/components';
 import { useDisplay } from 'vuetify';
 import MessageReply from './MessageReply.vue';
 import AttachMenu from '@/components/chat/attach/AttachMenu.vue';
-import AttachDialog, { AttachDialogProps, AttachedContent } from '@/components/chat/attach/AttachDialog.vue';
+import AttachDialog from '@/components/chat/attach/AttachDialog.vue';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { ref, computed, watchEffect } from 'vue';
 import { v4 as uuidv4 } from 'uuid';
-import { AttachFormContent } from '@/services/message';
-import { Message } from '@/stores/messages';
-import { MessageContent } from '@/types/db/MessagesTable';
+import { Message, MessageContent, FormAttachment, CreateMsgForm } from '@/services/message';
+import { ContentType, AttachmentType } from '@/types/db/MessagesTable';
 
-export type EditMessageData = Pick<Message, 'id' | 'type' | Partial<'content'>>;
-interface MessageForm extends Omit<MessageContent, 'attachments'> {
-	attachedFiles: AttachDialogProps['fileList'];
+export type EditMessageData = { id: Message['id']; content: MessageContent };
+interface IMessageForm extends Omit<MessageContent, 'type' | 'attachments'> {
+	attachedFiles: FormAttachment<'file'>[];
 }
 
 const emit = defineEmits<{
-	createMessage: [msgType: Message['type'], msgContent: Partial<AttachFormContent>];
+	createMessage: [msgContent: CreateMsgForm];
 	updateMessage: [mData: EditMessageData];
 	scrollToMessage: [mId: Message['id']];
 }>();
@@ -87,14 +85,14 @@ defineOptions({
 const { showMessage } = useSnackbarStore();
 const { smAndUp } = useDisplay();
 
-const messageState = ref<MessageForm>({
+const messageState = ref<IMessageForm>({
 	text: '',
 	attachedFiles: [],
 });
 
 const attachDialogState = ref({
 	show: false,
-	contentType: 'file' as Exclude<Message['type'], 'text'>,
+	contentType: 'file' as AttachmentType,
 });
 
 const textareaValue = computed({
@@ -109,18 +107,18 @@ const submitHandler = () => {
 		createMessage('text');
 	}
 };
-const createMessage = (type: Message['type'] = 'text', attachData?: AttachedContent) => {
+const createMessage = <T extends ContentType>(
+	type: T,
+	attachData?: T extends AttachmentType ? FormAttachment<T>[] : undefined
+) => {
 	if (messageState.value.text || attachData) {
-		emit('createMessage', type, {
-			text: messageState.value.text,
-			attachments: attachData,
-		} as AttachFormContent);
+		emit('createMessage', { type, text: messageState.value.text, attachments: attachData ?? [] });
 		messageState.value = { text: '', attachedFiles: [] };
 		msgToEditState.value.isEditing = false;
 	}
 };
 
-const attachFiles = async (type: Exclude<Message['type'], 'text'>, fileList: FileList) => {
+const attachFiles = async (type: AttachmentType, fileList: FileList) => {
 	if (!fileList?.length) return;
 	if (fileList.length > 10 || messageState.value.attachedFiles.length > 10) {
 		showMessage('You can send only 10 files or less in one message ', 'red-darken-3', 2500);
@@ -133,8 +131,11 @@ const attachFiles = async (type: Exclude<Message['type'], 'text'>, fileList: Fil
 	if (type === 'media' && files.length) {
 		files = files.filter(f => f.type.startsWith('image/') || f.type.startsWith('video/'));
 		attachDialogState.value.contentType = 'media';
-	} else if (type === 'file') attachDialogState.value.contentType = 'file';
-	messageState.value.attachedFiles = files.map(f => ({ id: uuidv4(), fileData: f }));
+	} else attachDialogState.value.contentType = type;
+	messageState.value.attachedFiles = [
+		...messageState.value.attachedFiles,
+		...files.map(f => ({ id: uuidv4(), fileData: f })),
+	];
 	attachDialogState.value.show = true;
 };
 const changeContentType = () => {
@@ -158,11 +159,10 @@ const onInputPasted = (e: ClipboardEvent) => {
 		}
 	}
 };
-const msgToEditState = ref({
+const msgToEditState = ref<{ id: Message['id']; content: MessageContent | null; isEditing: boolean }>({
 	isEditing: false,
-	id: '' as Message['id'],
-	type: '' as Message['type'],
-	content: null as Message['content'] | null,
+	id: '',
+	content: null,
 });
 watchEffect(() => {
 	if (!msgToEditState.value.isEditing) {
@@ -171,14 +171,14 @@ watchEffect(() => {
 	}
 });
 
-const editMessage = ({ id, type, content }: EditMessageData) => {
-	messageState.value.text = content.text;
-	msgToEditState.value = { id, type, content, isEditing: true };
+const editMessage = ({ id, content }: EditMessageData) => {
+	messageState.value.text = content?.text || messageState.value.text;
+	msgToEditState.value = { id, content, isEditing: true };
 };
 const updateMessage = () => {
-	if (messageState.value.text && msgToEditState.value.id) {
-		const { id, type } = msgToEditState.value;
-		emit('updateMessage', { id, type, content: { text: messageState.value.text } } as EditMessageData);
+	if (messageState.value.text && msgToEditState.value.id && msgToEditState.value.content) {
+		const { id, content } = msgToEditState.value;
+		emit('updateMessage', { id, content });
 		msgToEditState.value.isEditing = false;
 	}
 };

@@ -18,20 +18,20 @@
 			class="message__card"
 			:class="self ? 'self bg-light-blue-darken-3' : ''"
 			variant="tonal">
-			<v-card-title v-if="type === 'text'" class="message__head d-flex flex-row align-center">
+			<v-card-title v-if="content.type === 'text'" class="message__head d-flex flex-row align-center">
 				<small class="sender__name" @click="openUserProfile"> {{ sender.displayName }}</small>
 			</v-card-title>
 
 			<v-card-text
 				class="message__content pb-1 pr-3"
-				:class="{ 'pl-2 pt-2': type === 'file', 'pl-3 pt-3': type === 'media' }">
+				:class="{ 'pl-2 pt-2': content.type === 'file', 'pl-3 pt-3': content.type === 'media' }">
 				<component
 					:is="messageComponent"
 					v-bind="{ content }"
-					:class="{ 'pr-2 pr-sm-3': type === 'file' }"
-					@openInOverlay="(imgId: ImageWithPreviewURL['id']) => emit('openInOverlay', imgId)" />
+					:class="{ 'pr-2 pr-sm-3': content.type === 'file' }"
+					@openInOverlay="(imgId: MediaAttachment['id']) => emit('openInOverlay', imgId)" />
 
-				<small :class="{ 'mt-2': type !== 'file' }" class="message__time d-block text-end mt-1 mt-sm-2">{{
+				<small :class="{ 'mt-2': content.type !== 'file' }" class="message__time d-block text-end mt-1 mt-sm-2">{{
 					d(created_at, { key: messagesDateFormat(created_at) })
 				}}</small>
 			</v-card-text>
@@ -50,12 +50,10 @@ import { computed } from 'vue';
 import { useRouter } from 'vue-router/auto';
 import { messagesDateFormat } from '@/utils/filters/messages';
 import { defaultAvatar } from '@/global-vars';
-import { ImageWithPreviewURL } from '@/components/chat/messages/media/ImageFrame.vue';
-import { Message } from '@/stores/messages';
+import { Message, MediaAttachment } from '@/services/message';
 import { useI18n } from 'vue-i18n';
 
 interface MessageItemProps {
-	type: Message['type'];
 	content: Message['content'];
 	sender: Message['sender'];
 	created_at: Message['created_at'];
@@ -67,18 +65,19 @@ const props = withDefaults(defineProps<MessageItemProps>(), {
 	active: false,
 });
 const emit = defineEmits<{
-	openInOverlay: [imgId: ImageWithPreviewURL['id']];
+	openInOverlay: [imgId: MediaAttachment['id']];
 	contextmenu: [event: MouseEvent];
 }>();
 
 const { d } = useI18n();
 const { xs, smAndUp } = useDisplay();
 const { push } = useRouter();
+
 const messageComponent = computed(() =>
-	props.type === 'media' ? MediaMessage : props.type === 'file' ? FileMessage : TextMessage
+	props.content.type === 'media' ? MediaMessage : props.content.type === 'file' ? FileMessage : TextMessage
 );
 const openUserProfile = () => {
-	push({ name: '/user/[userId]', params: { userId: props.sender.id } });
+	push({ name: '/user/[userId]', params: { userId: props.sender.uid } });
 };
 </script>
 

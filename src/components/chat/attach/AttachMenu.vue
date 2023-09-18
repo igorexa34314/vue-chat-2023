@@ -10,7 +10,7 @@
 				style="cursor: pointer"
 				class="add-attachment pa-0">
 				<label :for="item.attachmentType" style="cursor: pointer" class="d-block py-1 px-4">
-					<v-icon :icon="item.icon" class="mr-4"></v-icon>
+					<v-icon :icon="item.icon" class="mr-4" />
 					<span>{{ item.title }}</span>
 					<input
 						:id="item.attachmentType"
@@ -28,18 +28,11 @@
 <script setup lang="ts">
 import { VMenu } from 'vuetify/components';
 import { mdiImage, mdiFileDocumentOutline } from '@mdi/js';
-import { Message } from '@/types/db/MessagesTable';
+import { AttachmentType } from '@/types/db/MessagesTable';
 import { useDisplay } from 'vuetify';
 
-interface AttachMenu {
-	title: string;
-	icon: string;
-	attachmentType: Exclude<Message['type'], 'text'>;
-	accept?: string;
-}
-
 const emit = defineEmits<{
-	'attach-file': [type: Exclude<Message['type'], 'text'>, files: FileList];
+	'attach-file': [type: AttachmentType, files: FileList];
 }>();
 
 const slots = defineSlots<{
@@ -47,6 +40,13 @@ const slots = defineSlots<{
 }>();
 
 const { smAndUp } = useDisplay();
+
+interface AttachMenu {
+	title: string;
+	icon: string;
+	attachmentType: AttachmentType;
+	accept?: string;
+}
 
 const attachMenuItems: AttachMenu[] = [
 	{ title: 'Media', icon: mdiImage, attachmentType: 'media', accept: 'image/*, video/*' },

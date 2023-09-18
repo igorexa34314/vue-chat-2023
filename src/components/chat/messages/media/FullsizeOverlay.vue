@@ -20,7 +20,7 @@
 					v-if="smAndUp && overlayItem"
 					class="carousel__control d-flex align-center carousel__control-prev"
 					@click="props.onClick">
-					<v-icon :icon="mdiArrowLeft" size="55px" class="carousel-prev-btn" />
+					<v-icon :icon="mdiChevronLeft" size="60px" color="#ffffffbf" class="carousel-prev-btn" />
 				</div>
 			</template>
 			<template #next="{ props }">
@@ -28,7 +28,7 @@
 					v-if="smAndUp && overlayItem < content.length - 1"
 					class="carousel__control d-flex align-center carousel__control-next"
 					@click="props.onClick">
-					<v-icon :icon="mdiArrowRight" size="55px" class="carousel-next-btn" />
+					<v-icon :icon="mdiChevronRight" size="60px" class="carousel-next-btn" />
 				</div>
 			</template>
 
@@ -77,8 +77,8 @@
 <script setup lang="ts">
 import { VOverlay, VCarousel, VCarouselItem } from 'vuetify/components';
 import {
-	mdiArrowLeft,
-	mdiArrowRight,
+	mdiChevronLeft,
+	mdiChevronRight,
 	mdiMagnifyPlusOutline,
 	mdiMagnifyMinusOutline,
 	mdiDownload,
@@ -87,12 +87,12 @@ import {
 import ImageLoader from '@/components/chat/ImageLoader.vue';
 import { ref } from 'vue';
 import { useVModel } from '@vueuse/core';
-import { ImageWithPreviewURL } from '@/components/chat/messages/media/ImageFrame.vue';
+import { MediaAttachment } from '@/services/message';
 import { useDisplay } from 'vuetify';
 
 interface OverlayProps {
 	modelValue?: boolean;
-	content: ImageWithPreviewURL[];
+	content: MediaAttachment[];
 	currentItem?: number;
 	alt?: string;
 }

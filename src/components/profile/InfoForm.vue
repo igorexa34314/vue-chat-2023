@@ -60,11 +60,11 @@ import BirthdayPicker from '@/components/UI/BirthdayPicker.vue';
 import validations from '@/utils/validations';
 import { ref, toRefs } from 'vue';
 import { defaultAvatar } from '@/global-vars';
-import { UserInfo } from '@/types/db/UserdataTable';
+import { UserInfo } from '@/services/user';
 import { VForm, VTextField, VRadioGroup, VRadio, VFileInput } from 'vuetify/components';
 import { useDisplay } from 'vuetify';
 
-export interface ProfileForm extends Pick<UserInfo, 'displayName' | 'gender' | 'birthday_date'> {
+export interface IProfileForm extends Pick<UserInfo, 'displayName' | 'gender' | 'birthday_date'> {
 	birthday_date: Date;
 	avatar: File[];
 }
@@ -74,16 +74,16 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-	submit: [data: ProfileForm];
+	submit: [data: IProfileForm];
 }>();
 
 const { uinfo: info } = toRefs(props);
 const { xs } = useDisplay();
 const formEl = ref<VForm>();
-const formState = ref<ProfileForm>({
+const formState = ref<IProfileForm>({
 	displayName: info.value.displayName || '',
 	gender: info.value.gender || 'unknown',
-	birthday_date: (info.value.birthday_date as Date | undefined) || new Date(),
+	birthday_date: info.value.birthday_date || new Date(),
 	avatar: [],
 });
 

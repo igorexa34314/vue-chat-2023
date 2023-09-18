@@ -41,17 +41,18 @@ import ImageLoader from '@/components/chat/ImageLoader.vue';
 import { ref } from 'vue';
 import { formatFileSize, getFileExt } from '@/utils/filters/messages';
 import { VImg } from 'vuetify/components';
+import { FileAttachment } from '@/services/message';
 import { AttachedContent } from '@/components/chat/attach/AttachDialog.vue';
 
 const props = withDefaults(
 	defineProps<{
-		previewItem: AttachedContent[number];
+		previewItem: AttachedContent;
 	}>(),
 	{}
 );
 
 const emit = defineEmits<{
-	'delete-item': [itemId: string];
+	'delete-item': [itemId: FileAttachment['id']];
 }>();
 
 const imgEl = ref<VImg>();

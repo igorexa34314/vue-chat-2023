@@ -22,12 +22,11 @@
 							<MessageItem
 								v-for="m in messages"
 								:key="m.id"
-								:self="uid === m.sender.id"
-								:type="m.type"
+								:self="uid === m.sender.uid"
 								:content="m.content"
 								:sender="m.sender"
 								:created_at="m.created_at"
-								@contextmenu="(e: MouseEvent) => openCtxMenu(e, { mId: m.id, mType: m.type })"
+								@contextmenu="(e: MouseEvent) => openCtxMenu(e, { mId: m.id, mType: m.content.type })"
 								:id="`message-${m.id}`"
 								:data-message-id="m.id"
 								class="message-item px-2 px-sm-4 py-2"
@@ -101,10 +100,10 @@ import sbMessages from '@/utils/messages.json';
 import MessageItem from '@/components/chat/messages/MessageItem.vue';
 import MessageForm, { EditMessageData } from '@/components/chat/form/MessageForm.vue';
 import ContextMenu from '@/components/chat/ContextMenu.vue';
-import { MessagesService, AttachFormContent } from '@/services/message';
+import { MessagesService, CreateMsgForm, Message, MediaAttachment, MessageContent } from '@/services/message';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { useUserdataStore } from '@/stores/userdata';
-import { useMessagesStore, Message } from '@/stores/messages';
+import { useMessagesStore } from '@/stores/messages';
 import { AuthService } from '@/services/auth';
 import { ChatService, ChatInfo } from '@/services/chat';
 import { ref, computed, onUnmounted, nextTick, watchEffect, toRef } from 'vue';
@@ -118,10 +117,10 @@ import { downloadFile as downloadFileProcess } from '@/utils/message/fileActions
 import { copyToClipboard as copyImageToClipboard } from '@/utils/message/imageActions';
 import { Unsubscribe } from 'firebase/firestore';
 import { VDialog, VContainer, VFadeTransition } from 'vuetify/components';
-import { ImageWithPreviewURL } from '@/components/chat/messages/media/ImageFrame.vue';
 import { VInfiniteScroll } from 'vuetify/labs/VInfiniteScroll';
 import { gsap, ScrollToPlugin } from 'gsap/all';
 import { useDisplay } from 'vuetify';
+import { ContentType } from '@/types/db/MessagesTable';
 
 gsap.registerPlugin(ScrollToPlugin);
 
@@ -132,11 +131,11 @@ const messagesStore = useMessagesStore();
 const { xs } = useDisplay();
 const { $reset: resetMsgStore } = messagesStore;
 
-const chatInfo = ref<ChatInfo>();
+const chatInfo = ref<ChatInfo | null>(null);
 const srollEl = ref<VInfiniteScroll>();
 const loading = ref(false);
 const messages = computed(() => messagesStore.messages);
-let unsub: Unsubscribe | undefined;
+let unsub: Unsubscribe | null = null;
 const chatId = toRef(() => route.params.chatId);
 const uid = await AuthService.getUid();
 
@@ -197,19 +196,19 @@ watchEffect(async onCleanup => {
 });
 
 const allowTransition = ref(false);
-const createMessage = async (type: Message['type'] = 'text', content: Partial<AttachFormContent>) => {
+const createMessage = async <T extends ContentType>(content: CreateMsgForm<T>) => {
 	try {
 		allowTransition.value = true;
-		await MessagesService.createMessage(chatId.value, type, content);
+		await MessagesService.createMessage(chatId.value, content);
 	} catch (e) {
 		showMessage(sbMessages[e as keyof typeof sbMessages] || (e as string), 'red-darken-3', 2000);
 	} finally {
 		nextTick().then(() => (allowTransition.value = false));
 	}
 };
-const updateMessage = async ({ id, type, content }: EditMessageData) => {
+const updateMessage = async ({ id, content }: EditMessageData) => {
 	try {
-		await MessagesService.updateMessage(chatId.value, { id, type, content });
+		await MessagesService.updateMessage(chatId.value, { id, content });
 	} catch (e) {
 		showMessage(sbMessages[e as keyof typeof sbMessages] || (e as string), 'red-darken-3', 2000);
 	}
@@ -218,11 +217,11 @@ const updateMessage = async ({ id, type, content }: EditMessageData) => {
 // Context menu on message right click
 const msgCtxMenu = ref({
 	show: false,
-	contentType: 'text' as Message['type'],
+	contentType: 'text' as ContentType,
 	position: { x: 0, y: 0 },
 	activeMessage: '' as Message['id'],
 });
-const openCtxMenu = (e: MouseEvent, { mId, mType }: { mId: Message['id']; mType?: Message['type'] }) => {
+const openCtxMenu = (e: MouseEvent, { mId, mType }: { mId: Message['id']; mType?: MessageContent['type'] }) => {
 	const highlighter = gsap.utils.selector(`#message-${mId}`)('span.highlighter');
 	gsap.set(highlighter, {
 		autoAlpha: 0.2,
@@ -247,14 +246,16 @@ onUnmounted(() => {
 	unsub?.();
 	resetMsgStore();
 });
-const getAllMedia = computed<ImageWithPreviewURL[]>(() =>
-	messages.value.filter(m => m.type !== 'text').flatMap(m => m.content.attachments.filter(f => f.raw?.previewURL))
+const getAllMedia = computed<MediaAttachment[]>(() =>
+	messages.value
+		.filter(m => m.content.type !== 'text')
+		.flatMap(m => (m.content as MessageContent<'media'>).attachments.filter(f => f.raw?.previewURL))
 );
 const overlayState = ref({
 	show: false,
 	currentImage: 0,
 });
-const openInOverlay = (imgId: ImageWithPreviewURL['id']) => {
+const openInOverlay = (imgId: MediaAttachment['id']) => {
 	overlayState.value = { show: true, currentImage: getAllMedia.value?.findIndex(img => img.id == imgId) };
 };
 const overlayClosed = () => {};
@@ -271,8 +272,9 @@ const copySelectedText = async () => {
 const copyTextMessage = async () => {
 	try {
 		const msgText =
-			messages.value.find(m => m.type === 'text' && m.id === msgCtxMenu.value.activeMessage)?.content.text.trim() ||
-			'';
+			messages.value
+				.find(m => m.content.type === 'text' && m.id === msgCtxMenu.value.activeMessage)
+				?.content.text.trim() || '';
 		await navigator.clipboard.writeText(msgText);
 		showMessage('Copied to clipboard', 'deep-purple-accent-3', 2000);
 	} catch (e) {
@@ -282,8 +284,10 @@ const copyTextMessage = async () => {
 };
 const copyImage = async () => {
 	try {
-		const imageToCopy =
-			messages.value.find(m => m.id === msgCtxMenu.value.activeMessage)?.content.attachments[0].raw.previewURL || '';
+		const msgContent = messages.value.find(m => m.id === msgCtxMenu.value.activeMessage)?.content as
+			| MessageContent<'media'>
+			| undefined;
+		const imageToCopy = msgContent?.attachments[0].raw.previewURL || '';
 		await copyImageToClipboard(imageToCopy);
 		showMessage('Copied to clipboard', 'deep-purple-accent-3', 2000);
 	} catch (e) {
@@ -293,7 +297,10 @@ const copyImage = async () => {
 };
 const downloadFile = async () => {
 	try {
-		const fileToDownLoad = messages.value.find(m => m.id === msgCtxMenu.value.activeMessage)?.content.attachments[0];
+		const msgContent = messages.value.find(m => m.id === msgCtxMenu.value.activeMessage)?.content as
+			| MessageContent<'file'>
+			| undefined;
+		const fileToDownLoad = msgContent?.attachments[0];
 		if (fileToDownLoad) {
 			await downloadFileProcess(fileToDownLoad);
 		}

@@ -14,7 +14,7 @@ export const setChatName = computed(() => (chat: ChatInfo) => {
 export const setChatAvatar = computed(() => (chat: ChatInfo) => {
 	const userdataStore = useUserdataStore();
 	return chat.type === 'private'
-		? (chat.members.find(m => m.uid !== userdataStore.userdata?.info.uid)?.photoURL as string)
+		? chat.members.find(m => m.uid !== userdataStore.userdata?.info.uid)?.photoURL || defaultAvatar
 		: chat.type === 'saved'
 		? savedMessages
 		: defaultAvatar;

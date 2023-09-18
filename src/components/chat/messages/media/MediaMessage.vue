@@ -28,17 +28,16 @@ import TextMessage from '@/components/chat/messages/text/TextMessage.vue';
 import ImageFrame from '@/components/chat/messages/media/ImageFrame.vue';
 import { computed } from 'vue';
 import { calcImageCols as calcCols } from '@/utils/images';
-import { Message } from '@/stores/messages';
-import { ImageWithPreviewURL } from '@/components/chat/messages/media/ImageFrame.vue';
+import { MessageContent, MediaAttachment } from '@/services/message';
 import { maxMessageMedia, maxMessageMediaSm } from '@/global-vars';
 import { useDisplay } from 'vuetify';
 
 const props = defineProps<{
-	content: Message['content'];
+	content: MessageContent<'media'>;
 }>();
 
 const emit = defineEmits<{
-	openInOverlay: [imgId: ImageWithPreviewURL['id']];
+	openInOverlay: [imgId: MediaAttachment['id']];
 	mediaLoaded: [];
 }>();
 
