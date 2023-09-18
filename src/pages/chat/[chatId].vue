@@ -1,16 +1,25 @@
 <template>
 	<v-container class="h-100 pa-0 d-flex flex-column" fluid>
-		<div v-if="userChats && userChats.length && !userChats.some(el => el === chatId)" class="text-h5 pa-5">
-			This chat doesnt exists
+		<!-- Chat not exists message -->
+		<div
+			v-if="userChats.length && !userChats.some(el => el === chatId)"
+			class="text-h5 pa-4 w-100 h-100 d-flex justify-center align-center">
+			<v-card min-height="200px" class="d-flex" variant="tonal" elevation="20px" style="opacity: 0.5">
+				<template #title>
+					<h3>This chat does not exists</h3>
+				</template>
+			</v-card>
 		</div>
+
+		<!-- Chat content -->
 		<div
 			v-else-if="userChats && userChats.length"
 			class="chat__field flex-fill overflow-hidden d-flex flex-column flex-grow-1">
 			<div class="chat__content w-100 flex-fill">
-				<div v-if="loading"><page-loader /></div>
+				<div v-if="isChatLoading || isMessagesLoading"><page-loader /></div>
 
 				<v-infinite-scroll
-					v-else-if="messages && messages.length"
+					v-else-if="messages.length"
 					:side="scrollSide || 'start'"
 					@load="onLoad"
 					:margin="50"
@@ -22,10 +31,11 @@
 							<MessageItem
 								v-for="m in messages"
 								:key="m.id"
-								:self="uid === m.sender.uid"
+								:self="getUserInfo?.uid === m.sender.uid"
 								:content="m.content"
 								:sender="m.sender"
 								:created_at="m.created_at"
+								:updated_at="m.updated_at"
 								@contextmenu="(e: MouseEvent) => openCtxMenu(e, { mId: m.id, mType: m.content.type })"
 								:id="`message-${m.id}`"
 								:data-message-id="m.id"
@@ -61,9 +71,17 @@
 					<template #error></template>
 				</v-infinite-scroll>
 
-				<!-- <div v-else class="text-h5 pa-4">This chat is empty right now
-				</div> -->
+				<!-- Chat empty message -->
+				<div v-else-if="!messages.length" class="text-h5 pa-4 w-100 h-100 d-flex justify-center align-center">
+					<v-card min-height="200px" class="d-flex" variant="tonal" elevation="20px" style="opacity: 0.5">
+						<template #title>
+							<h3>This chat is empty right now</h3>
+						</template>
+					</v-card>
+				</div>
 			</div>
+
+			<!-- Message form -->
 			<MessageForm
 				class="message-form flex-0-0 d-flex mx-auto w-100 pb-sm-4 pt-1 pt-sm-2 px-sm-6"
 				ref="msgForm"
@@ -72,6 +90,7 @@
 				@scroll-to-message="scrollToAndHighlightMessage"
 				:class="xs ? 'px-2 pb-2' : 'px-3 pb-3'" />
 
+			<!-- Go on bottom of the page button -->
 			<v-fade-transition>
 				<v-btn
 					v-if="srollEl && srollEl?.$el.scrollHeight > srollEl?.$el.clientHeight && !isScrollOnBottom"
@@ -82,6 +101,7 @@
 					@click="scrollBottom('smooth')" />
 			</v-fade-transition>
 		</div>
+
 		<!-- <v-dialog v-model="attachDialog" width="auto" ref="dropZone">
 			<v-card minHeight="80vh" minWidth="80vh" class="bg-blue-accent-1 d-flex flex-column align-center justify-center"
 				style="position: relative; left: 25%">
@@ -104,13 +124,12 @@ import { MessagesService, CreateMsgForm, Message, MediaAttachment, MessageConten
 import { useSnackbarStore } from '@/stores/snackbar';
 import { useUserdataStore } from '@/stores/userdata';
 import { useMessagesStore } from '@/stores/messages';
-import { AuthService } from '@/services/auth';
 import { ChatService, ChatInfo } from '@/services/chat';
-import { ref, computed, onUnmounted, nextTick, watchEffect, toRef } from 'vue';
+import { ref, computed, onUnmounted, nextTick, watch, toRef } from 'vue';
 import { useMeta } from 'vue-meta';
 import { useRoute } from 'vue-router/auto';
 import { useChatScroll } from '@/composables/useChatScroll';
-import { useDropZone } from '@vueuse/core';
+import { useAsyncState, useDropZone } from '@vueuse/core';
 import { storeToRefs } from 'pinia';
 import { setChatName } from '@/utils/chat';
 import { downloadFile as downloadFileProcess } from '@/utils/message/fileActions';
@@ -124,36 +143,35 @@ import { ContentType } from '@/types/db/MessagesTable';
 
 gsap.registerPlugin(ScrollToPlugin);
 
-const { getUserChats: userChats } = storeToRefs(useUserdataStore());
+const { xs } = useDisplay();
+const { getUserChats: userChats, getUserInfo } = storeToRefs(useUserdataStore());
 const route = useRoute('/chat/[chatId]');
 const { showMessage } = useSnackbarStore();
 const messagesStore = useMessagesStore();
-const { xs } = useDisplay();
+const isMessagesLoading = computed(() => messagesStore.isLoading);
 const { $reset: resetMsgStore } = messagesStore;
 
-const chatInfo = ref<ChatInfo | null>(null);
-const srollEl = ref<VInfiniteScroll>();
-const loading = ref(false);
-const messages = computed(() => messagesStore.messages);
-let unsub: Unsubscribe | null = null;
 const chatId = toRef(() => route.params.chatId);
-const uid = await AuthService.getUid();
 
-const attachDialog = ref(false);
-
-const { isScrollOnBottom, scrollBottom, onLoad, scrollSide } = useChatScroll(
-	toRef(() => srollEl.value?.$el),
-	async direction => {
-		await MessagesService.loadMoreMessages(chatId.value, direction);
+const {
+	state: chatState,
+	isLoading: isChatLoading,
+	execute: fetchChat,
+} = useAsyncState(
+	async (id?: ChatInfo['id']) => ({
+		chatInfo: await ChatService.getChatInfoById(id ?? chatId.value),
+		unsub: (await MessagesService.fetchMessages(id ?? chatId.value)) as Unsubscribe | null,
+	}),
+	{ chatInfo: null, unsub: null },
+	{
+		onError: () => {
+			showMessage('Error loading chat', 'red-darken-3');
+		},
 	}
 );
 
-// TODO
-// const dropZone = ref<VDialog | HTMLElement>();
-// Using chat scroll composable with infinite scroll
-// const { isOverDropZone } = useDropZone(dropZone.value as HTMLElement, (files) => {
-// 	console.log('droppped', files)
-// });
+const chatInfo = computed(() => chatState.value.chatInfo);
+const messages = computed(() => messagesStore.messages);
 
 //Dynamic page title
 useMeta(
@@ -163,37 +181,33 @@ useMeta(
 	})
 );
 
-const addAttachment = () => {
-	console.log('Drag enter');
-	attachDialog.value = true;
-};
-const removeAttachment = () => {
-	console.log('Drag leave');
-	attachDialog.value = false;
-};
-
 // Reset messages when switching chat
-watchEffect(async onCleanup => {
-	unsub?.();
+watch(chatId, async (newId, oldId, onCleanup) => {
+	chatState.value.unsub?.();
 	resetMsgStore();
-	if (chatId.value) {
-		try {
-			loading.value = true;
-			chatInfo.value = await ChatService.getChatInfoById(chatId.value);
-			unsub = await MessagesService.fetchMessages(chatId.value);
-		} catch (e) {
-			console.error(e);
-		} finally {
-			await nextTick();
-			loading.value = false;
-		}
+	if (newId) {
+		await fetchChat(0, newId);
 	}
 	// Unsubscribe from receiving messages realtime firebase
 	onCleanup(() => {
-		unsub?.();
+		chatState.value.unsub?.();
 		resetMsgStore();
 	});
 });
+
+// Unsubscribe from receiving messages realtime firebase
+onUnmounted(() => {
+	chatState.value.unsub?.();
+	resetMsgStore();
+});
+
+const srollEl = ref<VInfiniteScroll>();
+const { isScrollOnBottom, scrollBottom, onLoad, scrollSide } = useChatScroll(
+	toRef(() => srollEl.value?.$el),
+	async direction => {
+		await MessagesService.loadMoreMessages(chatId.value, direction);
+	}
+);
 
 const allowTransition = ref(false);
 const createMessage = async <T extends ContentType>(content: CreateMsgForm<T>) => {
@@ -241,11 +255,7 @@ const ctxMenuClosed = () => {
 		autoAlpha: 0,
 	});
 };
-// Unsubscribe from receiving messages realtime firebase
-onUnmounted(() => {
-	unsub?.();
-	resetMsgStore();
-});
+
 const getAllMedia = computed<MediaAttachment[]>(() =>
 	messages.value
 		.filter(m => m.content.type !== 'text')
@@ -367,6 +377,23 @@ const onLeave = (el: Element, done: () => void) => {
 		});
 	} else done();
 };
+
+// TODO
+// const attachDialog = ref(false);
+// const dropZone = ref<VDialog | HTMLElement>();
+// Using chat scroll composable with infinite scroll
+// const { isOverDropZone } = useDropZone(dropZone.value as HTMLElement, (files) => {
+// 	console.log('droppped', files)
+// });
+
+// const addAttachment = () => {
+// 	console.log('Drag enter');
+// 	attachDialog.value = true;
+// };
+// const removeAttachment = () => {
+// 	console.log('Drag leave');
+// 	attachDialog.value = false;
+// };
 </script>
 
 <style lang="scss" scoped>

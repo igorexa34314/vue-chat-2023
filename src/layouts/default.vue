@@ -15,7 +15,7 @@ import { VLayout, VMain } from 'vuetify/components';
 import AppNavbar from '@/components/app/AppNavbar.vue';
 import AppSidebar from '@/components/app/AppSidebar.vue';
 import messages from '@/utils/messages.json';
-import { ref, onUnmounted, provide } from 'vue';
+import { ref, onBeforeUnmount, provide } from 'vue';
 import { UserService } from '@/services/user';
 import { useAsyncState } from '@vueuse/core';
 import { globalLoadingKey } from '@/injection-keys';
@@ -45,7 +45,7 @@ const logout = async () => {
 };
 
 // Unsubscribe from receiving userdata realtime firebase and reseting store
-onUnmounted(() => {
+onBeforeUnmount(() => {
 	unsub.value?.();
 	$reset();
 });

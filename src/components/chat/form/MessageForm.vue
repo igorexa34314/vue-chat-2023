@@ -11,7 +11,7 @@
 				v-model.trim="textareaValue"
 				variant="solo"
 				hide-details
-				@keyup.enter="createMessage('text')"
+				@keyup.enter="submitHandler"
 				placeholder="Your message"
 				rows="1"
 				max-rows="10"
@@ -178,7 +178,7 @@ const editMessage = ({ id, content }: EditMessageData) => {
 const updateMessage = () => {
 	if (messageState.value.text && msgToEditState.value.id && msgToEditState.value.content) {
 		const { id, content } = msgToEditState.value;
-		emit('updateMessage', { id, content });
+		emit('updateMessage', { id, content: { ...content, text: messageState.value.text } });
 		msgToEditState.value.isEditing = false;
 	}
 };

@@ -32,7 +32,8 @@
 					@openInOverlay="(imgId: MediaAttachment['id']) => emit('openInOverlay', imgId)" />
 
 				<small :class="{ 'mt-2': content.type !== 'file' }" class="message__time d-block text-end mt-1 mt-sm-2">{{
-					d(created_at, { key: messagesDateFormat(created_at) })
+					d(created_at, { key: messagesDateFormat(created_at) }) +
+					(updated_at ? ` (upd. ${d(created_at, { key: messagesDateFormat(created_at) })})` : '')
 				}}</small>
 			</v-card-text>
 		</v-card>
@@ -57,6 +58,7 @@ interface MessageItemProps {
 	content: Message['content'];
 	sender: Message['sender'];
 	created_at: Message['created_at'];
+	updated_at: Message['updated_at'];
 	self?: boolean;
 }
 

@@ -34,7 +34,7 @@ import { encode } from 'base64-arraybuffer';
 import { storeToRefs } from 'pinia';
 import { useMessagesStore, Direction } from '@/stores/messages';
 import { useLoadingStore } from '@/stores/loading';
-import { DocumentReference, DocumentData, DocumentChange } from 'firebase/firestore';
+import { DocumentReference, DocumentData } from 'firebase/firestore';
 import {
 	AttachmentType,
 	ContentType,
@@ -88,15 +88,14 @@ export class MessagesService {
 	}
 
 	static async fetchMessages(chatId: ChatInfo['id'], lmt: number = 10) {
-		try {
-			const messagesStore = useMessagesStore();
-			const { addMessage, modifyMessage } = messagesStore;
-			const { lastVisible } = storeToRefs(messagesStore);
-			const messagesCol = this.getMessagesCol(chatId);
-			const q = query(messagesCol, orderBy('created_at', 'desc'), limit(lmt));
-			return onSnapshot(q, async messagesRef => {
-				// const messagesPromises = [] as Promise<{ message: Message; changeType: DocumentChange['type'] }>[];
-
+		const messagesStore = useMessagesStore();
+		const { addMessage, modifyMessage } = messagesStore;
+		const { lastVisible, isLoading } = storeToRefs(messagesStore);
+		const messagesCol = this.getMessagesCol(chatId);
+		const q = query(messagesCol, orderBy('created_at', 'desc'), limit(lmt));
+		isLoading.value = true;
+		return onSnapshot(q, async messagesRef => {
+			try {
 				const snapshots = await Promise.all(
 					messagesRef.docChanges().map(async change => {
 						const msgData = change.doc.data();
@@ -122,18 +121,22 @@ export class MessagesService {
 				if (messagesRef.size >= lmt) {
 					lastVisible.value.top = messagesRef.docs[messagesRef.docs.length - 1];
 				}
-			});
-		} catch (e) {
-			return errorHandler(e);
-		}
+			} catch (err) {
+				return errorHandler(err);
+			} finally {
+				if (isLoading.value) {
+					isLoading.value = false;
+				}
+			}
+		});
 	}
 
 	static async loadMoreMessages(chatId: ChatInfo['id'], direction: Direction, perPage: number = 10) {
-		try {
-			const messagesStore = useMessagesStore();
-			const { addMessage, deleteMessages } = messagesStore;
-			const { lastVisible } = storeToRefs(messagesStore);
-			if (lastVisible.value[direction]) {
+		const messagesStore = useMessagesStore();
+		const { addMessage, deleteMessages } = messagesStore;
+		const { lastVisible } = storeToRefs(messagesStore);
+		if (lastVisible.value[direction]) {
+			try {
 				const messagesCol = this.getMessagesCol(chatId);
 				const q = query(
 					messagesCol,
@@ -162,9 +165,9 @@ export class MessagesService {
 				});
 				lastVisible.value[direction] =
 					messagesRef.size >= perPage ? messagesRef.docs[messagesRef.docs.length - 1] : null;
+			} catch (e) {
+				return errorHandler(e);
 			}
-		} catch (e) {
-			return errorHandler(e);
 		}
 	}
 
@@ -187,6 +190,7 @@ export class MessagesService {
 				content: { text: content.text, type: content.type },
 				...timestampToDate({ created_at, updated_at }),
 			};
+
 			if (content.type !== 'text' && content.attachments?.length) {
 				const attachWithThumb = await Promise.all(
 					content.attachments.map(async file => {
@@ -265,6 +269,7 @@ export class MessagesService {
 			// Rewrite text content data to DB
 			await updateDoc(messageRef, {
 				'content.text': content.text,
+				updated_at: Timestamp.now(),
 			});
 		} catch (e) {
 			errorHandler(e);

@@ -8,6 +8,7 @@ export type LastVisibleFbRef = Record<Direction, QueryDocumentSnapshot<DocumentD
 
 export const useMessagesStore = defineStore('messages', () => {
 	const messages = ref<Message[]>([]);
+	const isLoading = ref(false);
 
 	const lastVisible = ref<LastVisibleFbRef>({
 		top: null,
@@ -39,6 +40,7 @@ export const useMessagesStore = defineStore('messages', () => {
 
 	return {
 		messages,
+		isLoading,
 		lastVisible,
 		addMessage,
 		$reset,

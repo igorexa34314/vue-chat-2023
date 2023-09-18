@@ -32,7 +32,7 @@
 							</div>
 						</div>
 					</v-col>
-					<v-col v-if="userId !== uid">
+					<v-col v-if="userId !== userInfo?.uid">
 						<v-tooltip location="bottom">
 							<template #activator="{ props }">
 								<v-btn v-bind="props" size="x-large" variant="text" :icon="mdiMessageText" @click="goToChat" />
@@ -66,7 +66,6 @@ import messages from '@/utils/messages.json';
 import { computed, toRef, watchEffect } from 'vue';
 import { UserService } from '@/services/user';
 import { useRoute, useRouter } from 'vue-router/auto';
-import { AuthService } from '@/services/auth';
 import { ChatService } from '@/services/chat';
 import { useMeta } from 'vue-meta';
 import { useSnackbarStore } from '@/stores/snackbar';
@@ -93,12 +92,11 @@ watchEffect(async () => {
 		await fetchUserInfo();
 	}
 });
-const uid = await AuthService.getUid();
 
 //Dynamic page title
 useMeta(
 	computed(() => {
-		if (userInfo.value && Object.keys(userInfo).length) {
+		if (userInfo.value && Object.keys(userInfo.value).length) {
 			return { title: `${userInfo.value?.displayName}` || 'User' };
 		}
 		return { title: 'User' };
@@ -109,9 +107,7 @@ const goToChat = async () => {
 	try {
 		if (userId.value) {
 			const chatId = await ChatService.joinPrivateChat(userId.value);
-			if (chatId) {
-				push({ name: '/chat/[chatId]', params: { chatId } });
-			}
+			push({ name: '/chat/[chatId]', params: { chatId } });
 		}
 	} catch (e) {
 		showMessage(messages[e as keyof typeof messages] || (e as string), 'red-darken-3', 2000);
