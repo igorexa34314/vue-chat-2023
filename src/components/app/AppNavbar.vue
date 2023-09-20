@@ -6,7 +6,10 @@
 			:density="!xs ? 'default' : 'comfortable'"
 			class="mr-3 mr-sm-0" />
 
-		<v-app-bar-title v-show="!xs || !searchState.enabled" class="app-title text-truncate">My chat</v-app-bar-title>
+		<v-app-bar-title v-show="!xs || !searchState.enabled" class="app-title text-truncate">
+			<slot v-if="title || slots.title" name="title">{{ title }}</slot>
+			<v-skeleton-loader v-else type="list-item" color="blue-grey-darken-4" max-width="280" />
+		</v-app-bar-title>
 
 		<v-spacer />
 
@@ -51,6 +54,7 @@
 </template>
 
 <script setup lang="ts">
+import { VSkeletonLoader } from 'vuetify/labs/VSkeletonLoader';
 import { VAppBar, VAppBarNavIcon, VAppBarTitle, VFadeTransition, VMenu } from 'vuetify/components';
 import SearchBox from '@/components/UI/SearchBox.vue';
 import { mdiMagnify, mdiFilter, mdiDotsVertical, mdiAccountCircleOutline, mdiLogout } from '@mdi/js';
@@ -60,9 +64,20 @@ import { useDisplay } from 'vuetify';
 
 const { push } = useRouter();
 
+const props = withDefaults(
+	defineProps<{
+		title?: string;
+	}>(),
+	{}
+);
+
 const emit = defineEmits<{
 	drawer: [];
 	logout: [];
+}>();
+
+const slots = defineSlots<{
+	title: any;
 }>();
 
 const { xs } = useDisplay();

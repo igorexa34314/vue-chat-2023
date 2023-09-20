@@ -16,6 +16,7 @@
 			v-for="item of contextMenuItems"
 			:key="item.value"
 			@click="emit(item.value as any)"
+			v-bind="{ disabled: item.disabled }"
 			style="cursor: pointer"
 			class="w-100">
 			<template #icon>
@@ -52,6 +53,7 @@ const props = withDefaults(
 	defineProps<{
 		modelValue?: boolean;
 		contentType?: MessageContent['type'];
+		self?: boolean;
 		maxWidth?: MenuOptions['maxWidth'];
 		minWidth?: MenuOptions['minWidth'];
 		position?: { x: MenuOptions['x']; y: MenuOptions['y'] };
@@ -62,6 +64,7 @@ const props = withDefaults(
 	{
 		modelValue: false,
 		contentType: 'text',
+		self: true,
 		maxWidth: 400,
 		minWidth: 200,
 		zIndex: 100,
@@ -101,9 +104,9 @@ const showMenu = useVModel(props, 'modelValue', emit);
 const contextMenuItems = computed(
 	() =>
 		[
-			{ title: 'Reply', value: 'reply', icon: mdiReplyOutline },
-			{ title: 'Edit', value: 'edit', icon: mdiPencil },
-			{ title: 'Pin', value: 'pin', icon: mdiPinOutline },
+			{ title: 'Reply', value: 'reply', icon: mdiReplyOutline, disabled: true },
+			props.self ? { title: 'Edit', value: 'edit', icon: mdiPencil } : false,
+			{ title: 'Pin', value: 'pin', icon: mdiPinOutline, disabled: true },
 			selectedText.value
 				? { title: 'Copy selected text', value: 'copySelected', icon: mdiContentCopy }
 				: props.contentType === 'text'
@@ -111,10 +114,17 @@ const contextMenuItems = computed(
 				: props.contentType === 'media'
 				? { title: 'Copy image', value: 'copyImage', icon: mdiImage }
 				: { title: 'Copy link', value: 'copyLink', icon: mdiLinkVariant },
-			props.contentType !== 'text' ? { title: 'Скачать', value: 'download', icon: mdiDownload } : false,
-			{ title: 'Forward', value: 'forward', icon: mdiShareOutline },
-			{ title: 'Select', value: 'select', icon: mdiCheckCircleOutline },
-			{ title: 'Delete', value: 'delete', icon: mdiDeleteOutline, colorClass: 'text-deep-orange-accent-3' },
-		].filter(Boolean) as { title: string; value: string; icon: string; colorClass?: string }[]
+			props.contentType !== 'text' ? { title: 'Download', value: 'download', icon: mdiDownload } : false,
+			{ title: 'Forward', value: 'forward', icon: mdiShareOutline, disabled: true },
+			{ title: 'Select', value: 'select', icon: mdiCheckCircleOutline, disabled: true },
+			props.self
+				? {
+						title: 'Delete',
+						value: 'delete',
+						icon: mdiDeleteOutline,
+						colorClass: 'text-deep-orange-accent-3',
+				  }
+				: false,
+		].filter(Boolean) as { title: string; value: string; icon: string; colorClass?: string; disabled?: boolean }[]
 );
 </script>

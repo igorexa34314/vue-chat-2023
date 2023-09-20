@@ -2,6 +2,7 @@
 	<v-card
 		v-if="image"
 		class="image__wrapper d-flex justify-center"
+		:data-attachment-id="image.id"
 		variant="text"
 		:width="width || calcImageSize.w"
 		@click="openImageFullsize"

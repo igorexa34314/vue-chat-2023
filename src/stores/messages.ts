@@ -19,7 +19,7 @@ export const useMessagesStore = defineStore('messages', () => {
 		return direction === 'end' ? messages.value.push(msg) : messages.value.unshift(msg);
 	};
 	const deleteMessageById = (messageId: Message['id']) => {
-		messages.value = messages.value.filter(m => m.id === messageId);
+		messages.value = messages.value.filter(m => m.id !== messageId);
 	};
 	const modifyMessage = (newMsg: Message) => {
 		messages.value = messages.value.map(m => (m.id === newMsg.id ? newMsg : m));

@@ -118,15 +118,19 @@ const createMessage = <T extends ContentType>(
 	}
 };
 
-const attachFiles = async (type: AttachmentType, fileList: FileList) => {
+const attachFiles = async (type: AttachmentType, fileList: FileList | File[]) => {
 	if (!fileList?.length) return;
 	if (fileList.length > 10 || messageState.value.attachedFiles.length > 10) {
 		showMessage('You can send only 10 files or less in one message ', 'red-darken-3', 2500);
 		return;
 	}
 	let files: File[] = [];
-	for (let i = 0; i < fileList.length; i++) {
-		files.push(fileList.item(i) as File);
+	if (fileList instanceof FileList) {
+		for (let i = 0; i < fileList.length; i++) {
+			files.push(fileList.item(i) as File);
+		}
+	} else {
+		files = fileList;
 	}
 	if (type === 'media' && files.length) {
 		files = files.filter(f => f.type.startsWith('image/') || f.type.startsWith('video/'));
@@ -191,6 +195,7 @@ const closeDialog = () => {
 };
 defineExpose({
 	editMessage,
+	attachFiles,
 });
 </script>
 

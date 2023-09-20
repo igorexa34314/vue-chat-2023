@@ -1,11 +1,11 @@
 <template>
 	<v-layout class="app">
-		<AppNavbar @drawer="drawer = !drawer" @logout="logout" />
+		<AppNavbar @drawer="drawer = !drawer" :title="navbarTitle" @logout="logout" />
 
 		<AppSidebar v-model="drawer" />
 
 		<v-main style="min-height: 100dvh; min-height: 100vh" class="overflow-hidden">
-			<RouterView />
+			<RouterView @updateTitle="(title: string) => (navbarTitle = title)" />
 		</v-main>
 	</v-layout>
 </template>
@@ -15,23 +15,32 @@ import { VLayout, VMain } from 'vuetify/components';
 import AppNavbar from '@/components/app/AppNavbar.vue';
 import AppSidebar from '@/components/app/AppSidebar.vue';
 import messages from '@/utils/messages.json';
-import { ref, onBeforeUnmount, provide } from 'vue';
+import { ref, onBeforeUnmount, provide, watchEffect } from 'vue';
 import { UserService } from '@/services/user';
 import { useAsyncState } from '@vueuse/core';
 import { globalLoadingKey } from '@/injection-keys';
 import { useUserdataStore } from '@/stores/userdata';
-import { useRouter, definePage } from 'vue-router/auto';
+import { useRoute, useRouter, definePage } from 'vue-router/auto';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { AuthService } from '@/services/auth';
 
 definePage({ meta: { auth: true, requiresAuth: true } });
 const drawer = ref(true);
+const navbarTitle = ref<string | undefined>();
 
 // Fetching all auth userdata
 const { push } = useRouter();
+const route = useRoute();
 const { showMessage } = useSnackbarStore();
-const { state: unsub, isLoading } = useAsyncState(UserService.fetchAuthUser, null, {});
 const { $reset } = useUserdataStore();
+
+watchEffect(() => {
+	if (route.name !== '/chat/[chatId]') {
+		navbarTitle.value = 'My chat';
+	}
+});
+
+const { state: unsub, isLoading } = useAsyncState(UserService.fetchAuthUser, null, {});
 
 provide(globalLoadingKey, isLoading);
 

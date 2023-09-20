@@ -89,7 +89,7 @@ export class MessagesService {
 
 	static async fetchMessages(chatId: ChatInfo['id'], lmt: number = 10) {
 		const messagesStore = useMessagesStore();
-		const { addMessage, modifyMessage } = messagesStore;
+		const { addMessage, modifyMessage, deleteMessageById } = messagesStore;
 		const { lastVisible, isLoading } = storeToRefs(messagesStore);
 		const messagesCol = this.getMessagesCol(chatId);
 		const q = query(messagesCol, orderBy('created_at', 'desc'), limit(lmt));
@@ -111,11 +111,15 @@ export class MessagesService {
 						};
 					})
 				);
-				snapshots.reverse().forEach(m => {
-					if (m && m.changeType === 'added') {
-						addMessage(m.message, 'end');
-					} else if (m && m.changeType === 'modified') {
-						modifyMessage(m.message);
+				snapshots.reverse().forEach(snap => {
+					console.log(snap.changeType);
+
+					if (snap.changeType === 'added') {
+						addMessage(snap.message, 'end');
+					} else if (snap.changeType === 'modified') {
+						modifyMessage(snap.message);
+					} else {
+						deleteMessageById(snap.message.id);
 					}
 				});
 				if (messagesRef.size >= lmt) {
@@ -416,5 +420,10 @@ export class MessagesService {
 		} catch (e) {
 			return errorHandler(e);
 		}
+	}
+
+	static async deleteMessageById(chatId: ChatInfo['id'], mId: Message['id']) {
+		const messageDocRef = doc(MessagesService.getMessagesCol(chatId), mId);
+		return deleteDoc(messageDocRef).catch(err => errorHandler(err));
 	}
 }

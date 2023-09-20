@@ -12,14 +12,14 @@
 			:title="sender.displayName" />
 
 		<v-card
-			min-width="120px"
-			:max-width="smAndUp ? '650px' : '480px'"
+			:min-width="smAndUp ? '120px' : '100px'"
+			:max-width="smAndUp ? '650px' : xs ? '80%' : '420px'"
 			density="compact"
 			class="message__card"
 			:class="self ? 'self bg-light-blue-darken-3' : ''"
 			variant="tonal">
 			<v-card-title v-if="content.type === 'text'" class="message__head d-flex flex-row align-center">
-				<small class="sender__name" @click="openUserProfile"> {{ sender.displayName }}</small>
+				<small class="sender__name text-truncate" @click="openUserProfile"> {{ sender.displayName }}</small>
 			</v-card-title>
 
 			<v-card-text
@@ -31,10 +31,14 @@
 					:class="{ 'pr-2 pr-sm-3': content.type === 'file' }"
 					@openInOverlay="(imgId: MediaAttachment['id']) => emit('openInOverlay', imgId)" />
 
-				<small :class="{ 'mt-2': content.type !== 'file' }" class="message__time d-block text-end mt-1 mt-sm-2">{{
-					d(created_at, { key: messagesDateFormat(created_at) }) +
-					(updated_at ? ` (upd. ${d(created_at, { key: messagesDateFormat(created_at) })})` : '')
-				}}</small>
+				<small
+					:class="{ 'mt-2': content.type !== 'file' }"
+					class="message__time d-block text-end mt-1 mt-sm-2 text-truncate"
+					>{{
+						d(created_at, { key: messagesDateFormat(created_at) }) +
+						(updated_at ? ` (upd. ${d(created_at, { key: messagesDateFormat(created_at) })})` : '')
+					}}</small
+				>
 			</v-card-text>
 		</v-card>
 

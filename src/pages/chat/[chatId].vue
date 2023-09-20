@@ -25,7 +25,7 @@
 					:margin="50"
 					ref="srollEl"
 					tag="div"
-					class="scrollable overflow-y-auto overflow-x-hidden flex-fill w-100 h-auto d-flex px-2 px-sm-4">
+					class="scrollable overflow-y-auto overflow-x-hidden flex-fill w-100 h-auto d-flex px-1 px-sm-4">
 					<div class="messages-field flex-fill w-100 d-flex flex-column justify-end px-1 px-sm-3 my-0 mx-auto">
 						<TransitionGroup :css="false" @before-enter="onBeforeEnter" @enter="onEnter" @leave="onLeave">
 							<MessageItem
@@ -36,7 +36,7 @@
 								:sender="m.sender"
 								:created_at="m.created_at"
 								:updated_at="m.updated_at"
-								@contextmenu="(e: MouseEvent) => openCtxMenu(e, { mId: m.id, mType: m.content.type })"
+								@contextmenu="(e: MouseEvent) => openCtxMenu(e, m)"
 								:id="`message-${m.id}`"
 								:data-message-id="m.id"
 								class="message-item px-2 px-sm-4 py-2"
@@ -48,7 +48,8 @@
 
 						<ContextMenu
 							v-model="msgCtxMenu.show"
-							:content-type="msgCtxMenu.contentType"
+							:content-type="msgCtxMenu.activeMessage?.content.type || 'text'"
+							:self="getUserInfo?.uid === msgCtxMenu.activeMessage?.sender.uid"
 							:max-width="350"
 							:min-width="xs ? 0 : 200"
 							:position="msgCtxMenu.position"
@@ -57,7 +58,13 @@
 							@copy-image="copyImage"
 							@copy-all="copyTextMessage"
 							@download="downloadFile"
-							@edit="editMessage" />
+							@edit="editMessage"
+							@delete="showConfirmation = true" />
+
+						<ConfirmationDialog
+							title="Are you sure you want to delete this message?"
+							v-model="showConfirmation"
+							@on-submit="deleteMessage" />
 
 						<FullsizeOverlay
 							v-model="overlayState.show"
@@ -115,12 +122,20 @@
 
 <script setup lang="ts">
 import { mdiArrowDown } from '@mdi/js';
+import ConfirmationDialog from '@/components/UI/ConfirmationDialog.vue';
 import FullsizeOverlay from '@/components/chat/messages/media/FullsizeOverlay.vue';
 import sbMessages from '@/utils/messages.json';
 import MessageItem from '@/components/chat/messages/MessageItem.vue';
 import MessageForm, { EditMessageData } from '@/components/chat/form/MessageForm.vue';
 import ContextMenu from '@/components/chat/ContextMenu.vue';
-import { MessagesService, CreateMsgForm, Message, MediaAttachment, MessageContent } from '@/services/message';
+import {
+	MessagesService,
+	CreateMsgForm,
+	Message,
+	MediaAttachment,
+	MessageContent,
+	MessageAttachment,
+} from '@/services/message';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { useUserdataStore } from '@/stores/userdata';
 import { useMessagesStore } from '@/stores/messages';
@@ -141,6 +156,10 @@ import { gsap, ScrollToPlugin } from 'gsap/all';
 import { useDisplay } from 'vuetify';
 import { ContentType } from '@/types/db/MessagesTable';
 
+const emit = defineEmits<{
+	updateTitle: [title: string];
+}>();
+
 gsap.registerPlugin(ScrollToPlugin);
 
 const { xs } = useDisplay();
@@ -158,10 +177,14 @@ const {
 	isLoading: isChatLoading,
 	execute: fetchChat,
 } = useAsyncState(
-	async (id?: ChatInfo['id']) => ({
-		chatInfo: await ChatService.getChatInfoById(id ?? chatId.value),
-		unsub: (await MessagesService.fetchMessages(id ?? chatId.value)) as Unsubscribe | null,
-	}),
+	async (id?: ChatInfo['id']) => {
+		const chatInfo = await ChatService.getChatInfoById(id ?? chatId.value);
+		if (chatInfo) {
+			emit('updateTitle', setChatName.value(chatInfo));
+		}
+		const unsub = (await MessagesService.fetchMessages(id ?? chatId.value)) as Unsubscribe | null;
+		return { chatInfo, unsub };
+	},
 	{ chatInfo: null, unsub: null },
 	{
 		onError: () => {
@@ -228,29 +251,40 @@ const updateMessage = async ({ id, content }: EditMessageData) => {
 	}
 };
 
+interface MessageContextMenu {
+	show: boolean;
+	position: { x: number; y: number };
+	activeMessage: Message | null;
+	closestAttachementId?: MessageAttachment['id'] | null;
+}
 // Context menu on message right click
-const msgCtxMenu = ref({
+const msgCtxMenu = ref<MessageContextMenu>({
 	show: false,
-	contentType: 'text' as ContentType,
 	position: { x: 0, y: 0 },
-	activeMessage: '' as Message['id'],
+	activeMessage: null as Message | null,
 });
-const openCtxMenu = (e: MouseEvent, { mId, mType }: { mId: Message['id']; mType?: MessageContent['type'] }) => {
-	const highlighter = gsap.utils.selector(`#message-${mId}`)('span.highlighter');
+const openCtxMenu = (e: MouseEvent, message: Message) => {
+	const highlighter = gsap.utils.selector(`#message-${message.id}`)('span.highlighter');
 	gsap.set(highlighter, {
 		autoAlpha: 0.2,
 	});
+
 	msgCtxMenu.value = {
 		show: false,
-		activeMessage: mId,
+		activeMessage: message,
 		position: { x: e.clientX, y: e.clientY },
-		contentType: mType || 'text',
 	};
+
+	if (message.content.type !== 'text') {
+		msgCtxMenu.value.closestAttachementId = (e.target as HTMLElement | null)
+			?.closest(msgCtxMenu.value.activeMessage?.content.type === 'media' ? '.image__wrapper' : '.file__wrapper')
+			?.getAttribute('data-attachment-id');
+	}
 	nextTick().then(() => (msgCtxMenu.value.show = true));
 };
 
 const ctxMenuClosed = () => {
-	const highlighter = gsap.utils.selector(`#message-${msgCtxMenu.value.activeMessage}`)('span.highlighter');
+	const highlighter = gsap.utils.selector(`#message-${msgCtxMenu.value.activeMessage?.id}`)('span.highlighter');
 	gsap.set(highlighter, {
 		autoAlpha: 0,
 	});
@@ -283,7 +317,7 @@ const copyTextMessage = async () => {
 	try {
 		const msgText =
 			messages.value
-				.find(m => m.content.type === 'text' && m.id === msgCtxMenu.value.activeMessage)
+				.find(m => m.content.type === 'text' && m.id === msgCtxMenu.value.activeMessage?.id)
 				?.content.text.trim() || '';
 		await navigator.clipboard.writeText(msgText);
 		showMessage('Copied to clipboard', 'deep-purple-accent-3', 2000);
@@ -294,10 +328,11 @@ const copyTextMessage = async () => {
 };
 const copyImage = async () => {
 	try {
-		const msgContent = messages.value.find(m => m.id === msgCtxMenu.value.activeMessage)?.content as
-			| MessageContent<'media'>
-			| undefined;
-		const imageToCopy = msgContent?.attachments[0].raw.previewURL || '';
+		const msgContent = msgCtxMenu.value.activeMessage?.content as MessageContent<'media'> | null;
+		const imageToCopy =
+			msgContent?.attachments.find(attach => attach.id === msgCtxMenu.value.closestAttachementId)?.raw.previewURL ||
+			msgContent?.attachments[0].raw.previewURL ||
+			'';
 		await copyImageToClipboard(imageToCopy);
 		showMessage('Copied to clipboard', 'deep-purple-accent-3', 2000);
 	} catch (e) {
@@ -307,13 +342,9 @@ const copyImage = async () => {
 };
 const downloadFile = async () => {
 	try {
-		const msgContent = messages.value.find(m => m.id === msgCtxMenu.value.activeMessage)?.content as
-			| MessageContent<'file'>
-			| undefined;
-		const fileToDownLoad = msgContent?.attachments[0];
-		if (fileToDownLoad) {
-			await downloadFileProcess(fileToDownLoad);
-		}
+		const msgContent = msgCtxMenu.value.activeMessage?.content as MessageContent<'file'> | null;
+		const filesToDownLoad = msgContent?.attachments;
+		filesToDownLoad?.map(downloadFileProcess);
 	} catch (e) {
 		showMessage('Failed to download', 'red-darken-4', 2000);
 		console.error(e);
@@ -321,9 +352,15 @@ const downloadFile = async () => {
 };
 const msgForm = ref<InstanceType<typeof MessageForm>>();
 const editMessage = () => {
-	const messageToEdit = messages.value.find(m => m.id === msgCtxMenu.value.activeMessage);
-	if (messageToEdit) {
-		msgForm.value?.editMessage(messageToEdit);
+	if (msgCtxMenu.value.activeMessage?.id) {
+		msgForm.value?.editMessage(msgCtxMenu.value.activeMessage);
+	}
+};
+
+const showConfirmation = ref(false);
+const deleteMessage = async () => {
+	if (msgCtxMenu.value.activeMessage?.id) {
+		await MessagesService.deleteMessageById(chatId.value, msgCtxMenu.value.activeMessage?.id);
 	}
 };
 const scrollToAndHighlightMessage = (mId: Message['id']) => {
@@ -380,11 +417,15 @@ const onLeave = (el: Element, done: () => void) => {
 
 // TODO
 // const attachDialog = ref(false);
-// const dropZone = ref<VDialog | HTMLElement>();
 // Using chat scroll composable with infinite scroll
-// const { isOverDropZone } = useDropZone(dropZone.value as HTMLElement, (files) => {
-// 	console.log('droppped', files)
-// });
+const { isOverDropZone } = useDropZone(
+	toRef(() => srollEl.value?.$el),
+	files => {
+		if (files) {
+			msgForm.value?.attachFiles('file', files);
+		}
+	}
+);
 
 // const addAttachment = () => {
 // 	console.log('Drag enter');
