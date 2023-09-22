@@ -2,7 +2,7 @@
 	<v-container class="h-100 pa-0 d-flex flex-column" fluid>
 		<!-- Chat not exists message -->
 		<div
-			v-if="userChats.length && !userChats.some(el => el === chatId)"
+			v-if="userChats.length && !userChats.some(el => el.id === chatId)"
 			class="text-h5 pa-4 w-100 h-100 d-flex justify-center align-center">
 			<v-card min-height="200px" class="d-flex" variant="tonal" elevation="20px" style="opacity: 0.5">
 				<template #title>

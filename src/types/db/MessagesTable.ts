@@ -1,13 +1,12 @@
-import { User } from 'firebase/auth';
-import { Timestamp } from 'firebase/firestore';
+import { DocumentReference, Timestamp } from 'firebase/firestore';
+import { UserData } from '@/types/db/UserdataTable';
 
 export type ContentType = 'text' | 'media' | 'file';
 export type AttachmentType = Exclude<ContentType, 'text'>;
 
 export interface Message {
-	id: string;
 	content: MessageContent;
-	sender_id: User['uid'];
+	sender: DocumentReference<UserData>;
 	created_at: Timestamp;
 	updated_at: Timestamp | null;
 }

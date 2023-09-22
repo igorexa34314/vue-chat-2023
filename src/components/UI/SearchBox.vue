@@ -21,11 +21,11 @@
 				<div v-for="index in indices" :key="index.indexId" class="search-hits w-100">
 					<v-list v-if="index.hits?.length">
 						<v-list-item
-							v-for="hit in index.hits.filter(h => h.info.uid !== uid)"
+							v-for="hit in index.hits.filter(h => h.objectID !== uid)"
 							:key="hit.objectID"
 							@click="
 								() => {
-									openUserProfile(hit.info.uid);
+									openUserProfile(hit.objectID);
 									refine('');
 								}
 							">
@@ -41,7 +41,7 @@
 									:icon="mdiMessageText"
 									@click="
 										() => {
-											goToChat(hit.info.uid);
+											goToChat(hit.objectID);
 											refine('');
 										}
 									"
@@ -61,12 +61,12 @@ import { VTextField } from 'vuetify/components';
 import { mdiMessageText } from '@mdi/js';
 import { searchClient } from '@/plugins/searchClient';
 import { useRouter } from 'vue-router/auto';
-import { UserInfo } from '@/types/db/UserdataTable';
 import { ChatService } from '@/services/chat';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { useUserdataStore } from '@/stores/userdata';
 import messages from '@/utils/messages.json';
 import { defaultAvatar } from '@/global-vars';
+import { UserInfo } from '@/types/db/UserdataTable';
 // @ts-ignore
 import { AisInstantSearch, AisAutocomplete } from 'vue-instantsearch/vue3/es';
 

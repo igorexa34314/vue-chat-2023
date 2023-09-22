@@ -24,30 +24,30 @@
 		"uuid": "^9.0.1",
 		"vue": "^3.3.4",
 		"vue-i18n": "^9.4.1",
-		"vue-instantsearch": "^4.10.11",
+		"vue-instantsearch": "^4.10.12",
 		"vue-meta": "3.0.0-alpha.10",
-		"vue-router": "^4.2.4",
-		"vuetify": "^3.3.16"
+		"vue-router": "^4.2.5",
+		"vuetify": "^3.3.17"
 	},
 	"devDependencies": {
 		"@intlify/unplugin-vue-i18n": "^0.12.3",
 		"@rushstack/eslint-patch": "^1.4.0",
-		"@types/node": "^20.6.2",
+		"@types/node": "^20.6.3",
 		"@types/uuid": "^9.0.4",
 		"@vitejs/plugin-vue": "^4.3.4",
 		"@vue/eslint-config-prettier": "^8.0.0",
 		"@vue/eslint-config-typescript": "^11.0.3",
-		"eslint": "^8.49.0",
+		"eslint": "^8.50.0",
 		"eslint-plugin-vue": "^9.17.0",
 		"prettier": "^3.0.3",
 		"rollup-plugin-visualizer": "^5.9.2",
-		"sass": "^1.67.0",
+		"sass": "^1.68.0",
 		"typescript": "^5.2.2",
 		"unplugin-vue-router": "^0.6.4",
 		"vite": "^4.4.9",
 		"vite-plugin-vue-layouts": "^0.8.0",
 		"vite-plugin-vuetify": "^1.0.2",
-		"vue-tsc": "^1.8.11"
+		"vue-tsc": "^1.8.13"
 	},
 	"packageManager": "pnpm@8.6.12",
 	"repository": {

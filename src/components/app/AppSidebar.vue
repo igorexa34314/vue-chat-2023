@@ -17,7 +17,9 @@
 
 		<v-divider thickness="2" class="mt-2" />
 
-		<div v-if="isLoading"><page-loader /></div>
+		<div v-if="isLoading">
+			<page-loader />
+		</div>
 
 		<ChatList v-else-if="isReady && getUserChatsInfo.length" :chats="getUserChatsInfo" />
 
@@ -27,7 +29,7 @@
 	</v-navigation-drawer>
 </template>
 
-<script setup lang="ts">
+<script lang="ts" setup>
 import ChatList from '@/components/chat/ChatList.vue';
 import { VSkeletonLoader } from 'vuetify/labs/VSkeletonLoader';
 import { VNavigationDrawer } from 'vuetify/components';
@@ -80,7 +82,9 @@ watch(
 			await refreshChats();
 		}
 	},
-	{ immediate: true }
+	{
+		immediate: true,
+	}
 );
 </script>
 
@@ -91,9 +95,11 @@ watch(
 		pointer-events: text;
 	}
 }
+
 .app-sidebar {
 	--v-scroll-width: 0.4rem;
 	--v-scroll-bg: transparent;
+
 	&:hover {
 		--v-scroll-bg: rgba(255, 255, 255, 0.2);
 	}

@@ -26,6 +26,7 @@ module.exports = {
     'linebreak-style': 'off',
     'object-curly-spacing': 'off',
     'import/no-unresolved': 'off',
+    '@typescript-eslint/ban-ts-comment': 'off',
     indent: 'off',
     'no-unused-vars': 'off',
   },

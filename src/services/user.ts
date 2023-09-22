@@ -12,46 +12,62 @@ import {
 	documentId,
 	query,
 	getDocs,
-	CollectionReference,
+	FirestoreDataConverter,
+	QueryDocumentSnapshot,
+	UpdateData,
 } from 'firebase/firestore';
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { AuthService } from '@/services/auth';
-import { updateProfile } from 'firebase/auth';
+import { User, updateProfile } from 'firebase/auth';
 import { v4 as uuidv4 } from 'uuid';
 import { fbErrorHandler as errorHandler } from '@/utils/errorHandler';
 import { UserData as DBUserData, UserInfo as DBUserInfo } from '@/types/db/UserdataTable';
 import { ParsedTimestamps } from '@/types/db/helpers';
 
-export interface UserInfo extends ParsedTimestamps<DBUserInfo> {}
+export type UserInfo = ParsedTimestamps<DBUserInfo> & { uid: User['uid'] };
 export interface UserData extends Omit<DBUserData, 'info'> {
 	info: UserInfo;
 }
 export type PublicUserInfo = Pick<UserInfo, 'uid' | 'displayName' | 'photoURL'>;
 
 export class UserService {
-	static usersCol = collection(db, 'users') as CollectionReference<DBUserData>;
+	private static userConverter: FirestoreDataConverter<UserData, DBUserData> = {
+		toFirestore: user => {
+			if (user.info) {
+				const { uid, ...uinfo } = user.info as DBUserInfo & { uid: User['uid'] };
+				return { ...user, info: uinfo } as DBUserData;
+			}
+			return user as DBUserData;
+		},
+		fromFirestore: (snapshot: QueryDocumentSnapshot<DBUserData>, options) => {
+			const { info, ...udata } = snapshot.data(options);
+			const { birthday_date, created_at, updated_at, ...uinfo } = info;
+			return {
+				...udata,
+				info: {
+					...uinfo,
+					...timestampToDate({ created_at, updated_at, birthday_date }),
+					uid: snapshot.ref.id,
+				},
+			} as UserData;
+		},
+	};
 
-	static getUserDocRef(uid: DBUserInfo['uid']) {
+	static usersCol = collection(db, 'users').withConverter(UserService.userConverter);
+
+	static getUserDocRef(uid: User['uid']) {
 		return doc(UserService.usersCol, uid);
 	}
 
 	static async fetchAuthUser() {
 		try {
 			const userDocRef = UserService.getUserDocRef(await AuthService.getUid());
-			return onSnapshot(userDocRef, userSnapshot => {
-				if (userSnapshot && userSnapshot.exists()) {
+			return onSnapshot(userDocRef, userSnap => {
+				if (userSnap.exists()) {
 					const { setUserData } = useUserdataStore();
-					const { info, ...udata } = userSnapshot.data();
-					const { birthday_date, created_at, updated_at, ...uinfo } = info;
-					setUserData({
-						...udata,
-						info: {
-							...uinfo,
-							created_at: created_at.toDate(),
-							birthday_date: birthday_date?.toDate() ?? null,
-							updated_at: updated_at?.toDate() ?? null,
-						},
-					});
+					const udata = userSnap.data();
+
+					setUserData(udata);
 				}
 			});
 		} catch (e) {
@@ -59,32 +75,27 @@ export class UserService {
 		}
 	}
 
-	static async getUserInfoById(uid: DBUserInfo['uid']) {
+	static async getUserInfoById(uid: User['uid']) {
 		try {
 			const userSnapshot = await getDoc(UserService.getUserDocRef(uid));
-			if (userSnapshot && userSnapshot.exists()) {
-				const { created_at, updated_at, birthday_date, ...info } = userSnapshot.data().info;
-				return {
-					...info,
-					...timestampToDate({ created_at, updated_at, birthday_date }),
-				} as UserInfo;
+			if (userSnapshot.exists()) {
+				const info = userSnapshot.data().info;
+				return info;
 			}
+			return null;
 		} catch (e) {
 			return errorHandler(e);
 		}
 	}
 
-	static async getUsersbyIds(...userIds: UserInfo['uid'][]) {
-		const usersData: PublicUserInfo[] = [];
-		const q = query(this.usersCol, where(documentId(), 'in', userIds));
+	static async getUsersbyIds(...users: UserInfo['uid'][]) {
+		const q = query(this.usersCol, where(documentId(), 'in', users));
 		const usersSnapshot = await getDocs(q);
 
-		usersSnapshot.forEach(doc => {
+		return usersSnapshot.docs.map(doc => {
 			const { uid, displayName, photoURL } = doc.data().info;
-			usersData.push({ uid, displayName, photoURL });
+			return { uid, displayName, photoURL } as PublicUserInfo;
 		});
-
-		return usersData;
 	}
 
 	static async updateUserAvatar(avatar: File | File[]) {
@@ -100,7 +111,7 @@ export class UserService {
 				const avatarURL = await getDownloadURL(avatarRef);
 				await updateDoc(UserService.getUserDocRef(await AuthService.getUid()), {
 					'info.photoURL': avatarURL,
-				});
+				} as Omit<UpdateData<DBUserData>, 'chats' | 'friends'>);
 			}
 		} catch (e) {
 			return errorHandler(e);
@@ -120,19 +131,19 @@ export class UserService {
 				});
 			}
 
-			const infoField = Object.assign(
+			const updateInfoData: Omit<UpdateData<DBUserData>, 'chats' | 'friends'> = Object.assign(
 				{},
 				...(Object.keys(newData) as (keyof Partial<UserInfo>)[]).map(key => ({
 					[`info.${key}`]: newData[key],
 				}))
 			);
-			await updateDoc(UserService.getUserDocRef(await AuthService.getUid()), infoField);
+			await updateDoc(UserService.getUserDocRef(await AuthService.getUid()), updateInfoData);
 		} catch (e) {
 			return errorHandler(e);
 		}
 	}
 
-	static async addToFriend(userId: DBUserInfo['uid']) {
+	static async addToFriend(userId: User['uid']) {
 		try {
 			const addToFriendById = httpsCallable<{ userId: string }, { success: true }>(functions, 'addToFriendById');
 

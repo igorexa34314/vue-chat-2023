@@ -7,10 +7,16 @@ import {
 	browserSessionPersistence,
 	browserPopupRedirectResolver,
 } from 'firebase/auth';
-import { initializeFirestore } from 'firebase/firestore';
+import {
+	CACHE_SIZE_UNLIMITED,
+	initializeFirestore,
+	persistentLocalCache,
+	persistentMultipleTabManager,
+} from 'firebase/firestore';
 import { getFunctions } from 'firebase/functions';
 import { getStorage } from 'firebase/storage';
 import { initializeAnalytics } from 'firebase/analytics';
+import { markRaw } from 'vue';
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -32,7 +38,14 @@ export const auth = initializeAuth(firebaseApp, {
 });
 
 // Initialize Firestore and get a reference to the service
-export const db = initializeFirestore(firebaseApp, {});
+export const db = markRaw(
+	initializeFirestore(firebaseApp, {
+		// localCache: persistentLocalCache({
+		// 	tabManager: persistentMultipleTabManager(),
+		// 	cacheSizeBytes: CACHE_SIZE_UNLIMITED,
+		// }),
+	})
+);
 
 // Initialize Cloud Storage and get a reference to the service
 export const storage = getStorage(firebaseApp);

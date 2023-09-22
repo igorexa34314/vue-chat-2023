@@ -1,16 +1,14 @@
-import { UserInfo } from '@/types/db/UserdataTable';
-import { Timestamp } from 'firebase/firestore';
+import { UserData } from '@/types/db/UserdataTable';
+import { DocumentReference, Timestamp } from 'firebase/firestore';
 
 export type ChatType = 'saved' | 'private' | 'group' | 'public';
 
-export interface ChatInfo<T extends ChatType = ChatType> {
-	id: string;
+export type ChatInfo<T extends ChatType = ChatType> = {
 	name: string;
 	description: string;
 	avatar: string | null;
 	type: T;
-	created_by: UserInfo['uid'];
-	members: T extends 'saved' ? never : UserInfo['uid'][];
+	created_by: DocumentReference<UserData>;
 	created_at: Timestamp;
 	updated_at: Timestamp | null;
-}
+} & ([T] extends ['saved'] ? object : { members: DocumentReference<UserData>[] });

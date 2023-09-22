@@ -15,7 +15,8 @@
 							class="mr-5"
 							eager
 							:width="xs ? 'auto' : '100%'" />
-						<div class="">
+						<v-skeleton-loader v-if="isLoading" type="list-item" max-width="480" min-height="80" />
+						<div v-else class="">
 							<h2 class="mb-2">{{ userInfo?.displayName }}</h2>
 							<div class="d-flex align-center mt-2">
 								<span class="text-subtitle-1 mr-2">Пол:</span>
@@ -60,6 +61,7 @@
 </template>
 
 <script setup lang="ts">
+import { VSkeletonLoader } from 'vuetify/labs/VSkeletonLoader';
 import { mdiHelp, mdiGenderMale, mdiGenderFemale, mdiMessageText, mdiAccountPlusOutline } from '@mdi/js';
 import { VTooltip } from 'vuetify/components';
 import messages from '@/utils/messages.json';

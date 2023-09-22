@@ -12,7 +12,7 @@ export const useUserdataStore = defineStore('userdata', () => {
 		userdata.value = data;
 	};
 	const setUserInfo = (info: UserInfo) => {
-		userdata.value = { ...userdata.value, info };
+		userdata.value = { ...userdata.value, info } as UserData;
 	};
 	const getUdata = computed(() => userdata.value ?? null);
 	const getUserInfo = computed(() => userdata.value?.info ?? null);

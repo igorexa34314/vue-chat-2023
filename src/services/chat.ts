@@ -1,25 +1,55 @@
 import { db, functions } from '@/firebase';
-import { CollectionReference, collection, doc, getDoc } from 'firebase/firestore';
+import {
+	DocumentReference,
+	collection,
+	doc,
+	getDoc,
+	FirestoreDataConverter,
+	QueryDocumentSnapshot,
+} from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
-import { UserService, PublicUserInfo } from '@/services/user';
+import { UserService, PublicUserInfo, UserInfo, UserData } from '@/services/user';
 import { fbErrorHandler as errorHandler } from '@/utils/errorHandler';
-import { UserInfo as DBUserInfo } from '@/types/db/UserdataTable';
 import { ParsedTimestamps } from '@/types/db/helpers';
-import { ChatInfo as DBChatTable, ChatType } from '@/types/db/ChatTable';
+import { ChatInfo as DBChat, ChatType } from '@/types/db/ChatTable';
+import { timestampToDate } from '@/utils/helpers';
+import { User } from 'firebase/auth';
 
-export interface ChatInfo<T extends ChatType = ChatType> extends Omit<ParsedTimestamps<DBChatTable>, 'members'> {
+type ConvertedChat = ParsedTimestamps<DBChat> & { id: DocumentReference['id'] };
+
+export interface ChatInfo<T extends ChatType = ChatType> extends Omit<ConvertedChat, 'members'> {
 	members: T extends 'saved' ? never : PublicUserInfo[];
 }
 
 export class ChatService {
-	static chatCol = collection(db, 'chats') as CollectionReference<DBChatTable>;
+	private static chatConverter: FirestoreDataConverter<ConvertedChat, DBChat> = {
+		toFirestore: chat => {
+			const { id, ...chatInfo } = chat;
+			return chatInfo as DBChat;
+		},
+		fromFirestore: (snapshot: QueryDocumentSnapshot<DBChat>, options) => {
+			const { created_at, updated_at, ...chatInfo } = snapshot.data(options);
+			return {
+				...chatInfo,
+				...timestampToDate({ created_at, updated_at }),
+				id: snapshot.ref.id,
+			} as ConvertedChat;
+		},
+	};
 
-	static async joinPrivateChat(companionId: DBUserInfo['uid']): Promise<ChatInfo['id']> {
+	static chatCol = collection(db, 'chats').withConverter(this.chatConverter);
+
+	private static getChatDocRef(chatId: ChatInfo['id']) {
+		return doc(ChatService.chatCol, chatId);
+	}
+
+	static async joinPrivateChat(companionId: User['uid']): Promise<ChatInfo['id']> {
 		try {
 			const joinPrivateChatByCompanionId = httpsCallable<{ companionId: string }, { chatId: string }>(
 				functions,
 				'joinPrivateChatByCompanionId'
 			);
+
 			const res = await joinPrivateChatByCompanionId({ companionId });
 			return res.data.chatId;
 		} catch (e) {
@@ -27,19 +57,15 @@ export class ChatService {
 		}
 	}
 
-	static async getChatInfoById(chatId: DBChatTable['id']): Promise<ChatInfo | null> {
+	static async getChatInfoByRef(chatDocRef: DocumentReference<ConvertedChat, DBChat>) {
 		try {
 			let chatInfo: ChatInfo | null = null;
-			const chat = await getDoc(doc(ChatService.chatCol, chatId));
+			const chat = await getDoc(chatDocRef);
 			if (chat.exists()) {
-				const { members, created_at, updated_at, ...chatData } = chat.data();
-				chatInfo = {
-					...chatData,
-					created_at: created_at.toDate(),
-					updated_at: updated_at?.toDate() ?? null,
-				} as ChatInfo<'saved'>;
+				const { members, ...chatData } = chat.data();
+				chatInfo = chatData as ChatInfo<'saved'>;
 				if (chatData.type !== 'saved' && members?.length) {
-					const membersInfo = await UserService.getUsersbyIds(...members);
+					const membersInfo = await UserService.getUsersbyIds(...members.map(doc => doc.id));
 					chatInfo.members = membersInfo;
 				}
 			}
@@ -49,7 +75,13 @@ export class ChatService {
 		}
 	}
 
-	static async getUserChatsInfo(...chatIds: string[]) {
-		return Promise.all(chatIds.map(ChatService.getChatInfoById)).then(chats => chats.filter(Boolean) as ChatInfo[]);
+	static async getChatInfoById(chatId: ChatInfo['id']) {
+		return ChatService.getChatInfoByRef(ChatService.getChatDocRef(chatId));
+	}
+
+	static async getUserChatsInfo(...chatDocsRefs: UserData['chats']) {
+		return Promise.all(
+			chatDocsRefs.map(doc => ChatService.getChatInfoByRef(doc.withConverter(this.chatConverter)))
+		).then(chats => chats.filter(Boolean) as ChatInfo[]);
 	}
 }

@@ -1,4 +1,4 @@
-import { timestampToDate } from './../utils/helpers';
+import { timestampToDate } from '@/utils/helpers';
 import { storage, db } from '@/firebase';
 import {
 	arrayRemove,
@@ -16,6 +16,11 @@ import {
 	query,
 	orderBy,
 	startAfter,
+	DocumentReference,
+	UpdateData,
+	FirestoreDataConverter,
+	QueryDocumentSnapshot,
+	getDoc,
 	CollectionReference,
 } from 'firebase/firestore';
 import {
@@ -34,7 +39,6 @@ import { encode } from 'base64-arraybuffer';
 import { storeToRefs } from 'pinia';
 import { useMessagesStore, Direction } from '@/stores/messages';
 import { useLoadingStore } from '@/stores/loading';
-import { DocumentReference, DocumentData } from 'firebase/firestore';
 import {
 	AttachmentType,
 	ContentType,
@@ -47,7 +51,9 @@ import { EditMessageData } from '@/components/chat/form/MessageForm.vue';
 import { ParsedTimestamps } from '@/types/db/helpers';
 import { ThumbResult } from '@/utils/resizeFile';
 
-export interface Message extends Omit<ParsedTimestamps<DBMessage>, 'sender_id' | 'content'> {
+type ConvertedMessage = ParsedTimestamps<DBMessage> & { id: DocumentReference['id'] };
+
+export interface Message extends Omit<ConvertedMessage, 'sender' | 'content'> {
 	content: MessageContent;
 	sender: PublicUserInfo;
 }
@@ -83,8 +89,27 @@ export type FormAttachment<T extends AttachmentType = AttachmentType> = {
 	  });
 
 export class MessagesService {
+	private static messageConverter: FirestoreDataConverter<ConvertedMessage, DBMessage> = {
+		toFirestore: (message) => {
+			const { id, ...msg } = message;
+			return msg as DBMessage;
+		},
+		fromFirestore: (snapshot: QueryDocumentSnapshot<DBMessage>, options) => {
+			const { created_at, updated_at, ...chatInfo } = snapshot.data(options);
+			return {
+				...chatInfo,
+				...timestampToDate({ created_at, updated_at }),
+				id: snapshot.ref.id,
+			} as ConvertedMessage;
+		},
+	};
+
 	private static getMessagesCol(chatId: ChatInfo['id']) {
-		return collection(doc(ChatService.chatCol, chatId), 'messages') as CollectionReference<DBMessage>;
+		return collection(doc(ChatService.chatCol, chatId), 'messages').withConverter(this.messageConverter);
+	}
+
+	private static getMessageDocRef(chatId: ChatInfo['id'], mId: Message['id']) {
+		return doc(MessagesService.getMessagesCol(chatId), mId);
 	}
 
 	static async fetchMessages(chatId: ChatInfo['id'], lmt: number = 10) {
@@ -158,15 +183,17 @@ export class MessagesService {
 				// 	const msgBeforeDel = await getDoc(doc(messagesCol, messages.value.at(direction === 'top' ? -1 : 0)?.id));
 				// 	lastVisible.value[direction === 'top' ? 'bottom' : 'top'] = msgBeforeDel as LastVisibleFbRef[Direction];
 				// }
-				const dbMessagesPromises: Promise<Message>[] = [];
 
-				messagesRef.forEach(doc => {
-					const messageData = doc.data();
-					dbMessagesPromises.push(this.getFullMessageInfo(messageData));
-				});
-				(await Promise.all(dbMessagesPromises)).forEach(m => {
+				const messages = await Promise.all(
+					messagesRef.docs.map(doc => {
+						const messageData = doc.data();
+						return this.getFullMessageInfo(messageData);
+					})
+				);
+				for (const m of messages) {
 					if (m) addMessage(m, direction === 'top' ? 'start' : 'end');
-				});
+				}
+
 				lastVisible.value[direction] =
 					messagesRef.size >= perPage ? messagesRef.docs[messagesRef.docs.length - 1] : null;
 			} catch (e) {
@@ -175,24 +202,23 @@ export class MessagesService {
 		}
 	}
 
-	private static async getMessageSenderInfo(senderId: DBMessage['sender_id']) {
+	private static async getMessageSenderInfo(senderDocRef: DBMessage['sender']) {
 		try {
-			const { uid, displayName, photoURL } = (await UserService.getUserInfoById(senderId))!;
-			return { uid, displayName, photoURL } as Message['sender'];
+			const info = (await getDoc(senderDocRef)).data()?.info!;
+			return { uid: senderDocRef.id, displayName: info.displayName, photoURL: info.photoURL } as Message['sender'];
 		} catch (e) {
 			return errorHandler(e);
 		}
 	}
 
-	private static async getFullMessageInfo(DbMessage: DBMessage) {
+	private static async getFullMessageInfo(DbMessage: ConvertedMessage) {
 		try {
-			const { created_at, updated_at, sender_id, content, ...m } = DbMessage;
-			const sender = await this.getMessageSenderInfo(sender_id);
+			const { sender, content, ...m } = DbMessage;
+			const senderInfo = await this.getMessageSenderInfo(sender);
 			const messageResult: Message = {
 				...m,
-				sender,
+				sender: senderInfo,
 				content: { text: content.text, type: content.type },
-				...timestampToDate({ created_at, updated_at }),
 			};
 
 			if (content.type !== 'text' && content.attachments?.length) {
@@ -245,22 +271,22 @@ export class MessagesService {
 
 	static async createMessage(chatId: ChatInfo['id'], content: CreateMsgForm) {
 		try {
-			const messageRef = doc(this.getMessagesCol(chatId));
+			const newMessageRef = doc(this.getMessagesCol(chatId));
 			const { attachments, ...msgContent } = content;
 
 			const messageContent: DBMessageContent = msgContent;
 
 			// Get images thumbs and Doc ref to prospective image upload
 			if (attachments && attachments.length) {
-				messageContent.attachments = await this.uploadAttachments(chatId, messageRef, attachments);
+				messageContent.attachments = await this.uploadAttachments(chatId, newMessageRef, attachments);
 			}
 			// Add full message data to DB
-			await setDoc(messageRef, {
-				id: messageRef.id,
+			await setDoc(newMessageRef, {
+				id: newMessageRef.id,
 				content: messageContent,
+				sender: UserService.getUserDocRef(await AuthService.getUid()),
 				created_at: Timestamp.now(),
 				updated_at: null,
-				sender_id: await AuthService.getUid(),
 			});
 		} catch (e) {
 			return errorHandler(e);
@@ -269,12 +295,12 @@ export class MessagesService {
 
 	static async updateMessage(chatId: ChatInfo['id'], { id: mId, content }: EditMessageData) {
 		try {
-			const messageRef = doc(collection(doc(ChatService.chatCol, chatId), 'messages'), mId);
+			const messageDocRef = this.getMessageDocRef(chatId, mId);
 			// Rewrite text content data to DB
-			await updateDoc(messageRef, {
+			return updateDoc(messageDocRef, {
 				'content.text': content.text,
 				updated_at: Timestamp.now(),
-			});
+			} as UpdateData<DBMessage>);
 		} catch (e) {
 			errorHandler(e);
 		}
@@ -282,7 +308,7 @@ export class MessagesService {
 
 	private static async createUploadTask(
 		chatId: ChatInfo['id'],
-		messageDocRef: DocumentReference<DBMessage, DocumentData>,
+		messageDocRef: DocumentReference<ConvertedMessage, DBMessage>,
 		file: FormAttachment,
 		DBcontentToUpdate: Partial<DBMessageAttachment>
 	) {
@@ -350,13 +376,13 @@ export class MessagesService {
 					await writeBatch(db)
 						.update(messageDocRef, {
 							'content.attachments': arrayRemove(DBcontentToUpdate),
-						})
+						} as UpdateData<DBMessageAttachment>)
 						.update(messageDocRef, {
 							'content.attachments': arrayUnion({
 								...DBcontentToUpdate,
 								raw,
-							} as DBMessageAttachment),
-						})
+							}),
+						} as UpdateData<DBMessageAttachment>)
 						.commit();
 					finishLoading(fileId);
 				} catch (e) {
@@ -390,7 +416,7 @@ export class MessagesService {
 
 	private static async uploadAttachments(
 		chatId: ChatInfo['id'],
-		messageDocRef: DocumentReference<DBMessage, DocumentData>,
+		messageDocRef: DocumentReference<ConvertedMessage, DBMessage>,
 		attach: FormAttachment[]
 	) {
 		try {
@@ -423,7 +449,7 @@ export class MessagesService {
 	}
 
 	static async deleteMessageById(chatId: ChatInfo['id'], mId: Message['id']) {
-		const messageDocRef = doc(MessagesService.getMessagesCol(chatId), mId);
+		const messageDocRef = this.getMessageDocRef(chatId, mId);
 		return deleteDoc(messageDocRef).catch(err => errorHandler(err));
 	}
 }
