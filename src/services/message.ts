@@ -1,4 +1,4 @@
-import { timestampToDate } from '@/utils/helpers';
+import { timestampConverter } from '@/utils/firestore';
 import { storage, db } from '@/firebase';
 import {
 	arrayRemove,
@@ -20,8 +20,6 @@ import {
 	UpdateData,
 	FirestoreDataConverter,
 	QueryDocumentSnapshot,
-	getDoc,
-	CollectionReference,
 } from 'firebase/firestore';
 import {
 	ref as storageRef,
@@ -33,7 +31,7 @@ import {
 	deleteObject,
 } from 'firebase/storage';
 import { AuthService } from '@/services/auth';
-import { PublicUserInfo, UserService } from '@/services/user';
+import { UserService, DisplayUserInfo } from '@/services/user';
 import { fbErrorHandler as errorHandler } from '@/utils/errorHandler';
 import { encode } from 'base64-arraybuffer';
 import { storeToRefs } from 'pinia';
@@ -51,11 +49,11 @@ import { EditMessageData } from '@/components/chat/form/MessageForm.vue';
 import { ParsedTimestamps } from '@/types/db/helpers';
 import { ThumbResult } from '@/utils/resizeFile';
 
-type ConvertedMessage = ParsedTimestamps<DBMessage> & { id: DocumentReference['id'] };
+type MessageWithId = ParsedTimestamps<DBMessage> & { id: DocumentReference['id'] };
 
-export interface Message extends Omit<ConvertedMessage, 'sender' | 'content'> {
+export interface Message extends Omit<MessageWithId, 'sender' | 'content'> {
 	content: MessageContent;
-	sender: PublicUserInfo;
+	sender: DisplayUserInfo;
 }
 
 export type MessageContent<T extends ContentType = ContentType> = T extends AttachmentType
@@ -89,18 +87,11 @@ export type FormAttachment<T extends AttachmentType = AttachmentType> = {
 	  });
 
 export class MessagesService {
-	private static messageConverter: FirestoreDataConverter<ConvertedMessage, DBMessage> = {
-		toFirestore: (message) => {
-			const { id, ...msg } = message;
-			return msg as DBMessage;
-		},
-		fromFirestore: (snapshot: QueryDocumentSnapshot<DBMessage>, options) => {
-			const { created_at, updated_at, ...chatInfo } = snapshot.data(options);
-			return {
-				...chatInfo,
-				...timestampToDate({ created_at, updated_at }),
-				id: snapshot.ref.id,
-			} as ConvertedMessage;
+	private static messageConverter: FirestoreDataConverter<MessageWithId, DBMessage> = {
+		toFirestore: ({ id, ...msg }) => timestampConverter().toFirestore(msg) as DBMessage,
+		fromFirestore: (snapshot: QueryDocumentSnapshot<MessageWithId, DBMessage>, options) => {
+			const chat = timestampConverter<DBMessage>().fromFirestore(snapshot, options);
+			return { ...chat, id: snapshot.ref.id } as MessageWithId;
 		},
 	};
 
@@ -203,15 +194,10 @@ export class MessagesService {
 	}
 
 	private static async getMessageSenderInfo(senderDocRef: DBMessage['sender']) {
-		try {
-			const info = (await getDoc(senderDocRef)).data()?.info!;
-			return { uid: senderDocRef.id, displayName: info.displayName, photoURL: info.photoURL } as Message['sender'];
-		} catch (e) {
-			return errorHandler(e);
-		}
+		return (await UserService.getUserDisplayInfo(senderDocRef.id))! as Message['sender'];
 	}
 
-	private static async getFullMessageInfo(DbMessage: ConvertedMessage) {
+	private static async getFullMessageInfo(DbMessage: MessageWithId) {
 		try {
 			const { sender, content, ...m } = DbMessage;
 			const senderInfo = await this.getMessageSenderInfo(sender);
@@ -308,7 +294,7 @@ export class MessagesService {
 
 	private static async createUploadTask(
 		chatId: ChatInfo['id'],
-		messageDocRef: DocumentReference<ConvertedMessage, DBMessage>,
+		messageDocRef: DocumentReference<MessageWithId>,
 		file: FormAttachment,
 		DBcontentToUpdate: Partial<DBMessageAttachment>
 	) {
@@ -416,7 +402,7 @@ export class MessagesService {
 
 	private static async uploadAttachments(
 		chatId: ChatInfo['id'],
-		messageDocRef: DocumentReference<ConvertedMessage, DBMessage>,
+		messageDocRef: DocumentReference<MessageWithId>,
 		attach: FormAttachment[]
 	) {
 		try {

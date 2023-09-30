@@ -19,7 +19,7 @@ import { ref, onBeforeUnmount, provide, watchEffect } from 'vue';
 import { UserService } from '@/services/user';
 import { useAsyncState } from '@vueuse/core';
 import { globalLoadingKey } from '@/injection-keys';
-import { useUserdataStore } from '@/stores/userdata';
+import { useUserStore } from '@/stores/user';
 import { useRoute, useRouter, definePage } from 'vue-router/auto';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { AuthService } from '@/services/auth';
@@ -32,7 +32,7 @@ const navbarTitle = ref<string | undefined>();
 const { push } = useRouter();
 const route = useRoute();
 const { showMessage } = useSnackbarStore();
-const { $reset } = useUserdataStore();
+const { $reset } = useUserStore();
 
 watchEffect(() => {
 	if (route.name !== '/chat/[chatId]') {
@@ -40,7 +40,12 @@ watchEffect(() => {
 	}
 });
 
-const { state: unsub, isLoading } = useAsyncState(UserService.fetchAuthUser, null, {});
+const { state: unsub, isLoading } = useAsyncState(UserService.fetchAuthUser, null, {
+	onError: e => {
+		console.error(e);
+		showMessage(messages[e as keyof typeof messages] || (e as string), 'red-darken-3', 2000);
+	},
+});
 
 provide(globalLoadingKey, isLoading);
 

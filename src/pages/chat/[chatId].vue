@@ -2,7 +2,7 @@
 	<v-container class="h-100 pa-0 d-flex flex-column" fluid>
 		<!-- Chat not exists message -->
 		<div
-			v-if="userChats.length && !userChats.some(el => el.id === chatId)"
+			v-if="userChats.length && !userChats.some(el => el.info.id === chatId)"
 			class="text-h5 pa-4 w-100 h-100 d-flex justify-center align-center">
 			<v-card min-height="200px" class="d-flex" variant="tonal" elevation="20px" style="opacity: 0.5">
 				<template #title>
@@ -137,7 +137,7 @@ import {
 	MessageAttachment,
 } from '@/services/message';
 import { useSnackbarStore } from '@/stores/snackbar';
-import { useUserdataStore } from '@/stores/userdata';
+import { useUserStore } from '@/stores/user';
 import { useMessagesStore } from '@/stores/messages';
 import { ChatService, ChatInfo } from '@/services/chat';
 import { ref, computed, onUnmounted, nextTick, watch, toRef } from 'vue';
@@ -163,7 +163,7 @@ const emit = defineEmits<{
 gsap.registerPlugin(ScrollToPlugin);
 
 const { xs } = useDisplay();
-const { getUserChats: userChats, getUserInfo } = storeToRefs(useUserdataStore());
+const { chats: userChats,info: getUserInfo } = storeToRefs(useUserStore());
 const route = useRoute('/chat/[chatId]');
 const { showMessage } = useSnackbarStore();
 const messagesStore = useMessagesStore();

@@ -1,16 +1,40 @@
 import { UserInfo as FirebaseUserInfo } from 'firebase/auth';
 import { DocumentReference, Timestamp } from 'firebase/firestore';
 import { Writeable } from '@/types/db/helpers';
-import { ChatInfo } from '@/types/db/ChatTable';
+import { ChatInfo, ChatType } from '@/types/db/ChatTable';
 
 export interface UserData {
-	info: UserInfo;
-	chats: DocumentReference<ChatInfo>[];
-	friends: DocumentReference<UserData>[];
+	public: PublicUserDataCollection;
+	private: PrivateUserDataCollection;
 }
 
-export interface UserInfo
-	extends Writeable<Pick<FirebaseUserInfo, 'displayName' | 'email' | 'photoURL' | 'phoneNumber'>> {
+interface PublicUserDataCollection {
+	info: DocumentReference<UserInfo>;
+}
+interface PrivateUserDataCollection {
+	security: DocumentReference<Pick<FirebaseUserInfo, 'email' | 'phoneNumber'>>;
+	chats: DocumentReference<ChatRecord>;
+	friends: DocumentReference<FirebaseUserInfo>;
+}
+
+export type ChatRecord<T extends ChatType = ChatType> = Record<
+	DocumentReference['id'],
+	{
+		ref: DocumentReference<ChatInfo<T>>;
+	} & ([T] extends ['saved'] ? object : { member_since: Timestamp })
+>;
+
+export type FriendRecord = Record<
+	FirebaseUserInfo['uid'],
+	{
+		friend_since: Timestamp;
+		ref: DocumentReference<UserData>;
+	}
+>;
+
+export interface UserInfo extends Writeable<Pick<FirebaseUserInfo, 'uid' | 'photoURL'>> {
+	firstname: string;
+	lastname: string;
 	gender: 'unknown' | 'male' | 'female';
 	birthday_date: Timestamp | null;
 	created_at: Timestamp;

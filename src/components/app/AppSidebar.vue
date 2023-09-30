@@ -1,27 +1,31 @@
 <template>
 	<v-navigation-drawer v-model="drawer" width="320" location="left" class="app-sidebar pl-3 pr-0">
 		<v-card
-			v-if="userInfo && Object.keys(userInfo).length"
+			v-if="info && Object.keys(info).length"
 			class="user-info py-1 mt-3 bg-blue-grey-darken-4 pr-2"
 			density="compact"
 			variant="text"
 			@click="push('/profile')"
 			draggable="false">
 			<template #prepend>
-				<v-avatar :image="userInfo.photoURL || defaultAvatar" />
+				<v-avatar>
+					<v-img :src="info.photoURL || defaultAvatar" :lazy-src="defaultAvatar">
+						<template #error><v-img :src="defaultAvatar" /></template
+					></v-img>
+				</v-avatar>
 			</template>
-			<template #title>{{ userInfo.displayName || 'Unknown' }}</template>
+			<template #title>{{ setUserDisplayName(info) }}</template>
 		</v-card>
 
 		<v-skeleton-loader v-else type="list-item-avatar" width="100%" color="navbar" max-width="240px" />
 
 		<v-divider thickness="2" class="mt-2" />
 
-		<div v-if="isLoading">
+		<div v-if="isChatsLoading">
 			<page-loader />
 		</div>
 
-		<ChatList v-else-if="isReady && getUserChatsInfo.length" :chats="getUserChatsInfo" />
+		<ChatList v-else-if="chats.length" :chats="chats.map(chat => chat.info)" />
 
 		<div v-else class="mt-4 pa-3">
 			<p class="text-h6 text-center">No chats</p>
@@ -33,19 +37,15 @@
 import ChatList from '@/components/chat/ChatList.vue';
 import { VSkeletonLoader } from 'vuetify/labs/VSkeletonLoader';
 import { VNavigationDrawer } from 'vuetify/components';
-import messages from '@/utils/messages.json';
-import { watch } from 'vue';
-import { useAsyncState, useVModel } from '@vueuse/core';
-import { ChatService } from '@/services/chat';
+import { useVModel } from '@vueuse/core';
 import { storeToRefs } from 'pinia';
-import { useSnackbarStore } from '@/stores/snackbar';
-import { useUserdataStore } from '@/stores/userdata';
+import { useUserStore } from '@/stores/user';
 import { defaultAvatar } from '@/global-vars';
 import { useRouter } from 'vue-router/auto';
+import { setUserDisplayName } from '@/utils/user';
 
-const { showMessage } = useSnackbarStore();
 const { push } = useRouter();
-const { getUserChats: userChats, getUserInfo: userInfo } = storeToRefs(useUserdataStore());
+const { info, chats, isChatsLoading } = storeToRefs(useUserStore());
 
 const props = withDefaults(
 	defineProps<{
@@ -60,32 +60,6 @@ const emit = defineEmits<{
 	'update:modelValue': [value: boolean];
 }>();
 const drawer = useVModel(props, 'modelValue', emit);
-
-// fetchChatsInfo
-const {
-	state: getUserChatsInfo,
-	isLoading,
-	isReady,
-	execute: refreshChats,
-} = useAsyncState(() => ChatService.getUserChatsInfo(...userChats.value), [], {
-	immediate: false,
-	onError: e => {
-		console.error(e);
-		showMessage(messages[e as keyof typeof messages] || (e as string), 'red-darken-3', 2000);
-	},
-});
-
-watch(
-	() => userChats.value.length,
-	async newLength => {
-		if (newLength) {
-			await refreshChats();
-		}
-	},
-	{
-		immediate: true,
-	}
-);
 </script>
 
 <style lang="scss" scoped>

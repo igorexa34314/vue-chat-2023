@@ -1,20 +1,21 @@
 import { computed } from 'vue';
-import { useUserdataStore } from '@/stores/userdata';
+import { useUserStore } from '@/stores/user';
 import { defaultAvatar, savedMessages } from '@/global-vars';
 import { ChatInfo } from '@/services/chat';
+import { setUserDisplayName } from '@/utils/user';
 
 export const setChatName = computed(() => (chat: ChatInfo) => {
-	const userdataStore = useUserdataStore();
+	const userStore = useUserStore();
 	return chat.type === 'saved'
 		? 'Saved messages'
 		: chat.type === 'private'
-		? (chat.members.find(m => m.uid !== userdataStore.userdata?.info.uid)?.displayName as string)
+		? setUserDisplayName.value(chat.members.find(m => m.uid !== userStore.info?.uid)!)
 		: chat.name;
 });
 export const setChatAvatar = computed(() => (chat: ChatInfo) => {
-	const userdataStore = useUserdataStore();
+	const userdataStore = useUserStore();
 	return chat.type === 'private'
-		? chat.members.find(m => m.uid !== userdataStore.userdata?.info.uid)?.photoURL || defaultAvatar
+		? chat.members.find(m => m.uid !== userdataStore.info?.uid)?.photoURL || defaultAvatar
 		: chat.type === 'saved'
 		? savedMessages
 		: defaultAvatar;

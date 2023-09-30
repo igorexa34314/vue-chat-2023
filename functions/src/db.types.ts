@@ -1,14 +1,36 @@
+import { UserRecord } from 'firebase-admin/auth';
+
 // Users
 export interface UserData {
-  info: UserInfo;
-  chats: FirebaseFirestore.DocumentReference<ChatInfo>[];
-  friends: FirebaseFirestore.DocumentReference<UserData>[];
+  public: PublicUserDataCollection;
+  private: PrivateUserDataCollection;
 }
+
+interface PublicUserDataCollection {
+  info: FirebaseFirestore.DocumentReference<UserInfo>;
+}
+interface PrivateUserDataCollection {
+  security: FirebaseFirestore.DocumentReference<{
+    email: string;
+    phoneNumber: string | null;
+  }>;
+  chats: FirebaseFirestore.DocumentReference<Record<FirebaseFirestore.DocumentReference['id'], ChatRecord>>;
+  friends: FirebaseFirestore.DocumentReference<Record<UserRecord['uid'], FriendRecord>>;
+}
+
+interface FriendRecord {
+  friend_since: FirebaseFirestore.Timestamp;
+  ref: FirebaseFirestore.DocumentReference<UserData>;
+}
+type ChatRecord<T extends ChatType = ChatType> = {
+  ref: FirebaseFirestore.DocumentReference<ChatInfo<T>>;
+} & ([T] extends ['saved'] ? object : { member_since: FirebaseFirestore.Timestamp });
+
 export interface UserInfo {
-  displayName: string;
-  email: string;
+  uid: UserRecord['uid'];
+  firstname: string;
+  lastname: string;
   photoURL: string | null;
-  phoneNumber: string | null;
   gender: 'unknown' | 'male' | 'female';
   birthday_date: FirebaseFirestore.Timestamp | null;
   created_at: FirebaseFirestore.Timestamp;

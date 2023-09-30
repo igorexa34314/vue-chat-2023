@@ -1,73 +1,128 @@
-import { timestampToDate } from './../utils/helpers';
 import { storage, db, functions } from '@/firebase';
 import { httpsCallable } from 'firebase/functions';
-import { useUserdataStore } from '@/stores/userdata';
+import { useUserStore } from '@/stores/user';
+import { timestampConverter } from '@/utils/firestore';
 import {
 	getDoc,
 	onSnapshot,
 	doc,
 	updateDoc,
+	Unsubscribe,
 	collection,
-	where,
-	documentId,
-	query,
-	getDocs,
-	FirestoreDataConverter,
-	QueryDocumentSnapshot,
-	UpdateData,
+	DocumentReference,
+	CollectionReference,
 } from 'firebase/firestore';
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { AuthService } from '@/services/auth';
 import { User, updateProfile } from 'firebase/auth';
 import { v4 as uuidv4 } from 'uuid';
 import { fbErrorHandler as errorHandler } from '@/utils/errorHandler';
-import { UserData as DBUserData, UserInfo as DBUserInfo } from '@/types/db/UserdataTable';
+import { UserData as DBUserData, UserInfo as DBUserInfo, ChatRecord, FriendRecord } from '@/types/db/UserdataTable';
 import { ParsedTimestamps } from '@/types/db/helpers';
+import { ChatInfo, ChatService } from '@/services/chat';
+import { ChatType } from '@/types/db/ChatTable';
 
-export type UserInfo = ParsedTimestamps<DBUserInfo> & { uid: User['uid'] };
-export interface UserData extends Omit<DBUserData, 'info'> {
-	info: UserInfo;
+export type PublicUserInfo = ParsedTimestamps<DBUserInfo>;
+export type DisplayUserInfo = Pick<PublicUserInfo, 'uid' | 'firstname' | 'lastname' | 'photoURL'>;
+
+export type UserChat<T extends ChatType = ChatType> = Omit<ParsedTimestamps<ChatRecord<T>[string]>, 'ref'> & {
+	info: ChatInfo<T>;
+};
+export interface UserFriend extends Omit<ParsedTimestamps<FriendRecord[string]>, 'ref'> {
+	info: PublicUserInfo;
 }
-export type PublicUserInfo = Pick<UserInfo, 'uid' | 'displayName' | 'photoURL'>;
 
 export class UserService {
-	private static userConverter: FirestoreDataConverter<UserData, DBUserData> = {
-		toFirestore: user => {
-			if (user.info) {
-				const { uid, ...uinfo } = user.info as DBUserInfo & { uid: User['uid'] };
-				return { ...user, info: uinfo } as DBUserData;
-			}
-			return user as DBUserData;
-		},
-		fromFirestore: (snapshot: QueryDocumentSnapshot<DBUserData>, options) => {
-			const { info, ...udata } = snapshot.data(options);
-			const { birthday_date, created_at, updated_at, ...uinfo } = info;
-			return {
-				...udata,
-				info: {
-					...uinfo,
-					...timestampToDate({ created_at, updated_at, birthday_date }),
-					uid: snapshot.ref.id,
-				},
-			} as UserData;
-		},
-	};
+	private static usersCol = collection(db, 'users') as CollectionReference<DBUserData>;
 
-	static usersCol = collection(db, 'users').withConverter(UserService.userConverter);
+	static getUserDocRef<U extends DBUserData = DBUserData>(uid: User['uid']): DocumentReference<U>;
+	static getUserDocRef<U extends DBUserData = DBUserData, T extends keyof U = keyof U>(
+		uid: User['uid'],
+		dataType: T
+	): CollectionReference<U[T]>;
+	static getUserDocRef<
+		U extends DBUserData = DBUserData,
+		T extends keyof U = keyof U,
+		K extends keyof U[T] = keyof U[T],
+	>(uid: User['uid'], dataType: T, docId: K): U[T][K];
 
-	static getUserDocRef(uid: User['uid']) {
-		return doc(UserService.usersCol, uid);
+	static getUserDocRef<
+		U extends DBUserData = DBUserData,
+		T extends keyof U = keyof U,
+		K extends keyof U[T] = keyof U[T],
+	>(uid: User['uid'], dataType?: T, docId?: K) {
+		const userDocRef = doc(this.usersCol, uid) as DocumentReference<U>;
+		if (!dataType) {
+			return userDocRef;
+		}
+		const userDocRefWithPrivacy = collection(userDocRef, dataType.toString()) as CollectionReference<U[T]>;
+		return !docId ? userDocRefWithPrivacy : (doc(userDocRefWithPrivacy, docId.toString()) as U[T][K]);
 	}
 
-	static async fetchAuthUser() {
-		try {
-			const userDocRef = UserService.getUserDocRef(await AuthService.getUid());
-			return onSnapshot(userDocRef, userSnap => {
-				if (userSnap.exists()) {
-					const { setUserData } = useUserdataStore();
-					const udata = userSnap.data();
+	static getUInfoDocRef(uid: User['uid']) {
+		return UserService.getUserDocRef(uid, 'public', 'info').withConverter(timestampConverter<DBUserInfo>());
+	}
 
-					setUserData(udata);
+	static async subscribeAuthUserChats(uid?: User['uid']) {
+		try {
+			const userStore = useUserStore();
+			userStore.isChatsLoading = true;
+			uid ??= await AuthService.getUid();
+			const chatsDocRef = UserService.getUserDocRef(uid, 'private', 'chats').withConverter(
+				timestampConverter<ChatRecord>()
+			);
+			return onSnapshot(chatsDocRef, chatsSnap => {
+				if (chatsSnap.exists()) {
+					const chats = chatsSnap.data();
+					Promise.all(
+						(Object.values(chats) as (typeof chats)[string][]).map(async ({ ref, ...data }) => ({
+							...data,
+							info: (await ChatService.getChatInfoByRef(ref))!,
+						}))
+					)
+						.then(userStore.setChats)
+						.finally(() => {
+							if (userStore.isChatsLoading) {
+								userStore.isChatsLoading = false;
+							}
+						});
+				}
+			});
+		} catch (e) {
+			return errorHandler(e);
+		}
+	}
+	static async subscribeAuthUserFriends(uid?: User['uid']) {
+		try {
+			uid ??= await AuthService.getUid();
+			const friendsDocRef = UserService.getUserDocRef(uid, 'private', 'friends').withConverter(
+				timestampConverter<FriendRecord>()
+			);
+			return onSnapshot(friendsDocRef, friendsSnap => {
+				if (friendsSnap.exists()) {
+					const friends = friendsSnap.data();
+					const { setFriends } = useUserStore();
+					Promise.all(
+						(Object.values(friends) as (typeof friends)[string][]).map(async ({ ref, ...data }) => ({
+							...data,
+							info: (await UserService.getUserInfoById(ref.id))!,
+						}))
+					).then(setFriends);
+				}
+			});
+		} catch (e) {
+			return errorHandler(e);
+		}
+	}
+	static async subscribeAuthUserInfo(uid?: User['uid']) {
+		try {
+			uid ??= await AuthService.getUid();
+			const infoDocRef = UserService.getUInfoDocRef(uid);
+			return onSnapshot(infoDocRef, infoSnap => {
+				if (infoSnap.exists()) {
+					const info = infoSnap.data();
+					const { setInfo } = useUserStore();
+					setInfo(info);
 				}
 			});
 		} catch (e) {
@@ -75,12 +130,23 @@ export class UserService {
 		}
 	}
 
+	static async fetchAuthUser() {
+		const uid = await AuthService.getUid();
+		const unsubInfo = await UserService.subscribeAuthUserInfo(uid);
+		const unsubChats = await UserService.subscribeAuthUserChats(uid);
+
+		return (() => {
+			unsubInfo();
+			unsubChats();
+		}) as Unsubscribe;
+	}
+
 	static async getUserInfoById(uid: User['uid']) {
 		try {
-			const userSnapshot = await getDoc(UserService.getUserDocRef(uid));
+			const userSnapshot = await getDoc(UserService.getUInfoDocRef(uid));
 			if (userSnapshot.exists()) {
-				const info = userSnapshot.data().info;
-				return info;
+				const info = userSnapshot.data();
+				return info as PublicUserInfo;
 			}
 			return null;
 		} catch (e) {
@@ -88,17 +154,20 @@ export class UserService {
 		}
 	}
 
-	static async getUsersbyIds(...users: UserInfo['uid'][]) {
-		const q = query(this.usersCol, where(documentId(), 'in', users));
-		const usersSnapshot = await getDocs(q);
-
-		return usersSnapshot.docs.map(doc => {
-			const { uid, displayName, photoURL } = doc.data().info;
-			return { uid, displayName, photoURL } as PublicUserInfo;
-		});
+	static async getUserDisplayInfo(uid: User['uid']) {
+		const info = await UserService.getUserInfoById(uid);
+		if (info) {
+			return {
+				uid: info.uid,
+				firstname: info.firstname,
+				lastname: info.lastname,
+				photoURL: info.photoURL,
+			} as DisplayUserInfo;
+		}
+		return info;
 	}
 
-	static async updateUserAvatar(avatar: File | File[]) {
+	static async uploadUserAvatar(avatar: File | File[]) {
 		try {
 			if (avatar instanceof File) {
 				const avatarRef = storageRef(
@@ -108,36 +177,27 @@ export class UserService {
 				await uploadBytes(avatarRef, avatar, {
 					contentType: avatar.type,
 				});
-				const avatarURL = await getDownloadURL(avatarRef);
-				await updateDoc(UserService.getUserDocRef(await AuthService.getUid()), {
-					'info.photoURL': avatarURL,
-				} as Omit<UpdateData<DBUserData>, 'chats' | 'friends'>);
+				const photoURL = await getDownloadURL(avatarRef);
+				return photoURL;
 			}
 		} catch (e) {
 			return errorHandler(e);
 		}
 	}
 
-	static async updateUserInfo(newData: Partial<UserInfo>) {
+	static async updateUserInfo({ firstname, lastname, ...newData }: Partial<PublicUserInfo>) {
 		try {
-			if (newData.displayName || newData.photoURL) {
-				const user = await AuthService.getCurrentUser();
-				if (!user) {
-					throw new Error('User unauthenticated');
-				}
-				updateProfile(user, {
-					displayName: newData.displayName ?? user.displayName,
+			const user = await AuthService.getCurrentUser();
+			if (!user) {
+				throw new Error('User unauthenticated');
+			}
+			if (firstname || lastname || newData.photoURL) {
+				await updateProfile(user, {
+					displayName: [firstname, lastname].filter(Boolean).join(' ') ?? user.displayName,
 					photoURL: newData.photoURL ?? user.photoURL,
 				});
 			}
-
-			const updateInfoData: Omit<UpdateData<DBUserData>, 'chats' | 'friends'> = Object.assign(
-				{},
-				...(Object.keys(newData) as (keyof Partial<UserInfo>)[]).map(key => ({
-					[`info.${key}`]: newData[key],
-				}))
-			);
-			await updateDoc(UserService.getUserDocRef(await AuthService.getUid()), updateInfoData);
+			await updateDoc(UserService.getUInfoDocRef(user.uid), { firstname, lastname, ...newData });
 		} catch (e) {
 			return errorHandler(e);
 		}

@@ -12,7 +12,7 @@
 			<v-window-item :value="profileTabs[0].value" style="min-height: 100px">
 				<v-container fluid class="pa-2 pa-sm-4">
 					<div v-if="loading"><page-loader /></div>
-					<InfoForm v-if="userInfo && Object.keys(userInfo).length" :uinfo="userInfo" @submit="submitForm" />
+					<InfoForm v-if="info && Object.keys(info).length" :uinfo="info" @submit="submitForm" />
 				</v-container>
 			</v-window-item>
 		</v-window>
@@ -25,7 +25,7 @@ import { VTabs, VTab, VWindow, VWindowItem, VContainer } from 'vuetify/component
 import messages from '@/utils/messages.json';
 import { storeToRefs } from 'pinia';
 import { UserService } from '@/services/user';
-import { useUserdataStore } from '@/stores/userdata';
+import { useUserStore } from '@/stores/user';
 import { ref, inject } from 'vue';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { useMeta } from 'vue-meta';
@@ -35,7 +35,7 @@ import { definePage } from 'vue-router/auto';
 definePage({ alias: '/' });
 useMeta({ title: 'My profile' });
 
-const { getUserInfo: userInfo } = storeToRefs(useUserdataStore());
+const { info } = storeToRefs(useUserStore());
 const { showMessage } = useSnackbarStore();
 const loading = inject(globalLoadingKey);
 const profileTabs = [
@@ -47,9 +47,10 @@ const pickedProfileTab = ref(profileTabs[0].value);
 
 const submitForm = async ({ avatar, ...formData }: IProfileForm) => {
 	try {
-		await UserService.updateUserInfo(formData);
 		if (avatar?.length) {
-			await UserService.updateUserAvatar(avatar[0]);
+			await UserService.updateUserInfo({ ...formData, photoURL: await UserService.uploadUserAvatar(avatar[0]) });
+		} else {
+			await UserService.updateUserInfo(formData);
 		}
 		showMessage('succesfully_updated');
 	} catch (e) {

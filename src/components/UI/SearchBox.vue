@@ -4,12 +4,12 @@
 		:stalled-search-delay="500"
 		:search-client="searchClient"
 		class="search w-100 mr-3">
-		<ais-autocomplete #default="{ currentRefinement, indices, refine }: AisAutocompleteSlot">
+		<ais-autocomplete #default="{ currentRefinement, refine, indices }: AisAutocompleteSlot">
 			<v-text-field
-				:value="currentRefinement"
+				v-model="query"
 				ref="searchEl"
 				v-bind="$attrs"
-				@update:model-value="refine"
+				@update:model-value="val => updateQuery(val, refine)"
 				variant="solo"
 				placeholder="Search"
 				density="compact"
@@ -26,12 +26,12 @@
 							@click="
 								() => {
 									openUserProfile(hit.objectID);
-									refine('');
+									query = '';
 								}
 							">
-							<v-list-item-title>{{ hit.info.displayName }}</v-list-item-title>
+							<v-list-item-title>{{ setUserDisplayName(hit) }}</v-list-item-title>
 							<template #prepend>
-								<v-avatar :image="hit.info.photoURL || defaultAvatar" />
+								<v-avatar :image="hit.photoURL || defaultAvatar" />
 							</template>
 							<template #append>
 								<v-btn
@@ -42,7 +42,7 @@
 									@click="
 										() => {
 											goToChat(hit.objectID);
-											refine('');
+											query = '';
 										}
 									"
 									density="comfortable" />
@@ -63,16 +63,18 @@ import { searchClient } from '@/plugins/searchClient';
 import { useRouter } from 'vue-router/auto';
 import { ChatService } from '@/services/chat';
 import { useSnackbarStore } from '@/stores/snackbar';
-import { useUserdataStore } from '@/stores/userdata';
+import { useUserStore } from '@/stores/user';
 import messages from '@/utils/messages.json';
 import { defaultAvatar } from '@/global-vars';
 import { UserInfo } from '@/types/db/UserdataTable';
+import { setUserDisplayName } from '@/utils/user';
+import { useDebounceFn } from '@vueuse/core';
 // @ts-ignore
 import { AisInstantSearch, AisAutocomplete } from 'vue-instantsearch/vue3/es';
 
 type AisAutocompleteSlot = {
 	currentRefinement: string;
-	indices: { indexId: string; hits: { info: UserInfo; objectID: string }[] }[];
+	indices: { indexId: string; hits: (UserInfo & { objectID: string })[] }[];
 	refine: (query: string) => void;
 };
 
@@ -91,11 +93,17 @@ defineOptions({
 });
 
 const { push } = useRouter();
-const userdataStore = useUserdataStore();
+const userStore = useUserStore();
 const { showMessage } = useSnackbarStore();
 const searchIndex: string = import.meta.env.VITE_ALGOLIA_SEARCH_INDEX || 'index';
 const searchEl = ref<VTextField>();
-const uid = computed(() => userdataStore.getUserInfo?.uid);
+const uid = computed(() => userStore.info?.uid);
+
+const query = ref('');
+
+const updateQuery = useDebounceFn(async (value: string, refine: AisAutocompleteSlot['refine']) => {
+	return refine(value);
+}, 500);
 
 const goToChat = async (uid: string) => {
 	try {

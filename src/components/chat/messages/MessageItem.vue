@@ -9,7 +9,7 @@
 			:class="self ? 'ml-2' : 'mr-2'"
 			class="sender__avatar"
 			@click="openUserProfile"
-			:title="sender.displayName" />
+			:title="setUserDisplayName(sender)" />
 
 		<v-card
 			:min-width="smAndUp ? '120px' : '100px'"
@@ -19,7 +19,7 @@
 			:class="self ? 'self bg-light-blue-darken-3' : ''"
 			variant="tonal">
 			<v-card-title v-if="content.type === 'text'" class="message__head d-flex flex-row align-center">
-				<small class="sender__name text-truncate" @click="openUserProfile"> {{ sender.displayName }}</small>
+				<small class="sender__name text-truncate" @click="openUserProfile"> {{ setUserDisplayName(sender) }}</small>
 			</v-card-title>
 
 			<v-card-text
@@ -35,8 +35,8 @@
 					:class="{ 'mt-2': content.type !== 'file' }"
 					class="message__time d-block text-end mt-1 mt-sm-2 text-truncate"
 					>{{
-						d(created_at, { key: messagesDateFormat(created_at) }) +
-						(updated_at ? ` (upd. ${d(created_at, { key: messagesDateFormat(created_at) })})` : '')
+						d(created_at, { key: formatDate(created_at) }) +
+						(updated_at ? ` (upd. ${d(updated_at, { key: formatDate(updated_at) })})` : '')
 					}}</small
 				>
 			</v-card-text>
@@ -53,10 +53,11 @@ import TextMessage from '@/components/chat/messages/text/TextMessage.vue';
 import { useDisplay } from 'vuetify';
 import { computed } from 'vue';
 import { useRouter } from 'vue-router/auto';
-import { messagesDateFormat } from '@/utils/filters/messages';
+import { formatDate } from '@/utils/filters/messages';
 import { defaultAvatar } from '@/global-vars';
 import { Message, MediaAttachment } from '@/services/message';
 import { useI18n } from 'vue-i18n';
+import { setUserDisplayName } from '@/utils/user';
 
 interface MessageItemProps {
 	content: Message['content'];

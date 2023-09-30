@@ -1,4 +1,5 @@
 import { db, functions } from '@/firebase';
+import { timestampConverter } from '@/utils/firestore';
 import {
 	DocumentReference,
 	collection,
@@ -6,49 +7,46 @@ import {
 	getDoc,
 	FirestoreDataConverter,
 	QueryDocumentSnapshot,
+	CollectionReference,
 } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
-import { UserService, PublicUserInfo, UserInfo, UserData } from '@/services/user';
+import { UserService, DisplayUserInfo } from '@/services/user';
 import { fbErrorHandler as errorHandler } from '@/utils/errorHandler';
 import { ParsedTimestamps } from '@/types/db/helpers';
 import { ChatInfo as DBChat, ChatType } from '@/types/db/ChatTable';
-import { timestampToDate } from '@/utils/helpers';
 import { User } from 'firebase/auth';
 
-type ConvertedChat = ParsedTimestamps<DBChat> & { id: DocumentReference['id'] };
+type ChatWithId = ParsedTimestamps<DBChat> & { id: DocumentReference['id'] };
 
-export interface ChatInfo<T extends ChatType = ChatType> extends Omit<ConvertedChat, 'members'> {
-	members: T extends 'saved' ? never : PublicUserInfo[];
+export interface ChatInfo<T extends ChatType = ChatType> extends Omit<ChatWithId, 'members' | 'created_by'> {
+	created_by: DisplayUserInfo;
+	members: [T] extends ['saved'] ? never : DisplayUserInfo[];
 }
 
 export class ChatService {
-	private static chatConverter: FirestoreDataConverter<ConvertedChat, DBChat> = {
-		toFirestore: chat => {
-			const { id, ...chatInfo } = chat;
-			return chatInfo as DBChat;
-		},
-		fromFirestore: (snapshot: QueryDocumentSnapshot<DBChat>, options) => {
-			const { created_at, updated_at, ...chatInfo } = snapshot.data(options);
-			return {
-				...chatInfo,
-				...timestampToDate({ created_at, updated_at }),
-				id: snapshot.ref.id,
-			} as ConvertedChat;
+	private static chatConverter: FirestoreDataConverter<ChatWithId, DBChat> = {
+		toFirestore: ({ id, ...chatInfo }) => timestampConverter().toFirestore(chatInfo) as DBChat,
+		fromFirestore: (snapshot: QueryDocumentSnapshot<ChatWithId, DBChat>, options) => {
+			const chat = timestampConverter<DBChat>().fromFirestore(snapshot, options);
+			return { ...chat, id: snapshot.ref.id } as ChatWithId;
 		},
 	};
 
-	static chatCol = collection(db, 'chats').withConverter(this.chatConverter);
+	static chatCol = collection(db, 'chats') as CollectionReference<DBChat>;
 
 	private static getChatDocRef(chatId: ChatInfo['id']) {
-		return doc(ChatService.chatCol, chatId);
+		return doc(ChatService.chatCol, chatId).withConverter(this.chatConverter);
 	}
 
 	static async joinPrivateChat(companionId: User['uid']): Promise<ChatInfo['id']> {
 		try {
-			const joinPrivateChatByCompanionId = httpsCallable<{ companionId: string }, { chatId: string }>(
-				functions,
-				'joinPrivateChatByCompanionId'
-			);
+			const joinPrivateChatByCompanionId = httpsCallable<
+				{ companionId: string },
+				{
+					exists: boolean;
+					chatId: string;
+				}
+			>(functions, 'joinPrivateChatByCompanionId');
 
 			const res = await joinPrivateChatByCompanionId({ companionId });
 			return res.data.chatId;
@@ -57,19 +55,21 @@ export class ChatService {
 		}
 	}
 
-	static async getChatInfoByRef(chatDocRef: DocumentReference<ConvertedChat, DBChat>) {
+	static async getChatInfoByRef(chatDocRef: DocumentReference<DBChat> | DocumentReference<ChatWithId>) {
 		try {
-			let chatInfo: ChatInfo | null = null;
-			const chat = await getDoc(chatDocRef);
+			const chat = await getDoc(chatDocRef.withConverter(this.chatConverter));
 			if (chat.exists()) {
-				const { members, ...chatData } = chat.data();
-				chatInfo = chatData as ChatInfo<'saved'>;
-				if (chatData.type !== 'saved' && members?.length) {
-					const membersInfo = await UserService.getUsersbyIds(...members.map(doc => doc.id));
-					chatInfo.members = membersInfo;
+				const chatData = chat.data();
+				const creatorInfo = (await UserService.getUserDisplayInfo(chatData.created_by.id))!;
+				if (chatData.type !== 'saved' && chatData.members?.length) {
+					const membersInfo = await Promise.all(
+						chatData.members.map(async m => (await UserService.getUserDisplayInfo(m.id))!)
+					);
+					return { ...chatData, created_by: creatorInfo, members: membersInfo } as ChatInfo;
 				}
+				return { ...chatData, created_by: creatorInfo } as ChatInfo<'saved'>;
 			}
-			return chatInfo;
+			return null;
 		} catch (e) {
 			return errorHandler(e);
 		}
@@ -79,7 +79,7 @@ export class ChatService {
 		return ChatService.getChatInfoByRef(ChatService.getChatDocRef(chatId));
 	}
 
-	static async getUserChatsInfo(...chatDocsRefs: UserData['chats']) {
+	static async getUserChatsInfo(...chatDocsRefs: DocumentReference<DBChat>[]) {
 		return Promise.all(
 			chatDocsRefs.map(doc => ChatService.getChatInfoByRef(doc.withConverter(this.chatConverter)))
 		).then(chats => chats.filter(Boolean) as ChatInfo[]);

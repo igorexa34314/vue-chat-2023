@@ -82,10 +82,9 @@ const skipName = async () => {
 const submitForm = async () => {
 	const valid = (await formEl.value?.validate())?.valid;
 	if (valid) {
-		const { firstname, lastname } = formState.value;
 		try {
 			loading.value = true;
-			await UserService.updateUserInfo({ displayName: firstname.concat(' ', lastname) });
+			await UserService.updateUserInfo(formState.value);
 			push('/profile');
 		} catch (e) {
 			showMessage(messages[e as keyof typeof messages] || (e as string), 'red-darken-3', 2000);

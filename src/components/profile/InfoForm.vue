@@ -5,16 +5,28 @@
 		lazy-validation
 		class="overflow-auto pa-4 mt-2"
 		style="position: relative">
-		<v-text-field
-			v-model.trim="formState.displayName"
-			:rules="validations.name"
-			label="Display name"
-			placeholder="Enter your name"
-			variant="underlined"
-			counter="16"
-			clearable
-			required
-			style="max-width: 600px" />
+		<div class="d-sm-flex">
+			<v-text-field
+				v-model.trim="formState.firstname"
+				:rules="validations.firstname"
+				label="First name"
+				placeholder="Enter your first name"
+				variant="underlined"
+				class="mr-sm-3"
+				clearable
+				required
+				style="max-width: 600px" />
+			<v-text-field
+				v-model.trim="formState.lastname"
+				:rules="validations.lastname"
+				label="Last name"
+				placeholder="Enter your last name"
+				variant="underlined"
+				class="ml-sm-3"
+				clearable
+				required
+				style="max-width: 600px" />
+		</div>
 
 		<v-radio-group v-model="formState.gender" :inline="!xs" label="Gender" class="mt-3 mt-md-6">
 			<v-radio
@@ -60,17 +72,17 @@ import BirthdayPicker from '@/components/UI/BirthdayPicker.vue';
 import validations from '@/utils/validations';
 import { ref, toRefs } from 'vue';
 import { defaultAvatar } from '@/global-vars';
-import { UserInfo } from '@/services/user';
+import { PublicUserInfo } from '@/services/user';
 import { VForm, VTextField, VRadioGroup, VRadio, VFileInput } from 'vuetify/components';
 import { useDisplay } from 'vuetify';
 
-export interface IProfileForm extends Pick<UserInfo, 'displayName' | 'gender' | 'birthday_date'> {
+export interface IProfileForm extends Pick<PublicUserInfo, 'firstname' | 'lastname' | 'gender' | 'birthday_date'> {
 	birthday_date: Date;
 	avatar: File[];
 }
 
 const props = defineProps<{
-	uinfo: UserInfo;
+	uinfo: PublicUserInfo;
 }>();
 
 const emit = defineEmits<{
@@ -81,7 +93,8 @@ const { uinfo: info } = toRefs(props);
 const { xs } = useDisplay();
 const formEl = ref<VForm>();
 const formState = ref<IProfileForm>({
-	displayName: info.value.displayName || '',
+	firstname: info.value.firstname,
+	lastname: info.value.lastname,
 	gender: info.value.gender || 'unknown',
 	birthday_date: info.value.birthday_date || new Date(),
 	avatar: [],

@@ -2,7 +2,7 @@ import { computed } from 'vue';
 
 export const getFileExt = computed(() => (filename: string) => filename.split('.').at(-1) as string);
 
-export const messagesDateFormat = computed(() => (date = new Date()) => {
+export const formatDate = computed(() => (date = new Date()) => {
 	const day = (+new Date() - +date) / (60 * 60 * 24 * 1000);
 	return day < 1 && new Date().getDay() === date.getDay() ? 'messageShort' : day < 24 ? 'messageLong' : 'messageLarge';
 });
