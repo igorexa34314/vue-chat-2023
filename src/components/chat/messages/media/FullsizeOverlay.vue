@@ -66,7 +66,7 @@
 				class="download__btn"
 				:icon="mdiDownload"
 				variant="text"
-				:href="content[currentItem || 0].raw.previewURL || content[currentItem || 0].raw.downloadURL"
+				:href="content[currentItem || 0].raw.previewURL"
 				:download="content[currentItem || 0].fullname || 'image.png'"
 				title="Download" />
 			<v-btn class="close__btn" :icon="mdiClose" variant="text" @click="closeOverlay" title="Close" />

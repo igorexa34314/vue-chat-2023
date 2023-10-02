@@ -14,7 +14,6 @@
 						:key="img.id"
 						:alt="content.text"
 						@open="emit('openInOverlay', img.id)"
-						@loaded="('mediaLoaded')"
 						:width="content.attachments.length > 1 ? imageSize.w : undefined"
 						:max-height="content.attachments.length > 2 ? '400px' : `${imageSize.h}px`" />
 				</v-col>
@@ -38,7 +37,6 @@ const props = defineProps<{
 
 const emit = defineEmits<{
 	openInOverlay: [imgId: MediaAttachment['id']];
-	mediaLoaded: [];
 }>();
 
 const { smAndUp } = useDisplay();

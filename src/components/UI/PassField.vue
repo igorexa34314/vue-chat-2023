@@ -7,6 +7,7 @@
 			:label="label"
 			:placeholder="placeholder"
 			:variant="variant"
+			autocomplete="on"
 			required>
 			<template #append-inner>
 				<v-icon

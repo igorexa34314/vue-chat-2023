@@ -27,14 +27,14 @@
 		"vue-instantsearch": "^4.10.12",
 		"vue-meta": "3.0.0-alpha.10",
 		"vue-router": "^4.2.5",
-		"vuetify": "^3.3.19"
+		"vuetify": "^3.3.20"
 	},
 	"devDependencies": {
 		"@intlify/unplugin-vue-i18n": "^0.12.3",
-		"@rushstack/eslint-patch": "^1.5.0",
-		"@types/node": "^20.8.0",
+		"@rushstack/eslint-patch": "^1.5.1",
+		"@types/node": "^20.8.2",
 		"@types/uuid": "^9.0.4",
-		"@vitejs/plugin-vue": "^4.3.4",
+		"@vitejs/plugin-vue": "^4.4.0",
 		"@vue/eslint-config-prettier": "^8.0.0",
 		"@vue/eslint-config-typescript": "^11.0.3",
 		"eslint": "^8.50.0",

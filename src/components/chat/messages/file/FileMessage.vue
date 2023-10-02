@@ -12,10 +12,9 @@
 					:is="file.thumbnail && file.raw.sizes ? FilePreview : FileExtension"
 					v-bind="{ file, hoverProps, isHovering, loading: isLoading }"
 					@downloadFile="downloadFile(file)"
-					@openFile="emit('openInOverlay', file.id)" 
+					@openFile="emit('openInOverlay', file.id)"
 					class="file__wrapper"
-					:data-attachment-id="file.id"
-					/>
+					:data-attachment-id="file.id" />
 			</v-hover>
 
 			<div class="file-details ml-2 text-subtitle-1 font-weight-medium text-truncate">

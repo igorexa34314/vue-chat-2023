@@ -26,7 +26,6 @@ import {
 	uploadBytesResumable,
 	uploadString,
 	getBlob,
-	getDownloadURL,
 	getBytes,
 	deleteObject,
 } from 'firebase/storage';
@@ -34,7 +33,6 @@ import { AuthService } from '@/services/auth';
 import { UserService, DisplayUserInfo } from '@/services/user';
 import { fbErrorHandler as errorHandler } from '@/utils/errorHandler';
 import { encode } from 'base64-arraybuffer';
-import { storeToRefs } from 'pinia';
 import { useMessagesStore, Direction } from '@/stores/messages';
 import { useLoadingStore } from '@/stores/loading';
 import {
@@ -105,11 +103,9 @@ export class MessagesService {
 
 	static async fetchMessages(chatId: ChatInfo['id'], lmt: number = 10) {
 		const messagesStore = useMessagesStore();
-		const { addMessage, modifyMessage, deleteMessageById } = messagesStore;
-		const { lastVisible, isLoading } = storeToRefs(messagesStore);
 		const messagesCol = this.getMessagesCol(chatId);
 		const q = query(messagesCol, orderBy('created_at', 'desc'), limit(lmt));
-		isLoading.value = true;
+		messagesStore.setFirstLoading(true);
 		return onSnapshot(q, async messagesRef => {
 			try {
 				const snapshots = await Promise.all(
@@ -128,24 +124,22 @@ export class MessagesService {
 					})
 				);
 				snapshots.reverse().forEach(snap => {
-					console.log(snap.changeType);
-
 					if (snap.changeType === 'added') {
-						addMessage(snap.message, 'end');
+						messagesStore.addMessage(snap.message, 'end');
 					} else if (snap.changeType === 'modified') {
-						modifyMessage(snap.message);
+						messagesStore.modifyMessage(snap.message);
 					} else {
-						deleteMessageById(snap.message.id);
+						// messagesStore.deleteMessageById(snap.message.id);
 					}
 				});
 				if (messagesRef.size >= lmt) {
-					lastVisible.value.top = messagesRef.docs[messagesRef.docs.length - 1];
+					messagesStore.lastVisible.top = messagesRef.docs[messagesRef.docs.length - 1];
 				}
 			} catch (err) {
 				return errorHandler(err);
 			} finally {
-				if (isLoading.value) {
-					isLoading.value = false;
+				if (messagesStore.isLoadingFirst) {
+					messagesStore.setFirstLoading(false);
 				}
 			}
 		});
@@ -153,20 +147,19 @@ export class MessagesService {
 
 	static async loadMoreMessages(chatId: ChatInfo['id'], direction: Direction, perPage: number = 10) {
 		const messagesStore = useMessagesStore();
-		const { addMessage, deleteMessages } = messagesStore;
-		const { lastVisible } = storeToRefs(messagesStore);
-		if (lastVisible.value[direction]) {
+		if (messagesStore.lastVisible[direction] && !messagesStore.isLoading) {
 			try {
+				messagesStore.isLoading = true;
 				const messagesCol = this.getMessagesCol(chatId);
 				const q = query(
 					messagesCol,
 					orderBy('created_at', direction === 'top' ? 'desc' : 'asc'),
-					startAfter(lastVisible.value[direction]),
+					startAfter(messagesStore.lastVisible[direction]),
 					limit(perPage)
 				);
 				const messagesRef = await getDocs(q);
 				if (messagesRef.empty) {
-					lastVisible.value[direction] = null;
+					messagesStore.lastVisible[direction] = null;
 					return;
 				}
 				// if (messages.value.length > 40) {
@@ -176,80 +169,66 @@ export class MessagesService {
 				// }
 
 				const messages = await Promise.all(
-					messagesRef.docs.map(doc => {
-						const messageData = doc.data();
-						return this.getFullMessageInfo(messageData);
+					messagesRef.docs.map(async doc => {
+						const message = await this.getFullMessageInfo(doc.data());
+						return message;
 					})
 				);
 				for (const m of messages) {
-					if (m) addMessage(m, direction === 'top' ? 'start' : 'end');
+					messagesStore.addMessage(m, direction === 'top' ? 'start' : 'end');
 				}
 
-				lastVisible.value[direction] =
+				messagesStore.lastVisible[direction] =
 					messagesRef.size >= perPage ? messagesRef.docs[messagesRef.docs.length - 1] : null;
 			} catch (e) {
 				return errorHandler(e);
+			} finally {
+				messagesStore.isLoading = false;
 			}
 		}
 	}
 
-	private static async getMessageSenderInfo(senderDocRef: DBMessage['sender']) {
-		return (await UserService.getUserDisplayInfo(senderDocRef.id))! as Message['sender'];
-	}
-
-	private static async getFullMessageInfo(DbMessage: MessageWithId) {
+	private static async getFullMessageInfo(dbMessage: MessageWithId) {
 		try {
-			const { sender, content, ...m } = DbMessage;
-			const senderInfo = await this.getMessageSenderInfo(sender);
-			const messageResult: Message = {
-				...m,
+			const senderInfo = (await UserService.getUserDisplayInfo(dbMessage.sender.id))!;
+			const message = {
+				...dbMessage,
 				sender: senderInfo,
-				content: { text: content.text, type: content.type },
-			};
+			} as Message;
 
-			if (content.type !== 'text' && content.attachments?.length) {
-				const attachWithThumb = await Promise.all(
-					content.attachments.map(async file => {
-						if (file.fileType.startsWith('image/') && file.thumbnail) {
+			if (dbMessage.content.type !== 'text' && dbMessage.content.attachments?.length) {
+				const attachmentsWithThumb = await Promise.all(
+					dbMessage.content.attachments.map(async file => {
+						if (file.thumbnail) {
 							return {
 								...file,
-								thumbnail: await MessagesService.getMessageThumb(file),
+								thumbnail: await MessagesService.getMessageThumb(file.thumbnail.fullpath, file.fileType),
 							} as MessageAttachment<AttachmentType>;
 						}
 						return file as MessageAttachment<'file'>;
 					})
 				);
-				(messageResult.content as MessageContent<AttachmentType>).attachments = attachWithThumb;
+				(message.content as MessageContent<AttachmentType>).attachments = attachmentsWithThumb;
 			}
-			return messageResult;
+			return message;
 		} catch (e) {
 			return errorHandler(e);
 		}
 	}
 
-	private static async getMessageThumb(file: DBMessageAttachment) {
-		const thumb = file.thumbnail;
-		if (thumb?.fullpath) {
-			try {
-				const blobFile = await getBytes(storageRef(storage, thumb.fullpath));
-				if (blobFile) {
-					return `data:${file.fileType};base64,${encode(blobFile)}`;
-				}
-			} catch (e) {
-				return errorHandler(e);
-			}
+	private static async getMessageThumb(path: string, fileType: DBMessageAttachment['fileType']) {
+		try {
+			const buffer = await getBytes(storageRef(storage, path));
+			return `data:${fileType};base64,${encode(buffer)}`;
+		} catch (e) {
+			return errorHandler(e);
 		}
-		return null;
 	}
 
-	static async loadPreviewbyFullpath(rawFile: MessageAttachment['raw']) {
+	static async loadPreviewbyFullpath(path: string) {
 		try {
-			if (rawFile.fullpath) {
-				const blobFile = await getBlob(storageRef(storage, rawFile.fullpath));
-				if (blobFile) {
-					return URL.createObjectURL(blobFile);
-				}
-			}
+			const blobFile = await getBlob(storageRef(storage, path));
+			return URL.createObjectURL(blobFile);
 		} catch (e) {
 			return errorHandler(e);
 		}
@@ -349,12 +328,10 @@ export class MessagesService {
 			async () => {
 				try {
 					// Handle successful uploads on complete
-					const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
 					const raw = {
 						bucket: uploadTask.snapshot.ref.bucket,
 						fullpath: uploadTask.snapshot.ref.fullPath,
 						fullsize: fileData.size,
-						downloadURL,
 					} as DBMessageAttachment['raw'];
 					if ((file as FormAttachment<'media'>).sizes) {
 						raw.sizes = (file as FormAttachment<'media'>).sizes;

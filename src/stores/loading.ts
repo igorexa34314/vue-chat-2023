@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import { UploadTask } from 'firebase/storage';
 
 interface UploadingState {
@@ -12,7 +12,7 @@ interface UploadingState {
 export const useLoadingStore = defineStore('loading', () => {
 	const uploadingState = ref<UploadingState[]>([]);
 
-	const getUploadingStateById = computed(() => (id: string) => uploadingState.value.find(l => l.fileId === id));
+	const getUploadingStateById = (id: string) => uploadingState.value.find(l => l.fileId === id);
 
 	const setUploading = (id: string, task: UploadTask, startValue: number = 0) => {
 		uploadingState.value.push({ fileId: id, progress: startValue, task });
@@ -26,10 +26,15 @@ export const useLoadingStore = defineStore('loading', () => {
 		uploadingState.value = uploadingState.value.filter(l => l.fileId !== id);
 	};
 
+	const cancelLoading = (fileId: string) => {
+		return getUploadingStateById(fileId)?.task.cancel();
+	};
+
 	return {
 		getUploadingStateById,
 		setUploading,
 		updateLoading,
 		finishLoading,
+		cancelLoading,
 	};
 });

@@ -1,14 +1,13 @@
 import { defineStore } from 'pinia';
-import { ref, Ref } from 'vue';
+import { ref } from 'vue';
 import { DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
-import { Message, MediaAttachment } from '@/services/message';
+import { Message } from '@/services/message';
 
 export type Direction = 'top' | 'bottom';
 export type LastVisibleFbRef = Record<Direction, QueryDocumentSnapshot<DocumentData> | null>;
 
 export const useMessagesStore = defineStore('messages', () => {
 	const messages = ref<Message[]>([]);
-	const isLoading = ref(false);
 
 	const lastVisible = ref<LastVisibleFbRef>({
 		top: null,
@@ -27,19 +26,24 @@ export const useMessagesStore = defineStore('messages', () => {
 	const deleteMessages = (count = 10, direction: 'start' | 'end' = 'end') => {
 		return direction === 'end' ? messages.value.splice(-count, count) : messages.value.splice(0, count);
 	};
-	const setAttachPreviewURL = (attachRefInstance: Ref<MediaAttachment>, previewURL: string) => {
-		if (previewURL) {
-			attachRefInstance.value.raw.previewURL = previewURL;
-		}
-	};
 
 	const $reset = () => {
 		messages.value = [];
 		lastVisible.value = { top: null, bottom: null };
 	};
 
+	const isLoading = ref(false);
+	const isLoadingFirst = ref(false);
+
+	const setFirstLoading = (val: boolean) => {
+		isLoadingFirst.value = val;
+		isLoading.value = val;
+	};
+
 	return {
 		messages,
+		isLoadingFirst,
+		setFirstLoading,
 		isLoading,
 		lastVisible,
 		addMessage,
@@ -47,6 +51,5 @@ export const useMessagesStore = defineStore('messages', () => {
 		modifyMessage,
 		deleteMessageById,
 		deleteMessages,
-		setAttachPreviewURL,
 	};
 });

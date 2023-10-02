@@ -1,4 +1,4 @@
-import { computed, Ref, toRefs, nextTick } from 'vue';
+import { computed, Ref, toRefs, nextTick, watch } from 'vue';
 import { useScroll, watchPausable } from '@vueuse/core';
 import { useMessagesStore, Direction } from '@/stores/messages';
 import { VInfiniteScroll } from 'vuetify/labs/VInfiniteScroll';
@@ -21,12 +21,13 @@ export const useChatScroll = (
 	// Hiding scroll when inactive
 	const { arrivedState, isScrolling } = useScroll(scrollEl, {
 		offset: { bottom: 600 },
-		behavior: 'smooth',
 	});
 	const { bottom } = toRefs(arrivedState);
 
 	const scrollSide = computed(() =>
-		lastVisible.value.top && lastVisible.value.bottom
+		messagesStore.isLoading
+			? undefined
+			: lastVisible.value.top && lastVisible.value.bottom
 			? 'both'
 			: lastVisible.value.top
 			? 'start'
@@ -74,13 +75,25 @@ export const useChatScroll = (
 	// Inf. scroll on top and bottom
 	const onLoad: VInfiniteScroll['onLoad'] = async ({ side, done }) => {
 		const direction: Direction = side === 'start' ? 'top' : 'bottom';
-		if (lastVisible.value[direction]) {
-			pauseMessageWatcher();
+		if (messagesStore.isLoading) {
+			done('loading');
+		} else if (lastVisible.value[direction]) {
 			await onLoadMore?.(direction);
-			resumeMessageWatcher();
 			done('ok');
 		} else done('empty');
 	};
+
+	watch(
+		() => messagesStore.isLoading,
+		newVal => {
+			if (newVal) {
+				pauseMessageWatcher();
+			} else {
+				nextTick().then(() => resumeMessageWatcher());
+			}
+		},
+		{ immediate: true }
+	);
 
 	return {
 		isScrollOnBottom: bottom,

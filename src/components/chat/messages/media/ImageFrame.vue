@@ -12,7 +12,7 @@
 		height="100%">
 		<v-img
 			:lazy-src="image.thumbnail ?? ''"
-			:src="image.raw?.previewURL || image.raw?.downloadURL"
+			:src="image.raw?.previewURL"
 			:alt="alt || image.fullname"
 			width="100%"
 			eager
@@ -37,10 +37,8 @@
 import ImageLoader from '@/components/chat/ImageLoader.vue';
 import { onUnmounted, watchEffect, toRef } from 'vue';
 import { MessagesService } from '@/services/message';
-import { storeToRefs } from 'pinia';
 import { useDisplay } from 'vuetify';
 import { useLoadingStore } from '@/stores/loading';
-import { useMessagesStore } from '@/stores/messages';
 import { VImg, VCard } from 'vuetify/components';
 import { MessageAttachment } from '@/services/message';
 import { computed } from 'vue';
@@ -67,22 +65,19 @@ const emit = defineEmits<{
 	loaded: [];
 }>();
 
+const image = toRef(props, 'image');
 const { smAndUp } = useDisplay();
-const { setAttachPreviewURL } = useMessagesStore();
-const { getUploadingStateById } = storeToRefs(useLoadingStore());
+const { cancelLoading: cancelImageLoading, getUploadingStateById } = useLoadingStore();
+
 watchEffect(async () => {
 	try {
-		if (!props.image.raw.previewURL) {
-			const previewURL = await MessagesService.loadPreviewbyFullpath(props.image.raw);
-			setAttachPreviewURL(toRef(props, 'image'), previewURL as string);
+		if (!image.value.raw.previewURL) {
+			image.value.raw.previewURL = await MessagesService.loadPreviewbyFullpath(props.image.raw.fullpath);
 		}
 	} catch (e) {
 		console.log(e);
 	}
 });
-const cancelImageLoading = (imgId: string) => {
-	getUploadingStateById.value(imgId)?.task.cancel();
-};
 
 const calcImageSize = computed(() => {
 	const maxSize = smAndUp.value ? maxMessageMedia : maxMessageMediaSm;
@@ -92,14 +87,13 @@ const calcImageSize = computed(() => {
 		return w > h ? { w: maxSize.w, h: maxSize.w / ar } : { h: maxSize.h, w: maxSize.h * ar };
 	} else return { w, h };
 });
-
 const imageLoaded = () => {
 	if (props.image.raw.previewURL) {
 		emit('loaded');
 	}
 };
 const openImageFullsize = () => {
-	if (props.image.raw?.previewURL || props.image.raw?.downloadURL) {
+	if (props.image.raw?.previewURL) {
 		emit('open');
 	}
 };

@@ -71,7 +71,6 @@ export interface MessageAttachment<T extends AttachmentType = AttachmentType> {
   id: string;
   fileType: string;
   fullname: string;
-  created_at?: FirebaseFirestore.Timestamp;
   raw: {
     bucket: string;
     fullpath: string;
@@ -82,7 +81,6 @@ export interface MessageAttachment<T extends AttachmentType = AttachmentType> {
           h: number;
         }
       : never;
-    downloadURL: string;
   };
   thumbnail: T extends 'media'
     ? {

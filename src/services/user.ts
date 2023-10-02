@@ -71,21 +71,18 @@ export class UserService {
 			const chatsDocRef = UserService.getUserDocRef(uid, 'private', 'chats').withConverter(
 				timestampConverter<ChatRecord>()
 			);
-			return onSnapshot(chatsDocRef, chatsSnap => {
+			return onSnapshot(chatsDocRef, async chatsSnap => {
 				if (chatsSnap.exists()) {
 					const chats = chatsSnap.data();
-					Promise.all(
-						(Object.values(chats) as (typeof chats)[string][]).map(async ({ ref, ...data }) => ({
-							...data,
-							info: (await ChatService.getChatInfoByRef(ref))!,
-						}))
-					)
-						.then(userStore.setChats)
-						.finally(() => {
-							if (userStore.isChatsLoading) {
-								userStore.isChatsLoading = false;
-							}
-						});
+					const userChatRefs = (Object.values(chats) as (typeof chats)[string][]).map(({ ref }) => ref);
+					const chatsInfo = await ChatService.getUserChatsInfoByRef(...userChatRefs);
+					const userChats = chatsInfo
+						.map(info => ({ member_since: chats[info.id].member_since, info }) as UserChat)
+						.sort((a, b) => +(b.member_since ?? a.info.created_at) - +(a.member_since ?? a.info.created_at));
+					userStore.setChats(userChats);
+					if (userStore.isChatsLoading) {
+						userStore.isChatsLoading = false;
+					}
 				}
 			});
 		} catch (e) {
@@ -156,15 +153,14 @@ export class UserService {
 
 	static async getUserDisplayInfo(uid: User['uid']) {
 		const info = await UserService.getUserInfoById(uid);
-		if (info) {
-			return {
-				uid: info.uid,
-				firstname: info.firstname,
-				lastname: info.lastname,
-				photoURL: info.photoURL,
-			} as DisplayUserInfo;
-		}
-		return info;
+		return info
+			? ({
+					uid: info.uid,
+					firstname: info.firstname,
+					lastname: info.lastname,
+					photoURL: info.photoURL,
+			  } as DisplayUserInfo)
+			: null;
 	}
 
 	static async uploadUserAvatar(avatar: File | File[]) {

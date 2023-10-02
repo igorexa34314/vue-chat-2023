@@ -16,13 +16,13 @@
 			v-else-if="userChats && userChats.length"
 			class="chat__field flex-fill overflow-hidden d-flex flex-column flex-grow-1">
 			<div class="chat__content w-100 flex-fill">
-				<div v-if="isChatLoading || isMessagesLoading"><page-loader /></div>
+				<div v-if="isChatLoading || messagesStore.isLoadingFirst"><page-loader /></div>
 
 				<v-infinite-scroll
 					v-else-if="messages.length"
-					:side="scrollSide || 'start'"
+					:side="scrollSide ?? 'start'"
 					@load="onLoad"
-					:margin="50"
+					margin="70px"
 					ref="srollEl"
 					tag="div"
 					class="scrollable overflow-y-auto overflow-x-hidden flex-fill w-100 h-auto d-flex px-1 px-sm-4">
@@ -31,7 +31,7 @@
 							<MessageItem
 								v-for="m in messages"
 								:key="m.id"
-								:self="getUserInfo?.uid === m.sender.uid"
+								:self="userInfo?.uid === m.sender.uid"
 								:content="m.content"
 								:sender="m.sender"
 								:created_at="m.created_at"
@@ -49,7 +49,7 @@
 						<ContextMenu
 							v-model="msgCtxMenu.show"
 							:content-type="msgCtxMenu.activeMessage?.content.type || 'text'"
-							:self="getUserInfo?.uid === msgCtxMenu.activeMessage?.sender.uid"
+							:self="userInfo?.uid === msgCtxMenu.activeMessage?.sender.uid"
 							:max-width="350"
 							:min-width="xs ? 0 : 200"
 							:position="msgCtxMenu.position"
@@ -163,12 +163,12 @@ const emit = defineEmits<{
 gsap.registerPlugin(ScrollToPlugin);
 
 const { xs } = useDisplay();
-const { chats: userChats,info: getUserInfo } = storeToRefs(useUserStore());
+const { chats: userChats, info: userInfo } = storeToRefs(useUserStore());
 const route = useRoute('/chat/[chatId]');
 const { showMessage } = useSnackbarStore();
 const messagesStore = useMessagesStore();
-const isMessagesLoading = computed(() => messagesStore.isLoading);
 const { $reset: resetMsgStore } = messagesStore;
+const title = ref('');
 
 const chatId = toRef(() => route.params.chatId);
 
@@ -180,29 +180,24 @@ const {
 	async (id?: ChatInfo['id']) => {
 		const chatInfo = await ChatService.getChatInfoById(id ?? chatId.value);
 		if (chatInfo) {
-			emit('updateTitle', setChatName.value(chatInfo));
+			title.value = setChatName.value(chatInfo);
+			emit('updateTitle', title.value);
 		}
 		const unsub = (await MessagesService.fetchMessages(id ?? chatId.value)) as Unsubscribe | null;
 		return { chatInfo, unsub };
 	},
 	{ chatInfo: null, unsub: null },
 	{
-		onError: () => {
+		onError: e => {
+			console.error(e);
 			showMessage('Error loading chat', 'red-darken-3');
 		},
 	}
 );
 
-const chatInfo = computed(() => chatState.value.chatInfo);
-const messages = computed(() => messagesStore.messages);
+useMeta(computed(() => ({ title: title.value })));
 
-//Dynamic page title
-useMeta(
-	computed(() => {
-		if (chatInfo.value && Object.keys(chatInfo.value).length) return { title: setChatName.value(chatInfo.value) };
-		return { title: 'Chat' };
-	})
-);
+const { messages } = storeToRefs(messagesStore);
 
 // Reset messages when switching chat
 watch(chatId, async (newId, oldId, onCleanup) => {

@@ -23,10 +23,9 @@
 import InfoForm, { IProfileForm } from '@/components/profile/InfoForm.vue';
 import { VTabs, VTab, VWindow, VWindowItem, VContainer } from 'vuetify/components';
 import messages from '@/utils/messages.json';
-import { storeToRefs } from 'pinia';
 import { UserService } from '@/services/user';
 import { useUserStore } from '@/stores/user';
-import { ref, inject } from 'vue';
+import { ref, inject, computed } from 'vue';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { useMeta } from 'vue-meta';
 import { globalLoadingKey } from '@/injection-keys';
@@ -35,7 +34,8 @@ import { definePage } from 'vue-router/auto';
 definePage({ alias: '/' });
 useMeta({ title: 'My profile' });
 
-const { info } = storeToRefs(useUserStore());
+const usersStore = useUserStore();
+const info = computed(() => usersStore.info);
 const { showMessage } = useSnackbarStore();
 const loading = inject(globalLoadingKey);
 const profileTabs = [

@@ -21,7 +21,7 @@ let currentUser: User | null = null;
 
 export class AuthService {
 	static getCurrentUser() {
-		return new Promise((resolve: (user: User | null) => void, reject: ErrorFn) => {
+		return new Promise((resolve: (user: typeof currentUser) => void, reject: ErrorFn) => {
 			if (currentUser) {
 				resolve(currentUser);
 			} else {
@@ -30,7 +30,7 @@ export class AuthService {
 					user => {
 						unsubscribe();
 						currentUser = user;
-						resolve(user);
+						resolve(currentUser);
 					},
 					reject
 				);

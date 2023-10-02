@@ -8,6 +8,11 @@ import {
 	FirestoreDataConverter,
 	QueryDocumentSnapshot,
 	CollectionReference,
+	query,
+	where,
+	documentId,
+	getDocs,
+	orderBy,
 } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { UserService, DisplayUserInfo } from '@/services/user';
@@ -79,9 +84,30 @@ export class ChatService {
 		return ChatService.getChatInfoByRef(ChatService.getChatDocRef(chatId));
 	}
 
-	static async getUserChatsInfo(...chatDocsRefs: DocumentReference<DBChat>[]) {
-		return Promise.all(
-			chatDocsRefs.map(doc => ChatService.getChatInfoByRef(doc.withConverter(this.chatConverter)))
-		).then(chats => chats.filter(Boolean) as ChatInfo[]);
+	static async getUserChatsInfoByRef(...chatRefs: DocumentReference<DBChat>[] | DocumentReference<ChatWithId>[]) {
+		try {
+			const chatsSnap = await getDocs(
+				query(
+					this.chatCol.withConverter(this.chatConverter),
+					where('__name__', 'in', chatRefs),
+				)
+			);
+			const userChats = await Promise.all(
+				chatsSnap.docs.map(async doc => {
+					const chatData = doc.data();
+					const creatorInfo = (await UserService.getUserDisplayInfo(chatData.created_by.id))!;
+					if (chatData.type !== 'saved' && chatData.members?.length) {
+						const membersInfo = await Promise.all(
+							chatData.members.map(async m => (await UserService.getUserDisplayInfo(m.id))!)
+						);
+						return { ...chatData, created_by: creatorInfo, members: membersInfo } as ChatInfo;
+					}
+					return { ...chatData, created_by: creatorInfo } as ChatInfo<'saved'>;
+				})
+			);
+			return userChats;
+		} catch (e) {
+			return errorHandler(e);
+		}
 	}
 }
