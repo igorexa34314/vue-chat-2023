@@ -35,48 +35,42 @@
 </template>
 
 <script setup lang="ts">
-import { VAlert } from 'vuetify/components';
 import { computed } from 'vue';
 import { mdiPencil, mdiClose } from '@mdi/js';
-import { MessageContent } from '@/services/message';
 import { gsap } from 'gsap';
-import { AttachmentType } from '@/types/db/MessagesTable';
+import type { MessageContent } from '@/services/message';
+import type { AttachmentType } from '@/types/db/MessagesTable';
 
-const props = withDefaults(
-	defineProps<{
-		modelValue?: boolean;
-		content: MessageContent | null;
-	}>(),
-	{
-		modelValue: false,
-	}
-);
+const { content } = defineProps<{
+	content: MessageContent | null;
+}>();
 
 const emit = defineEmits<{
-	'update:modelValue': [val: boolean];
 	goToMessage: [];
 	cancel: [];
 }>();
+
+const modelValue = defineModel<boolean>('modelValue', { default: false });
 
 defineOptions({
 	inheritAttrs: false,
 });
 
 const getTextFromEditMsg = computed(() => {
-	return props.content?.type === 'text'
-		? props.content?.text
+	return content?.type === 'text'
+		? content?.text
 		: !getImagesFromEditMsg.value || !getImagesFromEditMsg.value.length
-		? (props.content as MessageContent<AttachmentType> | null)?.attachments.at(-1)?.fullname
-		: (getImagesFromEditMsg.value.length === 1 ? 'Photo' : 'Album') + ', ' + props.content?.text;
+		? (content as MessageContent<AttachmentType> | null)?.attachments.at(-1)?.fullname
+		: (getImagesFromEditMsg.value.length === 1 ? 'Photo' : 'Album') + ', ' + content?.text;
 });
 const getImagesFromEditMsg = computed(
 	() =>
-		(props.content as MessageContent<AttachmentType> | null)?.attachments
+		(content as MessageContent<AttachmentType> | null)?.attachments
 			?.filter(item => item.raw.previewURL)
 			.map(img => img.raw.previewURL)
 );
 const cancelReply = () => {
-	emit('update:modelValue', false);
+	modelValue.value = false;
 	emit('cancel');
 };
 

@@ -17,69 +17,69 @@
 			class="chat__field flex-fill overflow-hidden d-flex flex-column flex-grow-1">
 			<div class="chat__content w-100 flex-fill">
 				<div v-if="isChatLoading || messagesStore.isLoadingFirst"><page-loader /></div>
+				<Suspense v-else-if="messages.length" @resolve="handleSuspenceResolve">
+					<v-infinite-scroll
+						:side="scrollSide ?? 'start'"
+						@load="onLoad"
+						margin="70px"
+						ref="vuetifyScrollEl"
+						tag="div"
+						class="scrollable overflow-y-auto overflow-x-hidden flex-fill w-100 h-auto d-flex px-1 px-sm-4">
+						<div class="messages-field flex-fill w-100 d-flex flex-column justify-end px-1 px-sm-3 my-0 mx-auto">
+							<TransitionGroup :css="false" @before-enter="onBeforeEnter" @enter="onEnter" @leave="onLeave">
+								<MessageItem
+									v-for="m in messages"
+									:key="m.id"
+									:self="userInfo?.uid === m.sender.uid"
+									:content="m.content"
+									:sender="m.sender"
+									:created_at="m.created_at"
+									:updated_at="m.updated_at"
+									@contextmenu="(e: MouseEvent) => openCtxMenu(e, m)"
+									:id="`message-${m.id}`"
+									:data-message-id="m.id"
+									class="message-item px-2 px-sm-4 py-2"
+									@open-in-overlay="openInOverlay"
+									@dragstart.prevent
+									@drop.prevent
+									draggable="false" />
+							</TransitionGroup>
 
-				<v-infinite-scroll
-					v-else-if="messages.length"
-					:side="scrollSide ?? 'start'"
-					@load="onLoad"
-					margin="70px"
-					ref="srollEl"
-					tag="div"
-					class="scrollable overflow-y-auto overflow-x-hidden flex-fill w-100 h-auto d-flex px-1 px-sm-4">
-					<div class="messages-field flex-fill w-100 d-flex flex-column justify-end px-1 px-sm-3 my-0 mx-auto">
-						<TransitionGroup :css="false" @before-enter="onBeforeEnter" @enter="onEnter" @leave="onLeave">
-							<MessageItem
-								v-for="m in messages"
-								:key="m.id"
-								:self="userInfo?.uid === m.sender.uid"
-								:content="m.content"
-								:sender="m.sender"
-								:created_at="m.created_at"
-								:updated_at="m.updated_at"
-								@contextmenu="(e: MouseEvent) => openCtxMenu(e, m)"
-								:id="`message-${m.id}`"
-								:data-message-id="m.id"
-								class="message-item px-2 px-sm-4 py-2"
-								@open-in-overlay="openInOverlay"
-								@dragstart.prevent
-								@drop.prevent
-								draggable="false" />
-						</TransitionGroup>
+							<ContextMenu
+								v-model="msgCtxMenu.show"
+								:content-type="msgCtxMenu.activeMessage?.content.type || 'text'"
+								:self="userInfo?.uid === msgCtxMenu.activeMessage?.sender.uid"
+								:max-width="350"
+								:min-width="xs ? 0 : 200"
+								:position="msgCtxMenu.position"
+								@closed="ctxMenuClosed"
+								@copy-selected="copySelectedText"
+								@copy-image="copyImage"
+								@copy-all="copyTextMessage"
+								@download="downloadFile"
+								@edit="editMessage"
+								@delete="showConfirmation = true" />
 
-						<ContextMenu
-							v-model="msgCtxMenu.show"
-							:content-type="msgCtxMenu.activeMessage?.content.type || 'text'"
-							:self="userInfo?.uid === msgCtxMenu.activeMessage?.sender.uid"
-							:max-width="350"
-							:min-width="xs ? 0 : 200"
-							:position="msgCtxMenu.position"
-							@closed="ctxMenuClosed"
-							@copy-selected="copySelectedText"
-							@copy-image="copyImage"
-							@copy-all="copyTextMessage"
-							@download="downloadFile"
-							@edit="editMessage"
-							@delete="showConfirmation = true" />
+							<ConfirmationDialog
+								title="Are you sure you want to delete this message?"
+								v-model="showConfirmation"
+								@on-submit="deleteMessage" />
 
-						<ConfirmationDialog
-							title="Are you sure you want to delete this message?"
-							v-model="showConfirmation"
-							@on-submit="deleteMessage" />
+							<FullsizeOverlay
+								v-model="overlayState.show"
+								:content="getAllMedia"
+								v-model:currentItem="overlayState.currentImage"
+								@close="overlayClosed" />
+						</div>
 
-						<FullsizeOverlay
-							v-model="overlayState.show"
-							:content="getAllMedia"
-							v-model:currentItem="overlayState.currentImage"
-							@close="overlayClosed" />
-					</div>
-
-					<template #empty></template>
-					<template #loading></template>
-					<template #error></template>
-				</v-infinite-scroll>
+						<template #empty></template>
+						<template #loading></template>
+						<template #error></template>
+					</v-infinite-scroll>
+				</Suspense>
 
 				<!-- Chat empty message -->
-				<div v-else-if="!messages.length" class="text-h5 pa-4 w-100 h-100 d-flex justify-center align-center">
+				<div v-else class="text-h5 pa-4 w-100 h-100 d-flex justify-center align-center">
 					<v-card min-height="200px" class="d-flex" variant="tonal" elevation="20px" style="opacity: 0.5">
 						<template #title>
 							<h3>This chat is empty right now</h3>
@@ -100,7 +100,7 @@
 			<!-- Go on bottom of the page button -->
 			<v-fade-transition>
 				<v-btn
-					v-if="srollEl && srollEl?.$el.scrollHeight > srollEl?.$el.clientHeight && !isScrollOnBottom"
+					v-if="srollEl && srollEl.scrollHeight > srollEl.clientHeight && !isScrollOnBottom"
 					class="fixed-button-scrolldown"
 					color="blue-grey-darken-1"
 					:icon="mdiArrowDown"
@@ -121,26 +121,23 @@
 </template>
 
 <script setup lang="ts">
-import { mdiArrowDown } from '@mdi/js';
-import ConfirmationDialog from '@/components/UI/ConfirmationDialog.vue';
-import FullsizeOverlay from '@/components/chat/messages/media/FullsizeOverlay.vue';
-import sbMessages from '@/utils/messages.json';
 import MessageItem from '@/components/chat/messages/MessageItem.vue';
-import MessageForm, { EditMessageData } from '@/components/chat/form/MessageForm.vue';
-import ContextMenu from '@/components/chat/ContextMenu.vue';
+import { mdiArrowDown } from '@mdi/js';
+import sbMessages from '@/utils/messages.json';
+import MessageForm, { type EditMessageData } from '@/components/chat/form/MessageForm.vue';
 import {
 	MessagesService,
-	CreateMsgForm,
-	Message,
-	MediaAttachment,
-	MessageContent,
-	MessageAttachment,
+	type CreateMsgForm,
+	type Message,
+	type MediaAttachment,
+	type MessageContent,
+	type MessageAttachment,
 } from '@/services/message';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { useUserStore } from '@/stores/user';
 import { useMessagesStore } from '@/stores/messages';
-import { ChatService, ChatInfo } from '@/services/chat';
-import { ref, computed, onUnmounted, nextTick, watch, toRef } from 'vue';
+import { ChatService, type ChatInfo } from '@/services/chat';
+import { ref, computed, onUnmounted, nextTick, watch, toRef, defineAsyncComponent } from 'vue';
 import { useMeta } from 'vue-meta';
 import { useRoute } from 'vue-router/auto';
 import { useChatScroll } from '@/composables/useChatScroll';
@@ -149,12 +146,15 @@ import { storeToRefs } from 'pinia';
 import { setChatName } from '@/utils/chat';
 import { downloadFile as downloadFileProcess } from '@/utils/message/fileActions';
 import { copyToClipboard as copyImageToClipboard } from '@/utils/message/imageActions';
-import { Unsubscribe } from 'firebase/firestore';
-import { VDialog, VContainer, VFadeTransition } from 'vuetify/components';
-import { VInfiniteScroll } from 'vuetify/labs/VInfiniteScroll';
 import { gsap, ScrollToPlugin } from 'gsap/all';
 import { useDisplay } from 'vuetify';
-import { ContentType } from '@/types/db/MessagesTable';
+import type { VInfiniteScroll } from 'vuetify/components';
+import type { Unsubscribe } from 'firebase/firestore';
+import type { ContentType } from '@/types/db/MessagesTable';
+
+const FullsizeOverlay = defineAsyncComponent(() => import('@/components/chat/messages/media/FullsizeOverlay.vue'));
+const ContextMenu = defineAsyncComponent(() => import('@/components/chat/ContextMenu.vue'));
+const ConfirmationDialog = defineAsyncComponent(() => import('@/components/UI/ConfirmationDialog.vue'));
 
 const emit = defineEmits<{
 	updateTitle: [title: string];
@@ -183,7 +183,8 @@ const {
 			title.value = setChatName.value(chatInfo);
 			emit('updateTitle', title.value);
 		}
-		const unsub = (await MessagesService.fetchMessages(id ?? chatId.value)) as Unsubscribe | null;
+		const unsub = MessagesService.subscribeMessages(id ?? chatId.value) as Unsubscribe | null;
+		await MessagesService.fetchMessages(id ?? chatId.value);
 		return { chatInfo, unsub };
 	},
 	{ chatInfo: null, unsub: null },
@@ -219,13 +220,16 @@ onUnmounted(() => {
 	resetMsgStore();
 });
 
-const srollEl = ref<VInfiniteScroll>();
-const { isScrollOnBottom, scrollBottom, onLoad, scrollSide } = useChatScroll(
-	toRef(() => srollEl.value?.$el),
-	async direction => {
-		await MessagesService.loadMoreMessages(chatId.value, direction);
-	}
-);
+const vuetifyScrollEl = ref<VInfiniteScroll | null>(null);
+const srollEl = toRef(() => vuetifyScrollEl.value?.$el as HTMLElement | null);
+
+const { isScrollOnBottom, scrollBottom, onLoad, scrollSide } = useChatScroll(srollEl, async direction => {
+	await MessagesService.loadMoreMessages(chatId.value, direction);
+});
+
+const handleSuspenceResolve = () => {
+	scrollBottom();
+};
 
 const allowTransition = ref(false);
 const createMessage = async <T extends ContentType>(content: CreateMsgForm<T>) => {
@@ -345,7 +349,7 @@ const downloadFile = async () => {
 		console.error(e);
 	}
 };
-const msgForm = ref<InstanceType<typeof MessageForm>>();
+const msgForm = ref<InstanceType<typeof MessageForm> | null>(null);
 const editMessage = () => {
 	if (msgCtxMenu.value.activeMessage?.id) {
 		msgForm.value?.editMessage(msgCtxMenu.value.activeMessage);
@@ -362,7 +366,7 @@ const scrollToAndHighlightMessage = (mId: Message['id']) => {
 	const highlighter = gsap.utils.selector(`#message-${mId}`)('span.highlighter');
 	gsap
 		.timeline({ delay: 0 })
-		.to(srollEl.value?.$el, {
+		.to(srollEl.value, {
 			scrollTo: { y: `#message-${mId}`, autoKill: true, offsetY: 100 },
 			duration: 0.4,
 			ease: 'power2',
@@ -414,7 +418,7 @@ const onLeave = (el: Element, done: () => void) => {
 // const attachDialog = ref(false);
 // Using chat scroll composable with infinite scroll
 const { isOverDropZone } = useDropZone(
-	toRef(() => srollEl.value?.$el),
+	toRef(() => srollEl.value),
 	files => {
 		if (files) {
 			msgForm.value?.attachFiles('file', files);

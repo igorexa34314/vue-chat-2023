@@ -1,4 +1,4 @@
-import { UserData } from '@/types/db/UserdataTable';
+import type { UserData } from '@/types/db/UserdataTable';
 import { DocumentReference, Timestamp } from 'firebase/firestore';
 
 export type ChatType = 'saved' | 'private' | 'group' | 'public';

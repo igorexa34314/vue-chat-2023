@@ -7,16 +7,17 @@
 <script setup lang="ts">
 import PreviewFile from '@/components/chat/attach/PreviewFile.vue';
 import { ref, computed } from 'vue';
-import { AttachedContent } from '@/components/chat/attach/AttachDialog.vue';
+import type { AttachedContent } from '@/components/chat/attach/AttachDialog.vue';
 
-const props = defineProps<{
+const { files } = defineProps<{
 	files: AttachedContent[];
 }>();
+
 const emit = defineEmits<{
 	deleteAttach: [fileId: AttachedContent['id']];
 }>();
 
-const prevEl = ref<InstanceType<typeof PreviewFile>[]>();
+const prevEl = ref<InstanceType<typeof PreviewFile>[]>([]);
 
 const isFilesReady = computed(() => {
 	const imgsEl = prevEl.value?.filter(el => el.imgEl).map(el => el.imgEl);

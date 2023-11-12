@@ -1,5 +1,11 @@
 <template>
-	<v-dialog v-model="confirmationDialog" :attach="attach" width="auto" eager content-class="w-100">
+	<v-dialog
+		v-model="confirmationDialog"
+		:attach="attach"
+		:activator="activator"
+		width="auto"
+		eager
+		content-class="w-100">
 		<template #activator="{ props, isActive }">
 			<slot name="activator" v-bind="{ props, isActive }"></slot>
 		</template>
@@ -22,7 +28,7 @@
 						</v-btn>
 					</slot>
 					<slot name="submit" v-bind="{ submitEvent: submit }">
-						<v-btn :ref="el => (submitBtn = el as VBtn)" color="green-darken-1" variant="text" @click="submit">
+						<v-btn ref="submitBtn" color="green-darken-1" variant="text" @click="submit">
 							<span class="text-h6">{{ submitLabel || 'Submit' }}</span>
 						</v-btn>
 					</slot>
@@ -34,11 +40,19 @@
 
 <script setup lang="ts">
 import { ref, watch, nextTick } from 'vue';
-import { VBtn, VDialog } from 'vuetify/components';
-import { useVModel } from '@vueuse/core';
+import type { VBtn, VDialog } from 'vuetify/components';
 
-interface Props {
-	modelValue?: boolean;
+const {
+	maxWidth = '550px',
+	width = '100%',
+	title,
+	text,
+	attach,
+	submitLabel,
+	contentClass,
+	cancelLabel,
+	activator,
+} = defineProps<{
 	maxWidth?: string | number;
 	width?: string | number;
 	title?: string;
@@ -48,19 +62,14 @@ interface Props {
 	submitLabel?: string;
 	cancelLabel?: string;
 	contentClass?: VDialog['contentClass'];
-}
-
-const props = withDefaults(defineProps<Props>(), {
-	modelValue: false,
-	maxWidth: '550px',
-	width: '100%',
-});
+}>();
 
 const emit = defineEmits<{
-	'update:modelValue': [val: boolean];
 	onSubmit: [];
 	onCancel: [];
 }>();
+
+const confirmationDialog = defineModel<boolean>('modelValue', { default: false });
 
 const slots = defineSlots<{
 	title: VDialog['$slots']['default'];
@@ -70,8 +79,7 @@ const slots = defineSlots<{
 	submit(arg: { submitEvent: () => void }): any;
 }>();
 
-const confirmationDialog = useVModel(props, 'modelValue', emit);
-const submitBtn = ref<VBtn>();
+const submitBtn = ref<VBtn | null>(null);
 
 watch(
 	confirmationDialog,

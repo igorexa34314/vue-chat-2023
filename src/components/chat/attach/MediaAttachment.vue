@@ -17,9 +17,9 @@
 import PreviewImage from '@/components/chat/attach/PreviewImage.vue';
 import { ref, computed } from 'vue';
 import { calcImageCols as calcCols } from '@/utils/images';
-import { AttachedContent } from '@/components/chat/attach/AttachDialog.vue';
+import type { AttachedContent } from '@/components/chat/attach/AttachDialog.vue';
 
-const props = defineProps<{
+const { files } = defineProps<{
 	files: AttachedContent[];
 }>();
 
@@ -27,8 +27,9 @@ const emit = defineEmits<{
 	deleteAttach: [imgId: AttachedContent['id']];
 }>();
 
-const mediaFiles = computed(() => props.files.filter(file => file.fileData.type.startsWith('image/')));
-const prevEl = ref<InstanceType<typeof PreviewImage>[]>();
+const mediaFiles = computed(() => files.filter(file => file.fileData.type.startsWith('image/')));
+const prevEl = ref<InstanceType<typeof PreviewImage>[]>([]);
+
 const calcImageCols = computed(() => (imgIdx: number) => calcCols(mediaFiles.value.length, imgIdx));
 
 const isImgsReady = computed(() => prevEl.value?.map(img => img.imgEl).every(img => img?.state === 'loaded'));

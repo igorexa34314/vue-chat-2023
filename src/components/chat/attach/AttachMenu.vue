@@ -26,10 +26,10 @@
 </template>
 
 <script setup lang="ts">
-import { VMenu } from 'vuetify/components';
 import { mdiImage, mdiFileDocumentOutline } from '@mdi/js';
-import { AttachmentType } from '@/types/db/MessagesTable';
 import { useDisplay } from 'vuetify';
+import type { AttachmentType } from '@/types/db/MessagesTable';
+import type { VMenu } from 'vuetify/components';
 
 const emit = defineEmits<{
 	'attach-file': [type: AttachmentType, files: FileList];

@@ -18,10 +18,9 @@
 </template>
 
 <script setup lang="ts">
-import { VSnackbar } from 'vuetify/components';
 import { mdiClose } from '@mdi/js';
 import { ref } from 'vue';
-import { useSnackbarStore, SnackbarOptions } from '@/stores/snackbar';
+import { useSnackbarStore, type SnackbarOptions } from '@/stores/snackbar';
 
 const { $onAction } = useSnackbarStore();
 

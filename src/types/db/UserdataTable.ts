@@ -1,7 +1,7 @@
-import { UserInfo as FirebaseUserInfo } from 'firebase/auth';
 import { DocumentReference, Timestamp } from 'firebase/firestore';
-import { Writeable } from '@/types/db/helpers';
-import { ChatInfo, ChatType } from '@/types/db/ChatTable';
+import type { UserInfo as FirebaseUserInfo } from 'firebase/auth';
+import type { Writeable } from '@/types/db/helpers';
+import type { ChatInfo, ChatType } from '@/types/db/ChatTable';
 
 export interface UserData {
 	public: PublicUserDataCollection;

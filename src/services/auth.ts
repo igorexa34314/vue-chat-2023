@@ -1,6 +1,4 @@
 import {
-	ErrorFn,
-	User,
 	signOut,
 	createUserWithEmailAndPassword,
 	signInWithEmailAndPassword,
@@ -8,6 +6,8 @@ import {
 	signInWithRedirect,
 	getRedirectResult,
 	onAuthStateChanged,
+	type ErrorFn,
+	type User,
 } from 'firebase/auth';
 import { auth } from '@/firebase';
 import { fbErrorHandler } from '@/utils/errorHandler';

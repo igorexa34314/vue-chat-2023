@@ -1,5 +1,5 @@
 import { computed } from 'vue';
-import { DisplayUserInfo } from '@/services/user';
+import { type DisplayUserInfo } from '@/services/user';
 
 export const setUserDisplayName = computed(
 	() =>

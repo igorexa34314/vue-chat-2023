@@ -1,26 +1,25 @@
-import { computed, Ref, toRefs, nextTick, watch } from 'vue';
+import { computed, toRefs, nextTick, watch, type Ref } from 'vue';
 import { useScroll, watchPausable } from '@vueuse/core';
-import { useMessagesStore, Direction } from '@/stores/messages';
-import { VInfiniteScroll } from 'vuetify/labs/VInfiniteScroll';
+import { useMessagesStore, type Direction } from '@/stores/messages';
 import { gsap } from 'gsap';
 import { ScrollToPlugin } from 'gsap/all';
+import type { VInfiniteScroll } from 'vuetify/components';
 
 gsap.registerPlugin(ScrollToPlugin);
 
 export const useChatScroll = (
-	scrollEl: Ref<HTMLElement | undefined>,
+	scrollEl: Ref<HTMLElement | null>,
 	onLoadMore: (direction: Direction) => void | Promise<void>
 ) => {
+	// Messages store
 	const messagesStore = useMessagesStore();
+
 	// Last visible doc refs on top and bottom (needs for infinite loading)
 	const lastVisible = computed(() => messagesStore.lastVisible);
 
-	// Messages store state
-	const messages = computed(() => messagesStore.messages);
-
 	// Hiding scroll when inactive
 	const { arrivedState, isScrolling } = useScroll(scrollEl, {
-		offset: { bottom: 600 },
+		offset: { bottom: 300 },
 	});
 	const { bottom } = toRefs(arrivedState);
 
@@ -63,7 +62,7 @@ export const useChatScroll = (
 
 	// Watchers to scroll bottom when new message add
 	const { pause: pauseMessageWatcher, resume: resumeMessageWatcher } = watchPausable(
-		() => messages.value.length,
+		() => messagesStore.messages.length,
 		(newVal, oldVal) => {
 			if (newVal > oldVal && !isScrolling.value) {
 				nextTick().then(() => scrollBottom('instant'));

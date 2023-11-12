@@ -1,5 +1,5 @@
 import { storage } from '@/firebase';
-import { MessageAttachment } from '@/services/message';
+import { type MessageAttachment } from '@/services/message';
 import { ref as storageRef, getBlob } from 'firebase/storage';
 
 export const setDownloadLink = (filename: string, url: string) => {

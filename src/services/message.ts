@@ -1,4 +1,4 @@
-import { timestampConverter } from '@/utils/firestore';
+import { withIdConverter } from '@/utils/firestore';
 import { storage, db } from '@/firebase';
 import {
 	arrayRemove,
@@ -17,9 +17,9 @@ import {
 	orderBy,
 	startAfter,
 	DocumentReference,
-	UpdateData,
-	FirestoreDataConverter,
-	QueryDocumentSnapshot,
+	where,
+	type UpdateData,
+	type Unsubscribe,
 } from 'firebase/firestore';
 import {
 	ref as storageRef,
@@ -30,26 +30,25 @@ import {
 	deleteObject,
 } from 'firebase/storage';
 import { AuthService } from '@/services/auth';
-import { UserService, DisplayUserInfo } from '@/services/user';
+import { UserService, type DisplayUserInfo } from '@/services/user';
 import { fbErrorHandler as errorHandler } from '@/utils/errorHandler';
 import { encode } from 'base64-arraybuffer';
-import { useMessagesStore, Direction } from '@/stores/messages';
+import { useMessagesStore, type Direction } from '@/stores/messages';
 import { useLoadingStore } from '@/stores/loading';
-import {
+import type {
 	AttachmentType,
 	ContentType,
 	Message as DBMessage,
 	MessageAttachment as DBMessageAttachment,
 	MessageContent as DBMessageContent,
 } from '@/types/db/MessagesTable';
-import { ChatInfo, ChatService } from '@/services/chat';
-import { EditMessageData } from '@/components/chat/form/MessageForm.vue';
-import { ParsedTimestamps } from '@/types/db/helpers';
-import { ThumbResult } from '@/utils/resizeFile';
+import { ChatService, type ChatInfo } from '@/services/chat';
+import { type EditMessageData } from '@/components/chat/form/MessageForm.vue';
+import { type ThumbResult } from '@/utils/resizeFile';
 
-type MessageWithId = ParsedTimestamps<DBMessage> & { id: DocumentReference['id'] };
+type ConvertedMessage = ReturnType<ReturnType<typeof withIdConverter<DBMessage>>['fromFirestore']>;
 
-export interface Message extends Omit<MessageWithId, 'sender' | 'content'> {
+export interface Message extends Omit<ConvertedMessage, 'deleted_at' | 'sender' | 'content'> {
 	content: MessageContent;
 	sender: DisplayUserInfo;
 }
@@ -85,64 +84,122 @@ export type FormAttachment<T extends AttachmentType = AttachmentType> = {
 	  });
 
 export class MessagesService {
-	private static messageConverter: FirestoreDataConverter<MessageWithId, DBMessage> = {
-		toFirestore: ({ id, ...msg }) => timestampConverter().toFirestore(msg) as DBMessage,
-		fromFirestore: (snapshot: QueryDocumentSnapshot<MessageWithId, DBMessage>, options) => {
-			const chat = timestampConverter<DBMessage>().fromFirestore(snapshot, options);
-			return { ...chat, id: snapshot.ref.id } as MessageWithId;
-		},
-	};
-
 	private static getMessagesCol(chatId: ChatInfo['id']) {
-		return collection(doc(ChatService.chatCol, chatId), 'messages').withConverter(this.messageConverter);
+		return collection(doc(ChatService.chatCol, chatId), 'messages').withConverter(withIdConverter<DBMessage>());
 	}
 
 	private static getMessageDocRef(chatId: ChatInfo['id'], mId: Message['id']) {
 		return doc(MessagesService.getMessagesCol(chatId), mId);
 	}
 
+	static subscribeMessages(chatId: ChatInfo['id']) {
+		const messagesStore = useMessagesStore();
+		const messagesCol = this.getMessagesCol(chatId);
+		const subscribeAdd = () => {
+			const q = query(messagesCol, where('created_at', '>=', Timestamp.now()));
+			return onSnapshot(q, async messagesRef => {
+				try {
+					const messages = await Promise.all(
+						messagesRef
+							.docChanges()
+							.filter(change => change.type === 'added')
+							.map(async change => this.getFullMessageInfo(change.doc.data()))
+					);
+					messages.reverse().forEach(msg => {
+						messagesStore.addMessage(msg, 'end');
+					});
+					const lastAdded = messagesRef
+						.docChanges()
+						.reverse()
+						.findIndex(doc => doc.type === 'added');
+					if (lastAdded) {
+						messagesStore.lastVisible.top = messagesRef.docs[lastAdded];
+					}
+				} catch (err) {
+					return errorHandler(err);
+				}
+			});
+		};
+		const subscribeUpdate = () => {
+			const q = query(messagesCol, where('updated_at', '>=', Timestamp.now()));
+			return onSnapshot(q, async messagesRef => {
+				try {
+					const messages = await Promise.all(
+						messagesRef
+							.docChanges()
+							.filter(change => change.type !== 'removed')
+							.map(async change => this.getFullMessageInfo(change.doc.data()))
+					);
+					messages.forEach(msg => {
+						messagesStore.modifyMessage(msg);
+					});
+				} catch (err) {
+					return errorHandler(err);
+				}
+			});
+		};
+		const subscribeDelete = () => {
+			const q = query(messagesCol, where('deleted_at', '>=', Timestamp.now()));
+			return onSnapshot(q, async messagesRef => {
+				try {
+					const messagesId = await Promise.all(
+						messagesRef
+							.docChanges()
+							.filter(change => change.type !== 'removed')
+							.map(async change => change.doc.id)
+					);
+					messagesId.forEach(msgId => {
+						messagesStore.deleteMessageById(msgId);
+					});
+					// const lastAdded = messagesRef.docChanges().findLastIndex(doc => doc.type === 'added');
+					// if (lastAdded) {
+					// 	messagesStore.lastVisible.top = messagesRef.docs[lastAdded];
+					// }
+				} catch (err) {
+					return errorHandler(err);
+				}
+			});
+		};
+		const unsubAdd = subscribeAdd();
+		const unsubUpdate = subscribeUpdate();
+		const unsubDelete = subscribeDelete();
+
+		return (() => {
+			unsubAdd();
+			unsubUpdate();
+			unsubDelete();
+		}) as Unsubscribe;
+	}
+
 	static async fetchMessages(chatId: ChatInfo['id'], lmt: number = 10) {
 		const messagesStore = useMessagesStore();
 		const messagesCol = this.getMessagesCol(chatId);
-		const q = query(messagesCol, orderBy('created_at', 'desc'), limit(lmt));
 		messagesStore.setFirstLoading(true);
-		return onSnapshot(q, async messagesRef => {
-			try {
-				const snapshots = await Promise.all(
-					messagesRef.docChanges().map(async change => {
-						const msgData = change.doc.data();
-						if (change.type === 'added' || change.type === 'modified') {
-							return {
-								message: await this.getFullMessageInfo(msgData),
-								changeType: change.type,
-							};
-						}
-						return {
-							message: { id: msgData.id },
-							changeType: change.type,
-						};
-					})
-				);
-				snapshots.reverse().forEach(snap => {
-					if (snap.changeType === 'added') {
-						messagesStore.addMessage(snap.message, 'end');
-					} else if (snap.changeType === 'modified') {
-						messagesStore.modifyMessage(snap.message);
-					} else {
-						// messagesStore.deleteMessageById(snap.message.id);
-					}
-				});
-				if (messagesRef.size >= lmt) {
-					messagesStore.lastVisible.top = messagesRef.docs[messagesRef.docs.length - 1];
-				}
-			} catch (err) {
-				return errorHandler(err);
-			} finally {
-				if (messagesStore.isLoadingFirst) {
-					messagesStore.setFirstLoading(false);
-				}
+		const q = query(
+			messagesCol,
+			where('deleted_at', '==', null),
+			orderBy('deleted_at', 'desc'),
+			orderBy('created_at', 'desc'),
+			limit(lmt)
+		);
+		try {
+			const messagesDocRef = await getDocs(q);
+			const messageFullData = await Promise.all(
+				messagesDocRef.docs.map(async doc => {
+					return this.getFullMessageInfo(doc.data());
+				})
+			);
+			messageFullData.reverse().forEach(msg => {
+				messagesStore.addMessage(msg, 'end');
+			});
+			if (messagesDocRef.size >= lmt) {
+				messagesStore.lastVisible.top = messagesDocRef.docs[messagesDocRef.docs.length - 1];
 			}
-		});
+		} catch (err) {
+			return errorHandler(err);
+		} finally {
+			messagesStore.setFirstLoading(false);
+		}
 	}
 
 	static async loadMoreMessages(chatId: ChatInfo['id'], direction: Direction, perPage: number = 10) {
@@ -153,6 +210,8 @@ export class MessagesService {
 				const messagesCol = this.getMessagesCol(chatId);
 				const q = query(
 					messagesCol,
+					where('deleted_at', '==', null),
+					orderBy('deleted_at', 'desc'),
 					orderBy('created_at', direction === 'top' ? 'desc' : 'asc'),
 					startAfter(messagesStore.lastVisible[direction]),
 					limit(perPage)
@@ -174,9 +233,7 @@ export class MessagesService {
 						return message;
 					})
 				);
-				for (const m of messages) {
-					messagesStore.addMessage(m, direction === 'top' ? 'start' : 'end');
-				}
+				messagesStore.addMessages(messages.reverse(), direction === 'top' ? 'start' : 'end');
 
 				messagesStore.lastVisible[direction] =
 					messagesRef.size >= perPage ? messagesRef.docs[messagesRef.docs.length - 1] : null;
@@ -188,7 +245,7 @@ export class MessagesService {
 		}
 	}
 
-	private static async getFullMessageInfo(dbMessage: MessageWithId) {
+	private static async getFullMessageInfo<T extends ConvertedMessage>(dbMessage: T) {
 		try {
 			const senderInfo = (await UserService.getUserDisplayInfo(dbMessage.sender.id))!;
 			const message = {
@@ -252,6 +309,7 @@ export class MessagesService {
 				sender: UserService.getUserDocRef(await AuthService.getUid()),
 				created_at: Timestamp.now(),
 				updated_at: null,
+				deleted_at: null,
 			});
 		} catch (e) {
 			return errorHandler(e);
@@ -273,7 +331,7 @@ export class MessagesService {
 
 	private static async createUploadTask(
 		chatId: ChatInfo['id'],
-		messageDocRef: DocumentReference<MessageWithId>,
+		messageDocRef: DocumentReference<ConvertedMessage>,
 		file: FormAttachment,
 		DBcontentToUpdate: Partial<DBMessageAttachment>
 	) {
@@ -379,7 +437,7 @@ export class MessagesService {
 
 	private static async uploadAttachments(
 		chatId: ChatInfo['id'],
-		messageDocRef: DocumentReference<MessageWithId>,
+		messageDocRef: DocumentReference<ConvertedMessage>,
 		attach: FormAttachment[]
 	) {
 		try {
@@ -413,6 +471,8 @@ export class MessagesService {
 
 	static async deleteMessageById(chatId: ChatInfo['id'], mId: Message['id']) {
 		const messageDocRef = this.getMessageDocRef(chatId, mId);
-		return deleteDoc(messageDocRef).catch(err => errorHandler(err));
+		return updateDoc(messageDocRef, {
+			deleted_at: Timestamp.now(),
+		} as UpdateData<DBMessage>).catch(err => errorHandler(err));
 	}
 }

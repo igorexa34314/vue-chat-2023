@@ -1,5 +1,5 @@
 import { DocumentReference, Timestamp } from 'firebase/firestore';
-import { UserData } from '@/types/db/UserdataTable';
+import type { UserData } from '@/types/db/UserdataTable';
 
 export type ContentType = 'text' | 'media' | 'file';
 export type AttachmentType = Exclude<ContentType, 'text'>;
@@ -9,6 +9,7 @@ export interface Message {
 	sender: DocumentReference<UserData>;
 	created_at: Timestamp;
 	updated_at: Timestamp | null;
+	deleted_at: Timestamp | null;
 }
 
 export interface MessageContent {

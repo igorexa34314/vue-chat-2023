@@ -53,12 +53,12 @@
 import validations from '@/utils/validations';
 import messages from '@/utils/messages.json';
 import { ref } from 'vue';
-import { VContainer, VForm } from 'vuetify/components';
 import { useMeta } from 'vue-meta';
 import { definePage, useRouter } from 'vue-router/auto';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { useDisplay } from 'vuetify';
 import { UserService } from '@/services/user';
+import type { VForm } from 'vuetify/components';
 
 definePage({ meta: { layout: 'empty' } });
 useMeta({ title: 'Enter your name' });
@@ -67,7 +67,7 @@ const { xs } = useDisplay();
 const { push } = useRouter();
 const { showMessage } = useSnackbarStore();
 
-const formEl = ref<VForm>();
+const formEl = ref<VForm | null>(null);
 const loading = ref(false);
 const formState = ref({
 	firstname: '',

@@ -26,10 +26,16 @@
 				class="message__content pb-1 pr-3"
 				:class="{ 'pl-2 pt-2': content.type === 'file', 'pl-3 pt-3': content.type === 'media' }">
 				<component
-					:is="messageComponent"
+					:is="messageComponent1"
 					v-bind="{ content }"
 					:class="{ 'pr-2 pr-sm-3': content.type === 'file' }"
-					@openInOverlay="(imgId: MediaAttachment['id']) => emit('openInOverlay', imgId)" />
+					v-on="
+						content.type !== 'text'
+							? {
+									openInOverlay: (imgId: MediaAttachment['id']) => emit('openInOverlay', imgId),
+							  }
+							: {}
+					" />
 
 				<small
 					:class="{ 'mt-2': content.type !== 'file' }"
@@ -51,26 +57,22 @@ import MediaMessage from '@/components/chat/messages/media/MediaMessage.vue';
 import FileMessage from '@/components/chat/messages/file/FileMessage.vue';
 import TextMessage from '@/components/chat/messages/text/TextMessage.vue';
 import { useDisplay } from 'vuetify';
-import { computed } from 'vue';
+import { computed, defineAsyncComponent } from 'vue';
 import { useRouter } from 'vue-router/auto';
 import { formatDate } from '@/utils/filters/messages';
 import { defaultAvatar } from '@/global-vars';
-import { Message, MediaAttachment } from '@/services/message';
+import type { Message, MediaAttachment } from '@/services/message';
 import { useI18n } from 'vue-i18n';
 import { setUserDisplayName } from '@/utils/user';
 
-interface MessageItemProps {
+const { content, sender, created_at, updated_at, self } = defineProps<{
 	content: Message['content'];
 	sender: Message['sender'];
 	created_at: Message['created_at'];
 	updated_at: Message['updated_at'];
 	self?: boolean;
-}
+}>();
 
-const props = withDefaults(defineProps<MessageItemProps>(), {
-	self: false,
-	active: false,
-});
 const emit = defineEmits<{
 	openInOverlay: [imgId: MediaAttachment['id']];
 	contextmenu: [event: MouseEvent];
@@ -80,11 +82,19 @@ const { d } = useI18n();
 const { xs, smAndUp } = useDisplay();
 const { push } = useRouter();
 
-const messageComponent = computed(() =>
-	props.content.type === 'media' ? MediaMessage : props.content.type === 'file' ? FileMessage : TextMessage
+const messageComponent1 = computed(() =>
+	content.type === 'media' ? MediaMessage : content.type === 'file' ? FileMessage : TextMessage
 );
-const openUserProfile = () => {
-	push({ name: '/user/[userId]', params: { userId: props.sender.uid } });
+
+const messageComponent = defineAsyncComponent<any>(() =>
+	content.type === 'media'
+		? import('@/components/chat/messages/media/MediaMessage.vue')
+		: content.type === 'file'
+		? import('@/components/chat/messages/file/FileMessage.vue')
+		: import('@/components/chat/messages/text/TextMessage.vue')
+);
+const openUserProfile = async () => {
+	push({ name: '/user/[userId]', params: { userId: sender.uid } });
 };
 </script>
 

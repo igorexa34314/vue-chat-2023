@@ -23,12 +23,11 @@
 import GoogleProvider from '@/components/auth/providers/GoogleProvider.vue';
 import LocalRegister from '@/components/auth/LocalRegister.vue';
 import messages from '@/utils/messages.json';
-import { VContainer } from 'vuetify/components';
 import { useMeta } from 'vue-meta';
 import { definePage, useRouter } from 'vue-router/auto';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { useDisplay } from 'vuetify';
-import { User } from 'firebase/auth';
+import type { User } from 'firebase/auth';
 
 definePage({ meta: { layout: 'empty' } });
 useMeta({ title: 'Register' });

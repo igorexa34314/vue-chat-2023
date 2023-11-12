@@ -1,7 +1,5 @@
 <template>
-	<div v-if="!isLoading && (!userInfo || !Object.keys(userInfo).length)" class="text-h5 pa-4 mt-5">
-		Пользователь не найден
-	</div>
+	<div v-if="!isLoading && (!userInfo || !Object.keys(userInfo).length)" class="text-h5 pa-4 mt-5">User not found</div>
 	<div v-else>
 		<v-card class="pa-5">
 			<v-card-title>
@@ -60,9 +58,7 @@
 </template>
 
 <script setup lang="ts">
-import { VSkeletonLoader } from 'vuetify/labs/VSkeletonLoader';
 import { mdiHelp, mdiGenderMale, mdiGenderFemale, mdiMessageText, mdiAccountPlusOutline } from '@mdi/js';
-import { VTooltip } from 'vuetify/components';
 import messages from '@/utils/messages.json';
 import { computed, toRef, watchEffect } from 'vue';
 import { UserService } from '@/services/user';

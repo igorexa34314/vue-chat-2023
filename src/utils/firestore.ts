@@ -1,5 +1,11 @@
-import { FirestoreDataConverter, Timestamp, DocumentReference, QueryDocumentSnapshot } from 'firebase/firestore';
-import { ParsedTimestamps } from '@/types/db/helpers';
+import {
+	Timestamp,
+	DocumentReference,
+	QueryDocumentSnapshot,
+	type FirestoreDataConverter,
+	type DocumentData,
+} from 'firebase/firestore';
+import type { ParsedTimestamps } from '@/types/db/helpers';
 
 export const parseTimestamp = <T extends object, K extends keyof T>(obj: T): ParsedTimestamps<T> => {
 	if (obj instanceof Timestamp) {
@@ -17,11 +23,30 @@ export const parseTimestamp = <T extends object, K extends keyof T>(obj: T): Par
 	return obj;
 };
 
-export const timestampConverter = <T extends object>(): FirestoreDataConverter<ParsedTimestamps<T>, T> =>
+export const timestampConverter = <
+	T extends DocumentData,
+	Parsed extends ParsedTimestamps<T> = ParsedTimestamps<T>,
+>(): FirestoreDataConverter<Parsed, T> =>
 	({
 		toFirestore: data => data,
 		fromFirestore: (snapshot: QueryDocumentSnapshot<T>, options) => {
 			const info = snapshot.data(options);
 			return parseTimestamp(info);
 		},
-	}) as FirestoreDataConverter<ParsedTimestamps<T>, T>;
+	}) as FirestoreDataConverter<Parsed, T>;
+
+export const withIdConverter = <
+	T extends DocumentData,
+	WithId extends ParsedTimestamps<T> & { id: DocumentReference['id'] } = ParsedTimestamps<T> & {
+		id: DocumentReference['id'];
+	},
+>(): FirestoreDataConverter<WithId, T> => {
+	const tc = timestampConverter<T>();
+	return {
+		toFirestore: ({ id, ...data }: WithId) => tc.toFirestore(data as unknown as T),
+		fromFirestore: (snapshot: QueryDocumentSnapshot<WithId, T>, options) => {
+			const data = tc.fromFirestore(snapshot, options);
+			return { ...data, id: snapshot.ref.id } as WithId;
+		},
+	};
+};

@@ -7,7 +7,7 @@
 <script setup lang="ts">
 import { googleLogo } from '@/global-vars';
 import { AuthService } from '@/services/auth';
-import { User } from 'firebase/auth';
+import type { User } from 'firebase/auth';
 
 const emit = defineEmits<{
 	success: [user?: User];

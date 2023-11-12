@@ -10,6 +10,10 @@ export default {
 		(v: string) => !!v || 'Enter password',
 		(v: string) => (v && v.length >= 6 && v.length <= 32) || 'Password should be from 6 to 32 characters',
 	],
+	repeater: (original: string) => [
+		(v: string) => !!v || 'messages.repeat_pass',
+		(v: string) => (v && v === original) || 'rules.repeater',
+	],
 	file: [
 		(v: FileList | File[]) => (v.length ? v[0].size <= 2097152 || 'File size size should be less than 2 mib' : true),
 	],

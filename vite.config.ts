@@ -16,7 +16,7 @@ export default ({ mode }: ConfigEnv) => {
 		appType: 'mpa', // disable history fallback
 		base: process.env.VITE_BASE || '/',
 		server: {
-			port: +process.env.VITE_PORT || 3000,
+			port: +(process.env.VITE_PORT || 3000),
 		},
 		resolve: {
 			alias: {
@@ -29,12 +29,12 @@ export default ({ mode }: ConfigEnv) => {
 				exclude: ['**/components/*.vue'],
 				dts: './src/types/typed-router.d.ts',
 			}),
-			vue({ template: { transformAssetUrls } }),
+			vue({ template: { transformAssetUrls }, script: { defineModel: true, propsDestructure: true } }),
 			Layouts({
 				layoutsDirs: 'src/layouts',
 				defaultLayout: 'default',
 			}),
-			vuetify(),
+			vuetify({ autoImport: true }),
 			VueI18nPlugin({
 				globalSFCScope: true,
 				// you need to set i18n resource including paths!

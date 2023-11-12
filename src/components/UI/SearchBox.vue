@@ -9,7 +9,7 @@
 				v-model="query"
 				ref="searchEl"
 				v-bind="$attrs"
-				@update:model-value="val => updateQuery(val, refine)"
+				@update:model-value="(val: string) => updateQuery(val, refine)"
 				variant="solo"
 				placeholder="Search"
 				density="compact"
@@ -35,7 +35,6 @@
 							</template>
 							<template #append>
 								<v-btn
-									v-bind="props"
 									size="large"
 									variant="text"
 									:icon="mdiMessageText"
@@ -57,7 +56,6 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { VTextField } from 'vuetify/components';
 import { mdiMessageText } from '@mdi/js';
 import { searchClient } from '@/plugins/searchClient';
 import { useRouter } from 'vue-router/auto';
@@ -66,9 +64,10 @@ import { useSnackbarStore } from '@/stores/snackbar';
 import { useUserStore } from '@/stores/user';
 import messages from '@/utils/messages.json';
 import { defaultAvatar } from '@/global-vars';
-import { UserInfo } from '@/types/db/UserdataTable';
+import type { UserInfo } from '@/types/db/UserdataTable';
 import { setUserDisplayName } from '@/utils/user';
 import { useDebounceFn } from '@vueuse/core';
+import type { VTextField } from 'vuetify/components';
 // @ts-ignore
 import { AisInstantSearch, AisAutocomplete } from 'vue-instantsearch/vue3/es';
 
@@ -78,15 +77,11 @@ type AisAutocompleteSlot = {
 	refine: (query: string) => void;
 };
 
-const props = withDefaults(
-	defineProps<{
-		search?: string;
-		modelValue?: string;
-	}>(),
-	{
-		modelValue: '',
-	}
-);
+const { search } = defineProps<{
+	search?: string;
+}>();
+
+const modelValue = defineModel<string>('modelValue', { default: '' });
 
 defineOptions({
 	inheritAttrs: false,
@@ -96,7 +91,7 @@ const { push } = useRouter();
 const userStore = useUserStore();
 const { showMessage } = useSnackbarStore();
 const searchIndex: string = import.meta.env.VITE_ALGOLIA_SEARCH_INDEX || 'index';
-const searchEl = ref<VTextField>();
+const searchEl = ref<VTextField | null>(null);
 const uid = computed(() => userStore.info?.uid);
 
 const query = ref('');

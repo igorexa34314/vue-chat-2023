@@ -2,8 +2,10 @@
 	<metainfo>
 		<template #title="{ content }">{{ content ? `${content} | ${AppName}` : AppName }}</template>
 	</metainfo>
+
 	<GlobalSnackbar />
-	<RouterView #default="{ Component }">
+
+	<router-view #default="{ Component }">
 		<template v-if="Component">
 			<Suspense>
 				<!-- main content -->
@@ -14,13 +16,14 @@
 				</template>
 			</Suspense>
 		</template>
-	</RouterView>
+	</router-view>
 </template>
 
 <script setup lang="ts">
-import GlobalSnackbar from '@/components/app/GlobalSnackbar.vue';
+import { defineAsyncComponent } from 'vue';
 
-const AppName = import.meta.env.VITE_APP_NAME || 'My Chat';
+const GlobalSnackbar = defineAsyncComponent(() => import('@/components/app/GlobalSnackbar.vue'));
+const AppName: string = import.meta.env.VITE_APP_NAME || 'My Chat';
 </script>
 
 <style lang="scss">

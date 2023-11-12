@@ -1,49 +1,35 @@
 import { db, functions } from '@/firebase';
-import { timestampConverter } from '@/utils/firestore';
+import { withIdConverter } from '@/utils/firestore';
 import {
 	DocumentReference,
 	collection,
 	doc,
 	getDoc,
-	FirestoreDataConverter,
-	QueryDocumentSnapshot,
 	CollectionReference,
 	query,
 	where,
-	documentId,
 	getDocs,
-	orderBy,
 } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
-import { UserService, DisplayUserInfo } from '@/services/user';
+import { UserService, type DisplayUserInfo } from '@/services/user';
 import { fbErrorHandler as errorHandler } from '@/utils/errorHandler';
-import { ParsedTimestamps } from '@/types/db/helpers';
-import { ChatInfo as DBChat, ChatType } from '@/types/db/ChatTable';
-import { User } from 'firebase/auth';
+import type { ChatInfo as DBChat, ChatType } from '@/types/db/ChatTable';
 
-type ChatWithId = ParsedTimestamps<DBChat> & { id: DocumentReference['id'] };
+type ConvertedChat = ReturnType<ReturnType<typeof withIdConverter<DBChat>>['fromFirestore']>;
 
-export interface ChatInfo<T extends ChatType = ChatType> extends Omit<ChatWithId, 'members' | 'created_by'> {
+export interface ChatInfo<T extends ChatType = ChatType> extends Omit<ConvertedChat, 'members' | 'created_by'> {
 	created_by: DisplayUserInfo;
 	members: [T] extends ['saved'] ? never : DisplayUserInfo[];
 }
 
 export class ChatService {
-	private static chatConverter: FirestoreDataConverter<ChatWithId, DBChat> = {
-		toFirestore: ({ id, ...chatInfo }) => timestampConverter().toFirestore(chatInfo) as DBChat,
-		fromFirestore: (snapshot: QueryDocumentSnapshot<ChatWithId, DBChat>, options) => {
-			const chat = timestampConverter<DBChat>().fromFirestore(snapshot, options);
-			return { ...chat, id: snapshot.ref.id } as ChatWithId;
-		},
-	};
-
 	static chatCol = collection(db, 'chats') as CollectionReference<DBChat>;
 
 	private static getChatDocRef(chatId: ChatInfo['id']) {
-		return doc(ChatService.chatCol, chatId).withConverter(this.chatConverter);
+		return doc(ChatService.chatCol, chatId).withConverter(withIdConverter<DBChat>());
 	}
 
-	static async joinPrivateChat(companionId: User['uid']): Promise<ChatInfo['id']> {
+	static async joinPrivateChat(companionId: DocumentReference['id']): Promise<ChatInfo['id']> {
 		try {
 			const joinPrivateChatByCompanionId = httpsCallable<
 				{ companionId: string },
@@ -60,9 +46,9 @@ export class ChatService {
 		}
 	}
 
-	static async getChatInfoByRef(chatDocRef: DocumentReference<DBChat> | DocumentReference<ChatWithId>) {
+	static async getChatInfoByRef(chatDocRef: DocumentReference<DBChat> | DocumentReference<ConvertedChat>) {
 		try {
-			const chat = await getDoc(chatDocRef.withConverter(this.chatConverter));
+			const chat = await getDoc(chatDocRef.withConverter(withIdConverter<DBChat>()));
 			if (chat.exists()) {
 				const chatData = chat.data();
 				const creatorInfo = (await UserService.getUserDisplayInfo(chatData.created_by.id))!;
@@ -84,13 +70,10 @@ export class ChatService {
 		return ChatService.getChatInfoByRef(ChatService.getChatDocRef(chatId));
 	}
 
-	static async getUserChatsInfoByRef(...chatRefs: DocumentReference<DBChat>[] | DocumentReference<ChatWithId>[]) {
+	static async getUserChatsInfoByRef(...chatRefs: DocumentReference<DBChat>[] | DocumentReference<ConvertedChat>[]) {
 		try {
 			const chatsSnap = await getDocs(
-				query(
-					this.chatCol.withConverter(this.chatConverter),
-					where('__name__', 'in', chatRefs),
-				)
+				query(this.chatCol.withConverter(withIdConverter<DBChat>()), where('__name__', 'in', chatRefs))
 			);
 			const userChats = await Promise.all(
 				chatsSnap.docs.map(async doc => {

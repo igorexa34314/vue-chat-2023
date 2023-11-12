@@ -3,7 +3,6 @@ import { DocumentSnapshot } from 'firebase-admin/firestore';
 import { UserInfo } from '../db.types';
 import { index } from './client';
 import * as logger from 'firebase-functions/logger';
-import { HttpsError } from 'firebase-functions/v1/auth';
 
 export const addRecordsToAlgoliaIndexTrigger = onDocumentWritten(
   { document: 'users/{userId}/public/info', region: 'europe-central2' },
@@ -17,21 +16,27 @@ export const addRecordsToAlgoliaIndexTrigger = onDocumentWritten(
     const beforeSnap = snapshot.before;
     const afterSnap = snapshot.after;
 
-    const eventType = beforeSnap.exists && afterSnap.exists ? 'update' : afterSnap.exists ? 'create' : 'delete';
+    const eventType = !afterSnap.exists ? 'delete' : !beforeSnap.exists ? 'update' : 'create';
 
     switch (eventType) {
       case 'create':
-        await index.saveObject({
-          objectID: event.params.userId,
-          ...afterSnap.data(),
-        });
+        await index.partialUpdateObject(
+          {
+            objectID: event.params.userId,
+            ...afterSnap.data(),
+          },
+          { createIfNotExists: true }
+        );
         break;
 
       case 'update':
-        await index.partialUpdateObject({
-          objectID: event.params.userId,
-          ...afterSnap.data(),
-        });
+        await index.partialUpdateObject(
+          {
+            objectID: event.params.userId,
+            ...afterSnap.data(),
+          },
+          { createIfNotExists: true }
+        );
         break;
 
       case 'delete':
@@ -39,7 +44,7 @@ export const addRecordsToAlgoliaIndexTrigger = onDocumentWritten(
         break;
 
       default:
-        throw new HttpsError('internal', 'Invalid snapshot event');
+        throw new Error(`Invalid event change type ${eventType}`);
     }
 
     logger.info(`User ${eventType} with ${event.params.userId} succesfully indexed`);

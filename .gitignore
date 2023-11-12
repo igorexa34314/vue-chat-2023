@@ -41,3 +41,4 @@ firebase/
 
 # rollup-plugin-visualizer
 bundle-stats.html
+.env*.local

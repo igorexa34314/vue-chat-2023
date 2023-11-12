@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import { DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
-import { Message } from '@/services/message';
+import type { DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
+import { type Message } from '@/services/message';
 
 export type Direction = 'top' | 'bottom';
 export type LastVisibleFbRef = Record<Direction, QueryDocumentSnapshot<DocumentData> | null>;
@@ -15,7 +15,10 @@ export const useMessagesStore = defineStore('messages', () => {
 	});
 
 	const addMessage = (msg: Message, direction: 'start' | 'end' = 'end') => {
-		return direction === 'end' ? messages.value.push(msg) : messages.value.unshift(msg);
+		messages.value = direction === 'end' ? [...messages.value, msg] : [msg, ...messages.value];
+	};
+	const addMessages = (msgs: Message[], direction: 'start' | 'end' = 'end') => {
+		messages.value = direction === 'end' ? [...messages.value, ...msgs] : [...msgs, ...messages.value];
 	};
 	const deleteMessageById = (messageId: Message['id']) => {
 		messages.value = messages.value.filter(m => m.id !== messageId);
@@ -47,6 +50,7 @@ export const useMessagesStore = defineStore('messages', () => {
 		isLoading,
 		lastVisible,
 		addMessage,
+		addMessages,
 		$reset,
 		modifyMessage,
 		deleteMessageById,

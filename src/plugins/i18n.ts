@@ -1,5 +1,5 @@
-import { createI18n } from 'vue-i18n';
-import dateTimeFormats from '@/utils/dateTimeFormats.json';
+import { createI18n, type DateTimeFormatSchema, type localeKey } from 'vue-i18n';
+import datetimeFormats from '@/utils/datetimeFormats.json';
 import { availableLocales } from '@/global-vars';
 
 export default createI18n({
@@ -7,5 +7,11 @@ export default createI18n({
 	locale: 'en-US',
 	fallbackLocale: 'en-US',
 	availableLocales,
-	datetimeFormats: Object.assign({}, ...availableLocales.map(locale => ({ [locale]: dateTimeFormats['en-US'] }))),
+	datetimeFormats: availableLocales.reduce(
+		(formats, locale) => ({
+			...formats,
+			[locale]: datetimeFormats['en-US'],
+		}),
+		{} as Record<localeKey, DateTimeFormatSchema>
+	),
 });

@@ -27,11 +27,11 @@ import TextMessage from '@/components/chat/messages/text/TextMessage.vue';
 import ImageFrame from '@/components/chat/messages/media/ImageFrame.vue';
 import { computed } from 'vue';
 import { calcImageCols as calcCols } from '@/utils/images';
-import { MessageContent, MediaAttachment } from '@/services/message';
+import type { MessageContent, MediaAttachment } from '@/services/message';
 import { maxMessageMedia, maxMessageMediaSm } from '@/global-vars';
 import { useDisplay } from 'vuetify';
 
-const props = defineProps<{
+const { content } = defineProps<{
 	content: MessageContent<'media'>;
 }>();
 
@@ -42,7 +42,7 @@ const emit = defineEmits<{
 const { smAndUp } = useDisplay();
 
 const imageSize = smAndUp.value ? maxMessageMedia : maxMessageMediaSm;
-const calcImageCols = computed(() => (imgIdx: number) => calcCols(props.content.attachments.length, imgIdx));
+const calcImageCols = computed(() => (imgIdx: number) => calcCols(content.attachments.length, imgIdx));
 </script>
 
 <style lang="scss" scoped>

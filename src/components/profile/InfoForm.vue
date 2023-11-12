@@ -70,18 +70,18 @@
 import ImageLoader from '@/components/chat/ImageLoader.vue';
 import BirthdayPicker from '@/components/UI/BirthdayPicker.vue';
 import validations from '@/utils/validations';
-import { ref, toRefs } from 'vue';
-import { defaultAvatar } from '@/global-vars';
-import { PublicUserInfo } from '@/services/user';
-import { VForm, VTextField, VRadioGroup, VRadio, VFileInput } from 'vuetify/components';
+import { ref } from 'vue';
 import { useDisplay } from 'vuetify';
+import { defaultAvatar } from '@/global-vars';
+import { type PublicUserInfo } from '@/services/user';
+import type { VForm } from 'vuetify/components';
 
 export interface IProfileForm extends Pick<PublicUserInfo, 'firstname' | 'lastname' | 'gender' | 'birthday_date'> {
 	birthday_date: Date;
 	avatar: File[];
 }
 
-const props = defineProps<{
+const { uinfo: info } = defineProps<{
 	uinfo: PublicUserInfo;
 }>();
 
@@ -89,14 +89,13 @@ const emit = defineEmits<{
 	submit: [data: IProfileForm];
 }>();
 
-const { uinfo: info } = toRefs(props);
 const { xs } = useDisplay();
-const formEl = ref<VForm>();
+const formEl = ref<VForm | null>(null);
 const formState = ref<IProfileForm>({
-	firstname: info.value.firstname,
-	lastname: info.value.lastname,
-	gender: info.value.gender || 'unknown',
-	birthday_date: info.value.birthday_date || new Date(),
+	firstname: info.firstname,
+	lastname: info.lastname,
+	gender: info.gender || 'unknown',
+	birthday_date: info.birthday_date || new Date(),
 	avatar: [],
 });
 

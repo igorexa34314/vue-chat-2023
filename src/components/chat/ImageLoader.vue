@@ -15,27 +15,22 @@
 </template>
 
 <script setup lang="ts">
-import { VProgressCircular } from 'vuetify/components';
 import { mdiClose } from '@mdi/js';
 import { useDisplay } from 'vuetify';
 
-const props = withDefaults(
-	defineProps<{
-		modelValue?: string | number;
-		color?: string;
-		bgColor?: string;
-		size?: string | number;
-		width?: string | number;
-		iconSize?: string | number;
-	}>(),
-	{
-		color: 'grey-lighten-4',
-		bgColor: 'grey-darken-4',
-	}
-);
+const { color = 'grey-lighten-4', bgColor = 'grey-darken-4' } = defineProps<{
+	color?: string;
+	bgColor?: string;
+	size?: string | number;
+	width?: string | number;
+	iconSize?: string | number;
+}>();
+
 const emit = defineEmits<{
 	cancel: [];
 }>();
+
+const modelValue = defineModel<string | number>('modelValue');
 
 const { smAndUp } = useDisplay();
 </script>

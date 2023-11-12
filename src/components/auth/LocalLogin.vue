@@ -22,15 +22,15 @@ import PassField from '@/components/UI/PassField.vue';
 import validations from '@/utils/validations';
 import { ref } from 'vue';
 import { AuthService } from '@/services/auth';
-import { VForm, VTextField } from 'vuetify/components';
-import { User } from 'firebase/auth';
+import type { VForm } from 'vuetify/components';
+import type { User } from 'firebase/auth';
 
 const emit = defineEmits<{
 	success: [user?: User];
 	error: [err: unknown];
 }>();
 
-const formEl = ref<VForm>();
+const formEl = ref<VForm | null>(null);
 const loading = ref(false);
 const formState = ref({
 	email: '',

@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import { UploadTask } from 'firebase/storage';
+import type { UploadTask } from 'firebase/storage';
 
 interface UploadingState {
 	fileId: string;

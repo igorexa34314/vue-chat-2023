@@ -43,39 +43,32 @@ import {
 	mdiDeleteOutline,
 	mdiLinkVariant,
 } from '@mdi/js';
-import { useVModel } from '@vueuse/core';
 import { ContextMenu, ContextMenuItem } from '@imengyu/vue3-context-menu';
-import { MenuOptions } from '@imengyu/vue3-context-menu/lib/ContextMenuDefine';
-import { MessageContent } from '@/services/message';
+import type { MenuOptions } from '@imengyu/vue3-context-menu/lib/ContextMenuDefine';
+import type { MessageContent } from '@/services/message';
 import '@imengyu/vue3-context-menu/lib/vue3-context-menu.css';
 
-const props = withDefaults(
-	defineProps<{
-		modelValue?: boolean;
-		contentType?: MessageContent['type'];
-		self?: boolean;
-		maxWidth?: MenuOptions['maxWidth'];
-		minWidth?: MenuOptions['minWidth'];
-		position?: { x: MenuOptions['x']; y: MenuOptions['y'] };
-		offset?: [MenuOptions['xOffset'], MenuOptions['yOffset']];
-		theme?: MenuOptions['theme'];
-		zIndex?: MenuOptions['zIndex'];
-	}>(),
-	{
-		modelValue: false,
-		contentType: 'text',
-		self: true,
-		maxWidth: 400,
-		minWidth: 200,
-		zIndex: 100,
-		offset: () => [20, 30],
-		theme: 'dark',
-		position: () => ({ x: 0, y: 0 }),
-	}
-);
+const {
+	contentType = 'text',
+	self = true,
+	maxWidth = 400,
+	minWidth = 200,
+	zIndex = 100,
+	offset = [20, 30],
+	theme = 'dark',
+	position = { x: 0, y: 0 },
+} = defineProps<{
+	contentType?: MessageContent['type'];
+	self?: boolean;
+	maxWidth?: MenuOptions['maxWidth'];
+	minWidth?: MenuOptions['minWidth'];
+	position?: { x: MenuOptions['x']; y: MenuOptions['y'] };
+	offset?: [MenuOptions['xOffset'], MenuOptions['yOffset']];
+	theme?: MenuOptions['theme'];
+	zIndex?: MenuOptions['zIndex'];
+}>();
 
 const emit = defineEmits<{
-	'update:modelValue': [val: boolean];
 	closed: [];
 	forward: [];
 	edit: [];
@@ -89,6 +82,8 @@ const emit = defineEmits<{
 	delete: [];
 }>();
 
+const showMenu = defineModel<boolean>('modelValue', { default: false });
+
 const selectedText = ref('');
 const getSelectionText = () => {
 	selectedText.value = getSelection()?.toString() || '';
@@ -100,24 +95,23 @@ onUnmounted(() => {
 	document.removeEventListener('selectionchange', getSelectionText);
 });
 
-const showMenu = useVModel(props, 'modelValue', emit);
 const contextMenuItems = computed(
 	() =>
 		[
 			{ title: 'Reply', value: 'reply', icon: mdiReplyOutline, disabled: true },
-			props.self ? { title: 'Edit', value: 'edit', icon: mdiPencil } : false,
+			self ? { title: 'Edit', value: 'edit', icon: mdiPencil } : false,
 			{ title: 'Pin', value: 'pin', icon: mdiPinOutline, disabled: true },
 			selectedText.value
 				? { title: 'Copy selected text', value: 'copySelected', icon: mdiContentCopy }
-				: props.contentType === 'text'
+				: contentType === 'text'
 				? { title: 'Copy text', value: 'copyAll', icon: mdiContentCopy }
-				: props.contentType === 'media'
+				: contentType === 'media'
 				? { title: 'Copy image', value: 'copyImage', icon: mdiImage }
 				: { title: 'Copy link', value: 'copyLink', icon: mdiLinkVariant },
-			props.contentType !== 'text' ? { title: 'Download', value: 'download', icon: mdiDownload } : false,
+			contentType !== 'text' ? { title: 'Download', value: 'download', icon: mdiDownload } : false,
 			{ title: 'Forward', value: 'forward', icon: mdiShareOutline, disabled: true },
 			{ title: 'Select', value: 'select', icon: mdiCheckCircleOutline, disabled: true },
-			props.self
+			self
 				? {
 						title: 'Delete',
 						value: 'delete',

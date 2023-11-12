@@ -28,27 +28,21 @@
 import { mdiDelete } from '@mdi/js';
 import ImageLoader from '@/components/chat/ImageLoader.vue';
 import { ref } from 'vue';
-import { VImg } from 'vuetify/components';
-import { AttachedContent } from '@/components/chat/attach/AttachDialog.vue';
-import { MediaAttachment } from '@/services/message';
+import type { VImg } from 'vuetify/components';
+import type { AttachedContent } from '@/components/chat/attach/AttachDialog.vue';
+import type { MediaAttachment } from '@/services/message';
 
-const props = withDefaults(
-	defineProps<{
-		previewItem: AttachedContent;
-		maxHeight?: string | number;
-		imgRatio?: string | number;
-	}>(),
-	{
-		maxHeight: '300px',
-		imgRatio: 1,
-	}
-);
+const { maxHeight = '300px', imgRatio = 1 } = defineProps<{
+	previewItem: AttachedContent;
+	maxHeight?: string | number;
+	imgRatio?: string | number;
+}>();
 
 const emit = defineEmits<{
 	'delete-item': [itemId: MediaAttachment['id']];
 }>();
 
-const imgEl = ref<VImg>();
+const imgEl = ref<VImg | null>(null);
 
 defineExpose({ imgEl });
 </script>

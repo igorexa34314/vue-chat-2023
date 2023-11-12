@@ -26,16 +26,15 @@
 </template>
 
 <script setup lang="ts">
-import { VHover } from 'vuetify/components';
 import TextMessage from '@/components/chat/messages/text/TextMessage.vue';
 import FileExtension from '@/components/chat/messages/file/FileExtension.vue';
 import FilePreview from '@/components/chat/messages/file/FilePreview.vue';
 import { ref } from 'vue';
 import { formatFileSize } from '@/utils/filters/messages';
 import { downloadFile as downloadFileProcess } from '@/utils/message/fileActions';
-import { MessageAttachment, MessageContent } from '@/services/message';
+import type { MessageAttachment, MessageContent } from '@/services/message';
 
-const props = defineProps<{
+const { content } = defineProps<{
 	content: MessageContent<'file'>;
 }>();
 

@@ -1,5 +1,5 @@
 import { AuthService } from '@/services/auth';
-import { NavigationGuardWithThis } from 'vue-router/auto';
+import type { NavigationGuardWithThis } from 'vue-router/auto';
 
 export const checkAuth: NavigationGuardWithThis<undefined> = async (to, from, next) => {
 	const currentUser = await AuthService.getCurrentUser();

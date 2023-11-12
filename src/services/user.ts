@@ -7,20 +7,25 @@ import {
 	onSnapshot,
 	doc,
 	updateDoc,
-	Unsubscribe,
 	collection,
 	DocumentReference,
 	CollectionReference,
+	type Unsubscribe,
 } from 'firebase/firestore';
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { AuthService } from '@/services/auth';
-import { User, updateProfile } from 'firebase/auth';
+import { type User, updateProfile } from 'firebase/auth';
 import { v4 as uuidv4 } from 'uuid';
 import { fbErrorHandler as errorHandler } from '@/utils/errorHandler';
-import { UserData as DBUserData, UserInfo as DBUserInfo, ChatRecord, FriendRecord } from '@/types/db/UserdataTable';
-import { ParsedTimestamps } from '@/types/db/helpers';
-import { ChatInfo, ChatService } from '@/services/chat';
-import { ChatType } from '@/types/db/ChatTable';
+import type {
+	UserData as DBUserData,
+	UserInfo as DBUserInfo,
+	ChatRecord,
+	FriendRecord,
+} from '@/types/db/UserdataTable';
+import type { ParsedTimestamps } from '@/types/db/helpers';
+import { ChatService, type ChatInfo } from '@/services/chat';
+import type { ChatType } from '@/types/db/ChatTable';
 
 export type PublicUserInfo = ParsedTimestamps<DBUserInfo>;
 export type DisplayUserInfo = Pick<PublicUserInfo, 'uid' | 'firstname' | 'lastname' | 'photoURL'>;

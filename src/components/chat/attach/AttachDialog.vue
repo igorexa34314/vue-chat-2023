@@ -95,43 +95,34 @@
 </template>
 
 <script setup lang="ts">
-import { VDialog, VMenu, VTextarea } from 'vuetify/components';
 import { mdiClose, mdiDotsVertical, mdiPlus, mdiFileMultipleOutline, mdiFolderMultipleImage } from '@mdi/js';
 import FileAttachment from '@/components/chat/attach/FileAttachment.vue';
 import MediaAttachment from '@/components/chat/attach/MediaAttachment.vue';
-import { ref, computed, watch, Ref } from 'vue';
-import { useVModel } from '@vueuse/core';
+import { ref, computed, watch, type Ref } from 'vue';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { getFileThumbAndSizes } from '@/utils/resizeFile';
-import { AttachmentType } from '@/types/db/MessagesTable';
 import { useDisplay } from 'vuetify';
-import { FormAttachment } from '@/services/message';
+import type { AttachmentType } from '@/types/db/MessagesTable';
+import type { FormAttachment } from '@/services/message';
 
 export type AttachedContent<T extends AttachmentType = 'media'> = FormAttachment<T> & {
 	preview: T extends 'media' ? string : never;
 };
 
-const props = withDefaults(
-	defineProps<{
-		modelValue?: boolean;
-		contentType: AttachmentType;
-		subtitleText: string;
-		fileList: FormAttachment[];
-	}>(),
-	{
-		modelValue: false,
-		subtitleText: '',
-	}
-);
+const { contentType, fileList } = defineProps<{
+	contentType: AttachmentType;
+	fileList: FormAttachment[];
+}>();
 
 const emit = defineEmits<{
-	'update:modelValue': [val: boolean];
-	'update:subtitleText': [val: boolean];
 	'add-more-files': [type: AttachmentType, files: FileList];
 	changeContentType: [];
 	submit: [type: AttachmentType, content: FormAttachment[]];
 	close: [];
 }>();
+
+const dialog = defineModel<boolean>('modelValue', { default: false });
+const subtitle = defineModel<string>('subtitleText', { default: '' });
 
 const { showMessage } = useSnackbarStore();
 const { mobile } = useDisplay();
@@ -139,26 +130,24 @@ const { mobile } = useDisplay();
 type AttachComponent<T extends AttachmentType = AttachmentType> = InstanceType<
 	T extends 'media' ? typeof MediaAttachment : typeof FileAttachment
 >;
-const attachComponent = ref<AttachComponent>();
-const dialog = useVModel(props, 'modelValue', emit);
-const subtitle = useVModel(props, 'subtitleText', emit);
+const attachComponent = ref<AttachComponent | null>(null);
 
 const attachedFiles = ref([]) as Ref<AttachedContent[]>;
 const isDialogReady = computed(() => {
-	if (props.contentType === 'media') {
+	if (contentType === 'media') {
 		return (attachComponent.value as AttachComponent<'media'> | undefined)?.isImgsReady;
-	} else if (props.contentType === 'file') {
+	} else if (contentType === 'file') {
 		return (attachComponent.value as AttachComponent<'file'> | undefined)?.isFilesReady;
 	}
 	return true;
 });
 
 watch(
-	() => props.fileList.length,
+	() => fileList.length,
 	async newLength => {
 		if (newLength) {
-			if (props.fileList.every(f => f.fileData.size <= 3145728)) {
-				Promise.all(props.fileList.map(file => getFileThumbAndSizes(file)))
+			if (fileList.every(f => f.fileData.size <= 3145728)) {
+				Promise.all(fileList.map(file => getFileThumbAndSizes(file)))
 					.then(result => (attachedFiles.value = result as AttachedContent[]))
 					.catch(err => console.error(err));
 			} else showMessage('Maximum file size - 3 Mb', 'red-darken-3', 2500);
@@ -171,7 +160,7 @@ const clearForm = () => {
 const submitHandler = () => {
 	emit(
 		'submit',
-		props.contentType,
+		contentType,
 		attachedFiles.value.map(({ preview, ...f }) => f)
 	);
 	closeDialog();
@@ -179,18 +168,18 @@ const submitHandler = () => {
 const addMoreFiles = (e: Event) => {
 	const files = (e.target as HTMLInputElement).files;
 	if (files && files.length) {
-		emit('add-more-files', props.contentType !== 'file' ? 'media' : 'file', files);
+		emit('add-more-files', contentType !== 'file' ? 'media' : 'file', files);
 	}
 	(e.target as HTMLInputElement).files = null;
 };
 const onInputPasted = (e: ClipboardEvent) => {
 	if (e.clipboardData?.types.includes('Files') && attachedFiles.value.length < 10) {
 		const attachData = e.clipboardData.files;
-		emit('add-more-files', props.contentType !== 'file' ? 'media' : 'file', attachData);
+		emit('add-more-files', contentType !== 'file' ? 'media' : 'file', attachData);
 	}
 };
 const closeDialog = () => {
-	emit('update:modelValue', false);
+	dialog.value = false;
 	clearForm();
 	emit('close');
 };

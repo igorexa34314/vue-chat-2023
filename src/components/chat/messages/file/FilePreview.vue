@@ -25,13 +25,12 @@
 </template>
 
 <script setup lang="ts">
-import { VFadeTransition } from 'vuetify/components';
 import ImageFrame from '@/components/chat/messages/media/ImageFrame.vue';
 import { mdiEyeOutline } from '@mdi/js';
 import { useDisplay } from 'vuetify';
-import { MessageAttachment } from '@/services/message';
+import type { MessageAttachment } from '@/services/message';
 
-const props = defineProps<{
+const { file, isHovering, hoverProps } = defineProps<{
 	file: MessageAttachment;
 	isHovering: Boolean;
 	hoverProps: Record<string, unknown>;

@@ -23,7 +23,6 @@
 import LocalLogin from '@/components/auth/LocalLogin.vue';
 import GoogleProvider from '@/components/auth/providers/GoogleProvider.vue';
 import messages from '@/utils/messages.json';
-import { VContainer } from 'vuetify/components';
 import { useMeta } from 'vue-meta';
 import { useRouter, definePage } from 'vue-router/auto';
 import { useSnackbarStore } from '@/stores/snackbar';

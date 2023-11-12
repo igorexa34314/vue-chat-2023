@@ -7,14 +7,14 @@
 			class="mr-3 mr-sm-0" />
 
 		<v-app-bar-title v-show="!xs || !searchState.enabled" class="app-title text-truncate">
-			<slot v-if="title || slots.title" name="title">{{ title }}</slot>
+			<slot v-if="title" name="title">{{ title }}</slot>
 			<v-skeleton-loader v-else type="list-item" color="blue-grey-darken-4" max-width="280" />
 		</v-app-bar-title>
 
 		<v-spacer />
 
 		<v-fade-transition>
-			<SearchBox v-show="searchState.enabled" ref="searchEl" @blur="searchState.enabled = false" />
+			<SearchBox v-if="searchState.enabled" ref="searchEl" @blur="searchState.enabled = false" />
 		</v-fade-transition>
 
 		<v-btn
@@ -36,7 +36,7 @@
 					:density="!xs ? 'default' : 'comfortable'" />
 			</template>
 			<v-list density="compact">
-				<v-list-item density="compact" @click="push('/profile')" draggable="false">
+				<v-list-item density="compact" to="/profile" draggable="false">
 					<v-list-item-title>Profile</v-list-item-title>
 					<template #prepend>
 						<v-icon :icon="mdiAccountCircleOutline" class="mr-6" />
@@ -54,22 +54,15 @@
 </template>
 
 <script setup lang="ts">
-import { VSkeletonLoader } from 'vuetify/labs/VSkeletonLoader';
-import { VAppBar, VAppBarNavIcon, VAppBarTitle, VFadeTransition, VMenu } from 'vuetify/components';
-import SearchBox from '@/components/UI/SearchBox.vue';
 import { mdiMagnify, mdiFilter, mdiDotsVertical, mdiAccountCircleOutline, mdiLogout } from '@mdi/js';
-import { ref, nextTick } from 'vue';
-import { useRouter } from 'vue-router/auto';
+import { ref, nextTick, defineAsyncComponent } from 'vue';
 import { useDisplay } from 'vuetify';
 
-const { push } = useRouter();
+const SearchBox = defineAsyncComponent(() => import('@/components/UI/SearchBox.vue'));
 
-const props = withDefaults(
-	defineProps<{
-		title?: string;
-	}>(),
-	{}
-);
+const { title } = defineProps<{
+	title?: string;
+}>();
 
 const emit = defineEmits<{
 	drawer: [];
@@ -77,20 +70,19 @@ const emit = defineEmits<{
 }>();
 
 const slots = defineSlots<{
-	title: any;
+	title(): any;
 }>();
 
 const { xs } = useDisplay();
-const searchEl = ref<InstanceType<typeof SearchBox>>();
+const searchEl = ref<InstanceType<typeof SearchBox> | null>(null);
 const searchState = ref({
 	enabled: false,
 	text: '',
 });
 
-const enableSearch = () => {
+const enableSearch = async () => {
 	searchState.value.enabled = true;
-	nextTick(() => {
-		searchEl.value?.$el?.focus();
-	});
+	await nextTick();
+	searchEl.value?.$el?.focus();
 };
 </script>

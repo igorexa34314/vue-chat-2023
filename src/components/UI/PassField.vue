@@ -22,7 +22,7 @@
 		<v-text-field
 			v-if="repeater"
 			:type="passFieldState.showRepeater ? 'text' : 'password'"
-			:rules="repeaterRules"
+			:rules="validations.repeater(password)"
 			:label="repeaterLabel"
 			:placeholder="repeaterPlaceholder"
 			:variant="variant || 'underlined'"
@@ -41,15 +41,23 @@
 </template>
 
 <script setup lang="ts">
-import { VTextField } from 'vuetify/components';
 import { mdiEye, mdiEyeOff } from '@mdi/js';
 import { ref } from 'vue';
 import validations from '@/utils/validations';
-import { useVModel } from '@vueuse/core';
+import type { VTextField } from 'vuetify/components';
 
 type Password = VTextField['modelValue'];
-interface PassFieldProps {
-	modelValue?: Password;
+
+const {
+	placeholder = 'Enter password',
+	label = 'Password',
+	variant = 'underlined',
+	repeater,
+	repeaterClass,
+	rules,
+	repeaterLabel = 'Repeat password',
+	repeaterPlaceholder = 'Repeat your password',
+} = defineProps<{
 	repeater?: boolean;
 	label?: VTextField['label'];
 	repeaterLabel?: string;
@@ -58,17 +66,6 @@ interface PassFieldProps {
 	rules?: ((v: Password) => boolean | string)[];
 	variant?: VTextField['variant'];
 	repeaterClass?: string;
-}
-const props = withDefaults(defineProps<PassFieldProps>(), {
-	repeater: false,
-	placeholder: 'Enter password',
-	label: 'Password',
-	variant: 'underlined',
-	repeaterLabel: 'Repeat password',
-	repeaterPlaceholder: 'Repeat your password',
-});
-const emit = defineEmits<{
-	'update:modelValue': [pass: Password];
 }>();
 
 const passFieldState = ref({
@@ -76,9 +73,5 @@ const passFieldState = ref({
 	showRepeater: false,
 });
 
-const password = useVModel(props, 'modelValue', emit);
-const repeaterRules = [
-	(v: Password) => !!v || 'Repeat your password',
-	(v: Password) => (v && v === password.value) || 'Passwords should match',
-];
+const password = defineModel<Password>('modelValue', { default: '' });
 </script>

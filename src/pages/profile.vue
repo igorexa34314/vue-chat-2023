@@ -20,8 +20,7 @@
 </template>
 
 <script setup lang="ts">
-import InfoForm, { IProfileForm } from '@/components/profile/InfoForm.vue';
-import { VTabs, VTab, VWindow, VWindowItem, VContainer } from 'vuetify/components';
+import InfoForm, { type IProfileForm } from '@/components/profile/InfoForm.vue';
 import messages from '@/utils/messages.json';
 import { UserService } from '@/services/user';
 import { useUserStore } from '@/stores/user';

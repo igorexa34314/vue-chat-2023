@@ -30,24 +30,19 @@
 </template>
 
 <script setup lang="ts">
-import { VFadeTransition } from 'vuetify/components';
 import ImageLoader from '@/components/chat/ImageLoader.vue';
 import { useDisplay } from 'vuetify';
 import { mdiFile, mdiDownload } from '@mdi/js';
 import { getFileExt } from '@/utils/filters/messages';
-import { MessageAttachment } from '@/services/message';
+import type { MessageAttachment } from '@/services/message';
 
-const props = withDefaults(
-	defineProps<{
-		file: MessageAttachment;
-		isHovering?: boolean;
-		hoverProps?: Record<string, unknown>;
-		loading?: boolean;
-	}>(),
-	{
-		loading: false,
-	}
-);
+const { file, isHovering, hoverProps, loading } = defineProps<{
+	file: MessageAttachment;
+	isHovering?: boolean;
+	hoverProps?: Record<string, unknown>;
+	loading?: boolean;
+}>();
+
 const emit = defineEmits<{
 	downloadFile: [];
 }>();

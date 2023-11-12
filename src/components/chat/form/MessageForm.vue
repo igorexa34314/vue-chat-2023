@@ -56,21 +56,21 @@
 
 <script setup lang="ts">
 import { mdiAttachment, mdiSend, mdiCheck } from '@mdi/js';
-import { VTextarea } from 'vuetify/components';
 import { useDisplay } from 'vuetify';
-import MessageReply from './MessageReply.vue';
-import AttachMenu from '@/components/chat/attach/AttachMenu.vue';
-import AttachDialog from '@/components/chat/attach/AttachDialog.vue';
 import { useSnackbarStore } from '@/stores/snackbar';
-import { ref, computed, watchEffect } from 'vue';
+import { ref, computed, watchEffect, defineAsyncComponent } from 'vue';
 import { v4 as uuidv4 } from 'uuid';
-import { Message, MessageContent, FormAttachment, CreateMsgForm } from '@/services/message';
-import { ContentType, AttachmentType } from '@/types/db/MessagesTable';
+import type { Message, MessageContent, FormAttachment, CreateMsgForm } from '@/services/message';
+import type { ContentType, AttachmentType } from '@/types/db/MessagesTable';
 
 export type EditMessageData = { id: Message['id']; content: MessageContent };
 interface IMessageForm extends Omit<MessageContent, 'type' | 'attachments'> {
 	attachedFiles: FormAttachment<'file'>[];
 }
+
+const AttachDialog = defineAsyncComponent(() => import('@/components/chat/attach/AttachDialog.vue'));
+const MessageReply = defineAsyncComponent(() => import('@/components/chat/form/MessageReply.vue'));
+const AttachMenu = defineAsyncComponent(() => import('@/components/chat/attach/AttachMenu.vue'));
 
 const emit = defineEmits<{
 	createMessage: [msgContent: CreateMsgForm];

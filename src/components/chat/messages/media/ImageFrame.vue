@@ -35,44 +35,47 @@
 
 <script setup lang="ts">
 import ImageLoader from '@/components/chat/ImageLoader.vue';
-import { onUnmounted, watchEffect, toRef } from 'vue';
+import { onUnmounted, watchEffect, toRef, computed } from 'vue';
 import { MessagesService } from '@/services/message';
 import { useDisplay } from 'vuetify';
 import { useLoadingStore } from '@/stores/loading';
-import { VImg, VCard } from 'vuetify/components';
-import { MessageAttachment } from '@/services/message';
-import { computed } from 'vue';
 import { maxMessageMedia, maxMessageMediaSm } from '@/global-vars';
+import { type MessageAttachment } from '@/services/message';
+import type { VImg, VCard } from 'vuetify/components';
 
-const props = withDefaults(
-	defineProps<{
-		image: MessageAttachment<'media'>;
-		width?: string | number | VCard['width'];
-		maxHeight?: string | number | VCard['maxHeight'];
-		height?: string | number | VCard['height'];
-		rounded?: string | number | boolean | VCard['rounded'];
-		loader?: InstanceType<typeof ImageLoader>['$props'];
-		alt?: string | VImg['alt'];
-		aspectRatio?: VImg['aspectRatio'];
-	}>(),
-	{
-		height: 'auto',
-		rounded: 0,
-	}
-);
+const {
+	image,
+	width,
+	maxHeight,
+	height = 'auto',
+	rounded = 0,
+	loader,
+	alt,
+	aspectRatio,
+} = defineProps<{
+	image: MessageAttachment<'media'>;
+	width?: string | number | VCard['width'];
+	maxHeight?: string | number | VCard['maxHeight'];
+	height?: string | number | VCard['height'];
+	rounded?: string | number | boolean | VCard['rounded'];
+	loader?: InstanceType<typeof ImageLoader>['$props'];
+	alt?: string | VImg['alt'];
+	aspectRatio?: VImg['aspectRatio'];
+}>();
+
 const emit = defineEmits<{
 	open: [];
 	loaded: [];
 }>();
 
-const image = toRef(props, 'image');
 const { smAndUp } = useDisplay();
 const { cancelLoading: cancelImageLoading, getUploadingStateById } = useLoadingStore();
+const imageRef = toRef(() => image);
 
 watchEffect(async () => {
 	try {
-		if (!image.value.raw.previewURL) {
-			image.value.raw.previewURL = await MessagesService.loadPreviewbyFullpath(props.image.raw.fullpath);
+		if (!imageRef.value.raw.previewURL) {
+			imageRef.value.raw.previewURL = await MessagesService.loadPreviewbyFullpath(image.raw.fullpath);
 		}
 	} catch (e) {
 		console.log(e);
@@ -81,25 +84,26 @@ watchEffect(async () => {
 
 const calcImageSize = computed(() => {
 	const maxSize = smAndUp.value ? maxMessageMedia : maxMessageMediaSm;
-	const { w, h } = props.image.raw.sizes!;
+	const { w, h } = image.raw.sizes!;
 	const ar = w / h;
 	if (w > maxSize.w || h > maxSize.h) {
 		return w > h ? { w: maxSize.w, h: maxSize.w / ar } : { h: maxSize.h, w: maxSize.h * ar };
 	} else return { w, h };
 });
+
 const imageLoaded = () => {
-	if (props.image.raw.previewURL) {
+	if (image.raw.previewURL) {
 		emit('loaded');
 	}
 };
 const openImageFullsize = () => {
-	if (props.image.raw?.previewURL) {
+	if (image.raw?.previewURL) {
 		emit('open');
 	}
 };
 onUnmounted(() => {
-	if (props.image.raw.previewURL) {
-		URL.revokeObjectURL(props.image.raw.previewURL);
+	if (image.raw.previewURL) {
+		URL.revokeObjectURL(image.raw.previewURL);
 	}
 });
 </script>

@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import { PublicUserInfo, UserChat, UserFriend } from '@/services/user';
+import type { PublicUserInfo, UserChat, UserFriend } from '@/services/user';
 
 export const useUserStore = defineStore('user', () => {
 	const info = ref<PublicUserInfo | null>(null);

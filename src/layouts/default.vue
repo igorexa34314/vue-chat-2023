@@ -5,13 +5,12 @@
 		<AppSidebar v-model="drawer" />
 
 		<v-main style="min-height: 100dvh; min-height: 100vh" class="overflow-hidden">
-			<RouterView @updateTitle="(title: string) => (navbarTitle = title)" />
+			<router-view @updateTitle="(title: string) => (navbarTitle = title)" />
 		</v-main>
 	</v-layout>
 </template>
 
 <script setup lang="ts">
-import { VLayout, VMain } from 'vuetify/components';
 import AppNavbar from '@/components/app/AppNavbar.vue';
 import AppSidebar from '@/components/app/AppSidebar.vue';
 import messages from '@/utils/messages.json';
@@ -26,7 +25,7 @@ import { AuthService } from '@/services/auth';
 
 definePage({ meta: { auth: true, requiresAuth: true } });
 const drawer = ref(true);
-const navbarTitle = ref<string | undefined>();
+const navbarTitle = ref<string>('');
 
 // Fetching all auth userdata
 const { push } = useRouter();

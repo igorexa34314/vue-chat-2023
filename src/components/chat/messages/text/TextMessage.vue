@@ -7,9 +7,9 @@
 </template>
 
 <script setup lang="ts">
-import { MessageContent } from '@/types/db/MessagesTable';
+import type { MessageContent } from '@/types/db/MessagesTable';
 
-const props = defineProps<{
+const { content } = defineProps<{
 	content: Omit<MessageContent, 'attachments'>;
 }>();
 </script>

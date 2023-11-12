@@ -40,22 +40,19 @@ import { mdiFile, mdiTrashCanOutline } from '@mdi/js';
 import ImageLoader from '@/components/chat/ImageLoader.vue';
 import { ref } from 'vue';
 import { formatFileSize, getFileExt } from '@/utils/filters/messages';
-import { VImg } from 'vuetify/components';
-import { FileAttachment } from '@/services/message';
-import { AttachedContent } from '@/components/chat/attach/AttachDialog.vue';
+import type { FileAttachment } from '@/services/message';
+import type { VImg } from 'vuetify/components';
+import type { AttachedContent } from '@/components/chat/attach/AttachDialog.vue';
 
-const props = withDefaults(
-	defineProps<{
-		previewItem: AttachedContent;
-	}>(),
-	{}
-);
+const { previewItem } = defineProps<{
+	previewItem: AttachedContent;
+}>();
 
 const emit = defineEmits<{
 	'delete-item': [itemId: FileAttachment['id']];
 }>();
 
-const imgEl = ref<VImg>();
+const imgEl = ref<VImg | null>(null);
 
 defineExpose({ imgEl });
 </script>

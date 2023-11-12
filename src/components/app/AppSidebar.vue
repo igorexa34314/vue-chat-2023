@@ -34,31 +34,18 @@
 </template>
 
 <script lang="ts" setup>
-import ChatList from '@/components/chat/ChatList.vue';
-import { VSkeletonLoader } from 'vuetify/labs/VSkeletonLoader';
-import { VNavigationDrawer } from 'vuetify/components';
-import { useVModel } from '@vueuse/core';
+import { defineAsyncComponent } from 'vue';
 import { useUserStore } from '@/stores/user';
 import { defaultAvatar } from '@/global-vars';
 import { useRouter } from 'vue-router/auto';
 import { setUserDisplayName } from '@/utils/user';
 
+const ChatList = defineAsyncComponent(() => import('@/components/chat/ChatList.vue'));
+
 const { push } = useRouter();
 const userStore = useUserStore();
 
-const props = withDefaults(
-	defineProps<{
-		modelValue?: boolean;
-	}>(),
-	{
-		modelValue: false,
-	}
-);
-
-const emit = defineEmits<{
-	'update:modelValue': [value: boolean];
-}>();
-const drawer = useVModel(props, 'modelValue', emit);
+const drawer = defineModel<boolean>('modelValue', { default: false });
 </script>
 
 <style lang="scss" scoped>

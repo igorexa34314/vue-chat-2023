@@ -75,7 +75,6 @@
 </template>
 
 <script setup lang="ts">
-import { VOverlay, VCarousel, VCarouselItem } from 'vuetify/components';
 import {
 	mdiChevronLeft,
 	mdiChevronRight,
@@ -86,32 +85,25 @@ import {
 } from '@mdi/js';
 import ImageLoader from '@/components/chat/ImageLoader.vue';
 import { ref } from 'vue';
-import { useVModel } from '@vueuse/core';
-import { MediaAttachment } from '@/services/message';
+import { type MediaAttachment } from '@/services/message';
 import { useDisplay } from 'vuetify';
 
-interface OverlayProps {
-	modelValue?: boolean;
+const { content, alt } = defineProps<{
 	content: MediaAttachment[];
-	currentItem?: number;
 	alt?: string;
-}
-const props = withDefaults(defineProps<OverlayProps>(), {
-	modelValue: false,
-	currentItem: 0,
-});
+}>();
+
 const emit = defineEmits<{
-	'update:modelValue': [val: boolean];
-	'update:currentItem': [val: number];
 	close: [];
 }>();
 
+const showOverlay = defineModel<boolean>('modelValue', { default: false });
+const overlayItem = defineModel<number>('currentItem', { default: 0 });
+
 const { smAndUp } = useDisplay();
-const showOverlay = useVModel(props, 'modelValue', emit);
-const overlayItem = useVModel(props, 'currentItem', emit);
 
 const closeOverlay = () => {
-	emit('update:modelValue', false);
+	showOverlay.value = false;
 	zoomed.value = false;
 	emit('close');
 };

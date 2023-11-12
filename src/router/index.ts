@@ -1,8 +1,8 @@
 import { createRouter, createWebHistory, createMemoryHistory } from 'vue-router/auto';
-import { RouteNamedMap } from 'vue-router/auto/routes';
 import { setupLayouts } from 'virtual:generated-layouts';
 import { checkAuth } from '@/middlewares/auth';
 import { valalidateEnterName } from '@/middlewares/enterName';
+import type { RouteNamedMap } from 'vue-router/auto/routes';
 
 const history = import.meta.env.SSR
 	? createMemoryHistory(import.meta.env.BASE_URL)
