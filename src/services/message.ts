@@ -1,5 +1,5 @@
 import { withIdConverter } from '@/utils/firestore';
-import { storage, db } from '@/firebase';
+import { chatDataStorage, db } from '@/firebase';
 import {
 	arrayRemove,
 	arrayUnion,
@@ -102,16 +102,23 @@ export class MessagesService {
 					const messages = await Promise.all(
 						messagesRef
 							.docChanges()
-							.filter(change => change.type === 'added')
-							.map(async change => this.getFullMessageInfo(change.doc.data()))
+							.filter(change => change.type !== 'removed')
+							.map(async change => ({
+								type: change.type,
+								data: await this.getFullMessageInfo(change.doc.data()),
+							}))
 					);
 					messages.reverse().forEach(msg => {
-						messagesStore.addMessage(msg, 'end');
+						if (msg.type === 'added') {
+							messagesStore.addMessage(msg.data, 'end');
+						} else {
+							messagesStore.modifyMessage(msg.data);
+						}
 					});
 					const lastAdded = messagesRef
 						.docChanges()
 						.reverse()
-						.findIndex(doc => doc.type === 'added');
+						.findIndex(doc => doc.type !== 'removed');
 					if (lastAdded) {
 						messagesStore.lastVisible.top = messagesRef.docs[lastAdded];
 					}
@@ -275,7 +282,7 @@ export class MessagesService {
 
 	private static async getMessageThumb(path: string, fileType: DBMessageAttachment['fileType']) {
 		try {
-			const buffer = await getBytes(storageRef(storage, path));
+			const buffer = await getBytes(storageRef(chatDataStorage, path));
 			return `data:${fileType};base64,${encode(buffer)}`;
 		} catch (e) {
 			return errorHandler(e);
@@ -284,7 +291,7 @@ export class MessagesService {
 
 	static async loadPreviewbyFullpath(path: string) {
 		try {
-			const blobFile = await getBlob(storageRef(storage, path));
+			const blobFile = await getBlob(storageRef(chatDataStorage, path));
 			return URL.createObjectURL(blobFile);
 		} catch (e) {
 			return errorHandler(e);
@@ -338,8 +345,8 @@ export class MessagesService {
 		const { setUploading, updateLoading, finishLoading } = useLoadingStore();
 		const { fileData, id: fileId } = file;
 		const fileDocRef = storageRef(
-			storage,
-			`chats/${chatId}/messageData/${messageDocRef.id}/${fileId + '.' + fileData.name.split('.').slice(1).join('.')}`
+			chatDataStorage,
+			`${chatId}/messageData/${messageDocRef.id}/${fileId + '.' + fileData.name.split('.').slice(1).join('.')}`
 		);
 		const uploadTask = uploadBytesResumable(fileDocRef, fileData, {
 			contentType: fileData.type,
@@ -366,7 +373,7 @@ export class MessagesService {
 					finishLoading(fileId);
 					// Handle unsuccessful uploads
 					await deleteDoc(messageDocRef);
-					await deleteObject(storageRef(storage, DBcontentToUpdate.thumbnail?.fullpath));
+					await deleteObject(storageRef(chatDataStorage, DBcontentToUpdate.thumbnail?.fullpath));
 					switch (error.code) {
 						case 'storage/unauthorized':
 							// User doesn't have permission to access the object
@@ -418,10 +425,8 @@ export class MessagesService {
 			if (attach.thumbnail) {
 				const { fileData, id, thumbnail } = attach;
 				const thumbRef = storageRef(
-					storage,
-					`chats/${chatId}/messageData/${messageId}/${
-						id + '_thumb.' + fileData.name.split('.').slice(1).join('.')
-					}`
+					chatDataStorage,
+					`${chatId}/messageData/${messageId}/${id + '_thumb.' + fileData.name.split('.').slice(1).join('.')}`
 				);
 				await uploadString(thumbRef, thumbnail.url, 'data_url');
 				return {

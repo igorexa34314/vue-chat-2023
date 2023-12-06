@@ -28,7 +28,7 @@ export const firebaseApp = initializeApp({
 	messagingSenderId: import.meta.env.VITE_FB_MESSAGING_SENDER_ID,
 	appId: import.meta.env.VITE_FB_APP_ID,
 	measurementId: import.meta.env.VITE_FB_MEASUREMENT_ID,
-	storageBucket: import.meta.env.VITE_FB_STORAGE_BUCKET,
+	storageBucket: import.meta.env.VITE_FB_PUBLIC_BUCKET,
 });
 
 // Initialize Firebase Authentication and get a reference to the service
@@ -49,6 +49,7 @@ export const db = markRaw(
 
 // Initialize Cloud Storage and get a reference to the service
 export const storage = getStorage(firebaseApp);
+export const chatDataStorage = getStorage(firebaseApp, import.meta.env.VITE_FB_CHAT_DATA_BUCKET);
 
 export const functions = getFunctions(firebaseApp, 'europe-central2');
 

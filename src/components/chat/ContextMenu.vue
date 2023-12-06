@@ -104,10 +104,10 @@ const contextMenuItems = computed(
 			selectedText.value
 				? { title: 'Copy selected text', value: 'copySelected', icon: mdiContentCopy }
 				: contentType === 'text'
-				? { title: 'Copy text', value: 'copyAll', icon: mdiContentCopy }
-				: contentType === 'media'
-				? { title: 'Copy image', value: 'copyImage', icon: mdiImage }
-				: { title: 'Copy link', value: 'copyLink', icon: mdiLinkVariant },
+				  ? { title: 'Copy text', value: 'copyAll', icon: mdiContentCopy }
+				  : contentType === 'media'
+				    ? { title: 'Copy image', value: 'copyImage', icon: mdiImage }
+				    : { title: 'Copy link', value: 'copyLink', icon: mdiLinkVariant },
 			contentType !== 'text' ? { title: 'Download', value: 'download', icon: mdiDownload } : false,
 			{ title: 'Forward', value: 'forward', icon: mdiShareOutline, disabled: true },
 			{ title: 'Select', value: 'select', icon: mdiCheckCircleOutline, disabled: true },

@@ -11,11 +11,10 @@
 		v-ripple="false"
 		height="100%">
 		<v-img
-			:lazy-src="image.thumbnail ?? ''"
-			:src="image.raw?.previewURL"
+			:lazy-src="image.thumbnail ?? undefined"
+			:src="imageRef.raw?.previewURL"
 			:alt="alt || image.fullname"
 			width="100%"
-			eager
 			@load="imageLoaded"
 			cover
 			draggable="false"
@@ -35,9 +34,10 @@
 
 <script setup lang="ts">
 import ImageLoader from '@/components/chat/ImageLoader.vue';
-import { onUnmounted, watchEffect, toRef, computed } from 'vue';
+import { onUnmounted, watch, toRef, computed, watchEffect, onMounted } from 'vue';
 import { MessagesService } from '@/services/message';
 import { useDisplay } from 'vuetify';
+import { storeToRefs } from 'pinia';
 import { useLoadingStore } from '@/stores/loading';
 import { maxMessageMedia, maxMessageMediaSm } from '@/global-vars';
 import { type MessageAttachment } from '@/services/message';
@@ -69,18 +69,21 @@ const emit = defineEmits<{
 }>();
 
 const { smAndUp } = useDisplay();
-const { cancelLoading: cancelImageLoading, getUploadingStateById } = useLoadingStore();
+const loadingStore = useLoadingStore();
+const { cancelLoading: cancelImageLoading, deleteLoading } = loadingStore;
+const { getUploadingStateById } = storeToRefs(loadingStore);
 const imageRef = toRef(() => image);
 
-watchEffect(async () => {
-	try {
-		if (!imageRef.value.raw.previewURL) {
-			imageRef.value.raw.previewURL = await MessagesService.loadPreviewbyFullpath(image.raw.fullpath);
+watch(
+	() => image.raw.fullpath,
+	async path => {
+		if (path && !imageRef.value.raw.previewURL) {
+			imageRef.value.raw.previewURL = await MessagesService.loadPreviewbyFullpath(path);
+			deleteLoading(image.id);
 		}
-	} catch (e) {
-		console.log(e);
-	}
-});
+	},
+	{ immediate: true }
+);
 
 const calcImageSize = computed(() => {
 	const maxSize = smAndUp.value ? maxMessageMedia : maxMessageMediaSm;

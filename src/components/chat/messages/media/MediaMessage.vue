@@ -25,7 +25,7 @@
 <script setup lang="ts">
 import TextMessage from '@/components/chat/messages/text/TextMessage.vue';
 import ImageFrame from '@/components/chat/messages/media/ImageFrame.vue';
-import { computed } from 'vue';
+import { watchEffect, computed } from 'vue';
 import { calcImageCols as calcCols } from '@/utils/images';
 import type { MessageContent, MediaAttachment } from '@/services/message';
 import { maxMessageMedia, maxMessageMediaSm } from '@/global-vars';
@@ -38,7 +38,6 @@ const { content } = defineProps<{
 const emit = defineEmits<{
 	openInOverlay: [imgId: MediaAttachment['id']];
 }>();
-
 const { smAndUp } = useDisplay();
 
 const imageSize = smAndUp.value ? maxMessageMedia : maxMessageMediaSm;

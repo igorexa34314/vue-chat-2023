@@ -5,6 +5,6 @@ import { GlobalComponents } from 'vue';
 
 declare module 'vue' {
 	export interface GlobalComponents {
-		PageLoader: typeof PageLoader;
+		PageLoader: (typeof import('@/components/UI/PageLoader.vue'))['default'];
 	}
 }

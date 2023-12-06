@@ -1,4 +1,4 @@
-import { storage } from '@/firebase';
+import { chatDataStorage } from '@/firebase';
 import { type MessageAttachment } from '@/services/message';
 import { ref as storageRef, getBlob } from 'firebase/storage';
 
@@ -12,7 +12,7 @@ export const setDownloadLink = (filename: string, url: string) => {
 export const downloadFile = async (file: MessageAttachment) => {
 	let url = '';
 	if (!file.raw.previewURL) {
-		const blobFile = await getBlob(storageRef(storage, file.raw.fullpath));
+		const blobFile = await getBlob(storageRef(chatDataStorage, file.raw.fullpath));
 		url = URL.createObjectURL(blobFile);
 	} else {
 		url = file.raw.previewURL;

@@ -1,6 +1,6 @@
 <template>
 	<metainfo>
-		<template #title="{ content }">{{ content ? `${content} | ${AppName}` : AppName }}</template>
+		<template #title="{ content }: SlotScopeProperties">{{ content ? `${content} | ${AppName}` : AppName }}</template>
 	</metainfo>
 
 	<GlobalSnackbar />
@@ -9,7 +9,7 @@
 		<template v-if="Component">
 			<Suspense>
 				<!-- main content -->
-				<component :is="Component"></component>
+				<component :is="Component" />
 				<!-- loading state -->
 				<template #fallback>
 					<page-loader />
@@ -21,6 +21,7 @@
 
 <script setup lang="ts">
 import { defineAsyncComponent } from 'vue';
+import type { SlotScopeProperties } from 'vue-meta';
 
 const GlobalSnackbar = defineAsyncComponent(() => import('@/components/app/GlobalSnackbar.vue'));
 const AppName: string = import.meta.env.VITE_APP_NAME || 'My Chat';

@@ -9,14 +9,14 @@ export const setChatName = computed(() => (chat: ChatInfo) => {
 	return chat.type === 'saved'
 		? 'Saved messages'
 		: chat.type === 'private'
-		? setUserDisplayName.value(chat.members.find(m => m.uid !== userStore.info?.uid)!)
-		: chat.name;
+		  ? setUserDisplayName.value(chat.members.find(m => m.uid !== userStore.info?.uid)!)
+		  : chat.name;
 });
 export const setChatAvatar = computed(() => (chat: ChatInfo) => {
 	const userdataStore = useUserStore();
 	return chat.type === 'private'
 		? chat.members.find(m => m.uid !== userdataStore.info?.uid)?.photoURL || defaultAvatar
 		: chat.type === 'saved'
-		? savedMessages
-		: defaultAvatar;
+		  ? savedMessages
+		  : defaultAvatar;
 });

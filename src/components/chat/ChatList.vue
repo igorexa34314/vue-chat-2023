@@ -4,16 +4,26 @@
 			v-for="chat of chats"
 			:key="chat.id"
 			:title="setChatName(chat)"
-			:prepend-avatar="setChatAvatar(chat)"
 			:to="{ name: '/chat/[chatId]', params: { chatId: chat.id } }"
 			class="py-3 mb-3"
-			draggable="false" />
+			draggable="false">
+			<template #prepend>
+				<v-avatar>
+					<v-img :src="setChatAvatar(chat)">
+						<template #error>
+							<v-img :src="defaultAvatar" />
+						</template>
+					</v-img>
+				</v-avatar>
+			</template>
+		</v-list-item>
 	</v-list>
 </template>
 
 <script setup lang="ts">
-import type { ChatInfo } from '@/services/chat';
+import { defaultAvatar } from '@/global-vars';
 import { setChatName, setChatAvatar } from '@/utils/chat';
+import type { ChatInfo } from '@/services/chat';
 
 const { chats } = defineProps<{
 	chats: ChatInfo[];
