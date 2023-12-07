@@ -7,18 +7,20 @@ import { UserRecord } from 'firebase-admin/auth';
 
 export const app = initializeApp();
 
-export const db = getFirestore();
+export const db = getFirestore(app);
 
-export function getUserDocRef<U extends UserData = UserData>(uid: UserRecord['uid']): FirebaseFirestore.DocumentReference<U>;
+export function getUserDocRef<U extends UserData = UserData>(
+  uid: UserRecord['uid']
+): FirebaseFirestore.DocumentReference<U>;
 export function getUserDocRef<U extends UserData = UserData, T extends keyof U = keyof U>(
   uid: UserRecord['uid'],
   dataType: T
 ): FirebaseFirestore.CollectionReference<U[T]>;
-export function getUserDocRef<U extends UserData = UserData, T extends keyof U = keyof U, K extends keyof U[T] = keyof U[T]>(
-  uid: UserRecord['uid'],
-  dataType: T,
-  docId: K
-): U[T][K];
+export function getUserDocRef<
+  U extends UserData = UserData,
+  T extends keyof U = keyof U,
+  K extends keyof U[T] = keyof U[T],
+>(uid: UserRecord['uid'], dataType: T, docId: K): U[T][K];
 
 export function getUserDocRef<
   U extends UserData = UserData,
@@ -34,7 +36,7 @@ export function getUserDocRef<
   >;
   return !docId ? userDocRefWithPrivacy : (userDocRefWithPrivacy.doc(docId.toString()) as U[T][K]);
 }
-
+// eslint-disable-next-line  @typescript-eslint/no-unused-vars
 export const getChatCol = <T extends ChatType = ChatType>(type?: T) => {
   return db.collection('chats') as FirebaseFirestore.CollectionReference<ChatInfo<T>>;
 };

@@ -3,6 +3,8 @@ import { Change } from 'firebase-functions';
 // import { cors } from './cors';
 
 import { db, getUserDocRef, getChatCol } from '../firestore';
+import { deleteDocumentWithNestedCols } from '../utils';
+import { chatDataBucket } from '../storage';
 import { onDocumentCreated, onDocumentDeleted, onDocumentWritten } from 'firebase-functions/v2/firestore';
 import { DocumentSnapshot, FieldValue } from 'firebase-admin/firestore';
 
@@ -39,9 +41,10 @@ export const deleteUserChatsTrigger = onDocumentDeleted(
 
     for (const doc of createdChatDocs.docs.concat(memberChatDocs.docs)) {
       if (doc.data()?.type === 'saved') {
-        batch.delete(doc.ref);
+        await deleteDocumentWithNestedCols(doc.ref, batch);
       } else if (doc.data().created_by.id === event.params.uid) {
         batch.update(doc.ref, {
+          // eslint-disable-next-line  @typescript-eslint/no-explicit-any
           created_by: 'deleted_user' as any,
         });
       } else {
@@ -62,45 +65,57 @@ export const bindChatsToChatMembersTrigger = onDocumentWritten(
       logger.error('No data associated with the event');
       return;
     }
-
     const beforeSnap = snapshot.before;
     const afterSnap = snapshot.after;
-    const batch = db.batch();
-
     const eventType = beforeSnap.exists && afterSnap.exists ? 'update' : afterSnap.exists ? 'create' : 'delete';
 
-    const userChatDocsToUpdate = (() => {
-      const chatCreatorDocRef = (afterSnap.data()?.created_by ?? beforeSnap.data()?.created_by)!;
-      const chatMembersDocsRef = afterSnap.data()?.members ?? beforeSnap.data()?.members ?? [];
-      return Array.from(new Set([chatCreatorDocRef.id, ...chatMembersDocsRef.map((doc) => doc.id)])).map((uid) =>
-        getUserDocRef(uid, 'private', 'chats')
-      );
-    })();
+    const chatCreatorDocRef = afterSnap.data()?.created_by;
+    const chatMembersDocsRef = afterSnap.data()?.members ?? [];
+    const userChatDocsToUpdate = Array.from(
+      new Set([chatCreatorDocRef?.id, ...chatMembersDocsRef.map((doc) => doc.id)].filter(Boolean))
+    ).map((uid) => getUserDocRef(uid as string, 'private', 'chats'));
+    const batch = db.batch();
 
     switch (eventType) {
       case 'create':
-      case 'update':
-        userChatDocsToUpdate.forEach((doc) => {
-          batch.set(
-            doc,
-            {
-              [afterSnap.ref.id]: { ref: afterSnap.ref, member_since: FieldValue.serverTimestamp() },
-            },
-            { merge: true }
-          );
-        });
-        break;
-
-      case 'delete':
-        userChatDocsToUpdate.forEach((doc) => {
-          batch.update(doc, {
-            [beforeSnap.ref.id]: FieldValue.delete(),
+      case 'update': {
+        const beforeCreator = beforeSnap.data()?.created_by;
+        if (
+          (beforeCreator && chatCreatorDocRef?.isEqual(beforeCreator)) ||
+          chatMembersDocsRef.length !== beforeSnap.data()?.members.length
+        ) {
+          userChatDocsToUpdate.forEach((doc) => {
+            batch.set(
+              doc,
+              {
+                [afterSnap.ref.id]: { ref: afterSnap.ref, member_since: FieldValue.serverTimestamp() },
+              },
+              { merge: true }
+            );
           });
-        });
+          await batch.commit();
+          logger.info(`Chat members and creator binded to their profiles - ${afterSnap.id ?? beforeSnap.id}`);
+        }
         break;
+      }
+      case 'delete': {
+        const deletedChat = beforeSnap.ref;
+        const users = await db.getAll(...userChatDocsToUpdate);
+        users
+          .filter((user) => user.exists)
+          .forEach((user) => {
+            batch.update(user.ref, {
+              [deletedChat.id]: FieldValue.delete(),
+            });
+          });
+        await batch.commit();
+        // Delete chat and messages attachments
+        await chatDataBucket.deleteFiles({
+          prefix: `${deletedChat.id}`,
+        });
+        logger.info(`Chat has been deleted - ${beforeSnap.id}`);
+        break;
+      }
     }
-
-    await batch.commit();
-    logger.info(`Chat members and creator binded to their profiles - ${afterSnap.id ?? beforeSnap.id}`);
   }
 );

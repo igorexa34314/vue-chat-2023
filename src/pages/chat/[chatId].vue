@@ -224,22 +224,21 @@ const vuetifyScrollEl = ref<VInfiniteScroll | null>(null);
 const srollEl = toRef(() => vuetifyScrollEl.value?.$el as HTMLElement | null);
 
 const { isScrollOnBottom, scrollBottom, onLoad, scrollSide } = useChatScroll(srollEl, async direction => {
+	allowTransition.value = false;
 	await MessagesService.loadMoreMessages(chatId.value, direction);
+	allowTransition.value = true;
 });
 
 const handleSuspenceResolve = () => {
 	scrollBottom();
 };
 
-const allowTransition = ref(false);
+const allowTransition = ref(true);
 const createMessage = async <T extends ContentType>(content: CreateMsgForm<T>) => {
 	try {
-		allowTransition.value = true;
 		await MessagesService.createMessage(chatId.value, content);
 	} catch (e) {
 		showMessage(sbMessages[e as keyof typeof sbMessages] || (e as string), 'red-darken-3', 2000);
-	} finally {
-		nextTick().then(() => (allowTransition.value = false));
 	}
 };
 const updateMessage = async ({ id, content }: EditMessageData) => {

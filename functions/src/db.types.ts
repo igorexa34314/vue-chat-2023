@@ -55,6 +55,7 @@ export interface Message {
   sender: FirebaseFirestore.DocumentReference<UserData>;
   created_at: FirebaseFirestore.Timestamp;
   updated_at: FirebaseFirestore.Timestamp | null;
+  deleted_at: FirebaseFirestore.Timestamp | null;
 }
 
 export interface MessageContent {

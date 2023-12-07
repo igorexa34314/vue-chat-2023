@@ -4,8 +4,9 @@ import * as logger from 'firebase-functions/logger';
 import { region } from 'firebase-functions';
 
 import { db } from '../firestore';
+import { publicBucket } from '../storage';
 import { FieldValue } from 'firebase-admin/firestore';
-
+import { deleteDocumentWithNestedCols } from '../utils';
 import { UserData } from '../db.types';
 import { UserRecord } from 'firebase-admin/auth';
 
@@ -40,6 +41,7 @@ export const createUserProfileTrigger = region('europe-central2')
   .onCreate(async (user) => {
     const batch = db.batch();
     batch
+      // eslint-disable-next-line  @typescript-eslint/no-explicit-any
       .set(getUserDocRef(user.uid), {} as any)
       .create(getUserDocRef(user.uid, 'public', 'info'), {
         uid: user.uid,
@@ -65,6 +67,9 @@ export const createUserProfileTrigger = region('europe-central2')
 export const deleteUserProfileTrigger = region('europe-central2')
   .auth.user()
   .onDelete(async (user) => {
-    await getUserDocRef(user.uid).delete();
+    await deleteDocumentWithNestedCols(getUserDocRef(user.uid));
+    await publicBucket.deleteFiles({
+      prefix: `users/${user.uid}`,
+    });
     logger.info(`User profile with ${user.uid} deleted`);
   });

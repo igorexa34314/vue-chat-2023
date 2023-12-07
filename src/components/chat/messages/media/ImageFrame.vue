@@ -34,7 +34,7 @@
 
 <script setup lang="ts">
 import ImageLoader from '@/components/chat/ImageLoader.vue';
-import { onUnmounted, watch, toRef, computed, watchEffect, onMounted } from 'vue';
+import { onUnmounted, watch, toRef, computed } from 'vue';
 import { MessagesService } from '@/services/message';
 import { useDisplay } from 'vuetify';
 import { storeToRefs } from 'pinia';
@@ -73,14 +73,16 @@ const loadingStore = useLoadingStore();
 const { cancelLoading: cancelImageLoading, deleteLoading } = loadingStore;
 const { getUploadingStateById } = storeToRefs(loadingStore);
 const imageRef = toRef(() => image);
+let previewURL = '';
 
 watch(
-	() => image.raw.fullpath,
-	async path => {
-		if (path && !imageRef.value.raw.previewURL) {
-			imageRef.value.raw.previewURL = await MessagesService.loadPreviewbyFullpath(path);
+	() => image.raw,
+	async (newRaw, oldRaw) => {
+		if (newRaw.fullpath && newRaw.fullpath !== oldRaw?.fullpath && !previewURL) {
+			previewURL = await MessagesService.loadPreviewbyFullpath(newRaw.fullpath);
 			deleteLoading(image.id);
 		}
+		imageRef.value.raw.previewURL = previewURL;
 	},
 	{ immediate: true }
 );
