@@ -38,7 +38,11 @@
 				class="mr-2" />
 		</v-radio-group>
 
-		<birthday-picker v-model="formState.birthday_date" class="birthday-picker mt-5" max-width="550" />
+		<v-birthday-picker
+			v-model="formState.birthday_date"
+			class="birthday-picker mt-5"
+			max-width="550"
+			:month-formatter="date => d(date, { month: 'long' })" />
 
 		<div class="mt-3 mt-md-5" style="max-width: 500px">
 			<v-card variant="outlined" max-width="250" class="mb-5" elevation="9">
@@ -68,13 +72,14 @@
 
 <script setup lang="ts">
 import ImageLoader from '@/components/chat/ImageLoader.vue';
-import BirthdayPicker from '@/components/UI/BirthdayPicker.vue';
 import validations from '@/utils/validations';
 import { ref } from 'vue';
 import { useDisplay } from 'vuetify';
 import { defaultAvatar } from '@/global-vars';
+import { VBirthdayPicker } from 'vuetify-birthdaypicker';
 import { type PublicUserInfo } from '@/services/user';
 import type { VForm } from 'vuetify/components';
+import { useI18n } from 'vue-i18n';
 
 export interface IProfileForm extends Pick<PublicUserInfo, 'firstname' | 'lastname' | 'gender' | 'birthday_date'> {
 	birthday_date: Date;
@@ -89,6 +94,7 @@ const emit = defineEmits<{
 	submit: [data: IProfileForm];
 }>();
 
+const { d } = useI18n();
 const { xs } = useDisplay();
 const formEl = ref<VForm | null>(null);
 const formState = ref<IProfileForm>({
