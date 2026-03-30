@@ -1,23 +1,28 @@
 <template>
-	<Transition :css="false" @before-enter="onBeforeEnter" @enter="onEnter" @leave="onLeave">
-		<v-alert
-			v-show="modelValue"
+	<v-slide-y-reverse-transition hide-on-leave>
+		<v-card
+			v-if="modelValue"
 			v-bind="$attrs"
-			class="reply-wrapper py-2"
+			class="reply-wrapper"
 			color="grey-darken-4"
 			density="compact"
 			variant="flat"
 			rounded="0"
 			elevation="0">
 			<template #prepend>
-				<v-icon :icon="mdiPencil" />
+				<v-icon :icon="mdiPencil" class="mr-1" />
 			</template>
-			<template #text>
+			<template #title>
 				<div class="reply-original d-flex align-center pa-2" @click="emit('goToMessage')">
 					<div
 						class="reply-original-media d-flex align-center"
 						v-if="getImagesFromEditMsg && getImagesFromEditMsg.length">
-						<v-img :src="getImagesFromEditMsg.at(-1)" aspect-ratio="1" width="48px" height="100%" cover />
+						<v-img
+							:src="getImagesFromEditMsg.at(-1)"
+							aspect-ratio="1"
+							width="48px"
+							height="100%"
+							cover />
 					</div>
 					<div class="reply-original-content-wrapper flex-fill text-truncate">
 						<div class="reply-type">Editing</div>
@@ -27,17 +32,16 @@
 					</div>
 				</div>
 			</template>
-			<template #close>
-				<v-icon :icon="mdiClose" @click="cancelReply" />
+			<template #append>
+				<v-icon :icon="mdiClose" @click="cancelReply" class="ml-2" />
 			</template>
-		</v-alert>
-	</Transition>
+		</v-card>
+	</v-slide-y-reverse-transition>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
 import { mdiPencil, mdiClose } from '@mdi/js';
-import { gsap } from 'gsap';
 import type { MessageContent } from '@/services/message';
 import type { AttachmentType } from '@/types/db/MessagesTable';
 
@@ -50,7 +54,7 @@ const emit = defineEmits<{
 	cancel: [];
 }>();
 
-const modelValue = defineModel<boolean>('modelValue', { default: false });
+const modelValue = defineModel<boolean>();
 
 defineOptions({
 	inheritAttrs: false,
@@ -60,42 +64,17 @@ const getTextFromEditMsg = computed(() => {
 	return content?.type === 'text'
 		? content?.text
 		: !getImagesFromEditMsg.value || !getImagesFromEditMsg.value.length
-		? (content as MessageContent<AttachmentType> | null)?.attachments.at(-1)?.fullname
-		: (getImagesFromEditMsg.value.length === 1 ? 'Photo' : 'Album') + ', ' + content?.text;
+			? (content as MessageContent<AttachmentType> | null)?.attachments.at(-1)?.fullname
+			: (getImagesFromEditMsg.value.length === 1 ? 'Photo' : 'Album') + ', ' + content?.text;
 });
-const getImagesFromEditMsg = computed(
-	() =>
-		(content as MessageContent<AttachmentType> | null)?.attachments
-			?.filter(item => item.raw.previewURL)
-			.map(img => img.raw.previewURL)
+const getImagesFromEditMsg = computed(() =>
+	(content as MessageContent<AttachmentType> | null)?.attachments
+		?.filter(item => item.raw.previewURL)
+		.map(img => img.raw.previewURL)
 );
 const cancelReply = () => {
 	modelValue.value = false;
 	emit('cancel');
-};
-
-const onBeforeEnter = (el: Element) => {
-	// 	gsap.set(el, { autoAlpha: 0 })
-};
-
-const onEnter = (el: Element, done: () => void) => {
-	gsap.from(el, {
-		height: 0,
-		duration: 0.2,
-		top: '2px',
-		ease: 'power2',
-		onComplete: done,
-	});
-};
-
-const onLeave = (el: Element, done: () => void) => {
-	gsap.to(el, {
-		height: 0,
-		duration: 0.2,
-		top: '2px',
-		ease: 'power2',
-		onComplete: done,
-	});
 };
 </script>
 
@@ -103,8 +82,18 @@ const onLeave = (el: Element, done: () => void) => {
 .reply {
 	&-wrapper {
 		border-radius: 0.75rem 0.75rem 0 0 !important;
+
+		:deep(.v-card-item) {
+			padding: 0.45rem 1rem;
+		}
+
+		:deep(.v-card-title) {
+			font-size: 1rem;
+			line-height: 1.33;
+		}
 	}
 	&-type {
+		margin-bottom: 0.45rem;
 		color: #7e57c2;
 	}
 	&-original {

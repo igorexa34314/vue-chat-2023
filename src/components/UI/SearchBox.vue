@@ -55,11 +55,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, useTemplateRef } from 'vue';
 import { mdiMessageText } from '@mdi/js';
 import { searchClient } from '@/plugins/searchClient';
-import { useRouter } from 'vue-router/auto';
-import { ChatService } from '@/services/chat';
+import { useRouter } from 'vue-router';
+import { joinPrivateChat } from '@/services/chat';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { useUserStore } from '@/stores/user';
 import messages from '@/utils/messages.json';
@@ -67,8 +67,6 @@ import { defaultAvatar } from '@/global-vars';
 import type { UserInfo } from '@/types/db/UserdataTable';
 import { setUserDisplayName } from '@/utils/user';
 import { useDebounceFn } from '@vueuse/core';
-import type { VTextField } from 'vuetify/components';
-// @ts-ignore
 import { AisInstantSearch, AisAutocomplete } from 'vue-instantsearch/vue3/es';
 
 type AisAutocompleteSlot = {
@@ -81,17 +79,17 @@ const { search } = defineProps<{
 	search?: string;
 }>();
 
-const modelValue = defineModel<string>('modelValue', { default: '' });
+const modelValue = defineModel<string>({ default: '' });
 
 defineOptions({
 	inheritAttrs: false,
 });
 
-const { push } = useRouter();
+const router = useRouter();
 const userStore = useUserStore();
 const { showMessage } = useSnackbarStore();
 const searchIndex: string = import.meta.env.VITE_ALGOLIA_SEARCH_INDEX || 'index';
-const searchEl = ref<VTextField | null>(null);
+const searchRef = useTemplateRef('searchEl');
 const uid = computed(() => userStore.info?.uid);
 
 const query = ref('');
@@ -102,20 +100,20 @@ const updateQuery = useDebounceFn(async (value: string, refine: AisAutocompleteS
 
 const goToChat = async (uid: string) => {
 	try {
-		const chatId = await ChatService.joinPrivateChat(uid);
+		const chatId = await joinPrivateChat(uid);
 		if (chatId) {
-			push({ name: '/chat/[chatId]', params: { chatId } });
+			router.push({ name: '//chat/[chatId]', params: { chatId } });
 		}
 	} catch (e) {
 		showMessage(messages[e as keyof typeof messages] || (e as string), 'red-darken-3', 2000);
 	}
 };
 const openUserProfile = (uid: string) => {
-	push({ name: '/user/[userId]', params: { userId: uid } });
+	router.push({ name: '//user/[userId]', params: { userId: uid } });
 };
 
 defineExpose({
-	$el: searchEl,
+	$el: searchRef,
 });
 </script>
 

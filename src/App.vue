@@ -1,8 +1,4 @@
 <template>
-	<metainfo>
-		<template #title="{ content }: SlotScopeProperties">{{ content ? `${content} | ${AppName}` : AppName }}</template>
-	</metainfo>
-
 	<GlobalSnackbar />
 
 	<router-view #default="{ Component }">
@@ -12,7 +8,7 @@
 				<component :is="Component" />
 				<!-- loading state -->
 				<template #fallback>
-					<page-loader />
+					<PageLoader />
 				</template>
 			</Suspense>
 		</template>
@@ -20,15 +16,18 @@
 </template>
 
 <script setup lang="ts">
-import { defineAsyncComponent } from 'vue';
-import type { SlotScopeProperties } from 'vue-meta';
+import { useHead } from '@unhead/vue';
+import GlobalSnackbar from '@/components/app/GlobalSnackbar.vue';
 
-const GlobalSnackbar = defineAsyncComponent(() => import('@/components/app/GlobalSnackbar.vue'));
-const AppName: string = import.meta.env.VITE_APP_NAME || 'My Chat';
+const appName = 'My Chat';
+
+useHead({
+	titleTemplate: title => (title ? `${title} | ${appName}` : appName),
+});
 </script>
 
 <style lang="scss">
-@import '@/assets/styles/main';
+@use '@/assets/styles/main';
 
 .v-divider {
 	--v-border-opacity: 0.6 !important;

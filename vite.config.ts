@@ -1,52 +1,50 @@
-import { defineConfig, loadEnv, ConfigEnv } from 'vite';
-import { resolve, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { defineConfig } from 'vite';
+import { fileURLToPath, URL } from 'node:url';
 import vue from '@vitejs/plugin-vue';
+import vueDevTools from 'vite-plugin-vue-devtools';
 import vuetify, { transformAssetUrls } from 'vite-plugin-vuetify';
 import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite';
 import VueRouter from 'unplugin-vue-router/vite';
-import Layouts from 'vite-plugin-vue-layouts';
 import { visualizer } from 'rollup-plugin-visualizer';
 
 // https://vitejs.dev/config/
-export default ({ mode }: ConfigEnv) => {
-	process.env = { ...process.env, ...loadEnv(mode, process.cwd()) };
-
-	return defineConfig({
-		appType: 'mpa', // disable history fallback
-		base: process.env.VITE_BASE || '/',
-		server: {
-			port: +(process.env.VITE_PORT || 3000),
+export default defineConfig({
+	base: '/',
+	resolve: {
+		alias: {
+			'@': fileURLToPath(new URL('./src', import.meta.url)),
 		},
-		resolve: {
-			alias: {
-				'@': resolve(dirname(fileURLToPath(import.meta.url)), './src'),
-			},
+	},
+	plugins: [
+		VueRouter({
+			routesFolder: 'src/pages',
+			dts: './src/types/typed-router.d.ts',
+		}),
+		vue({
+			template: { transformAssetUrls },
+		}),
+		vuetify({ autoImport: { labs: true } }),
+		VueI18nPlugin({
+			globalSFCScope: true,
+			// you need to set i18n resource including paths!
+			include: fileURLToPath(new URL('./src/locales/**', import.meta.url)),
+		}),
+		vueDevTools(),
+		{
+			...visualizer({ filename: 'stats.html', open: true }),
+			apply: ({ mode }) => mode === 'analyze',
 		},
-		plugins: [
-			VueRouter({
-				routesFolder: 'src/pages',
-				exclude: ['**/components/*.vue'],
-				dts: './src/types/typed-router.d.ts',
-			}),
-			vue({ template: { transformAssetUrls }, script: { defineModel: true, propsDestructure: true } }),
-			Layouts({
-				layoutsDirs: 'src/layouts',
-				defaultLayout: 'default',
-			}),
-			vuetify({ autoImport: true }),
-			VueI18nPlugin({
-				globalSFCScope: true,
-				// you need to set i18n resource including paths!
-				include: [resolve(dirname(fileURLToPath(import.meta.url)), './src/locales/**')],
-			}),
-			{
-				...visualizer({ filename: 'bundle-stats.html', template: 'treemap' }),
-				apply: () => !!process.env.ROLLUP_ANALYZE,
-			},
+	],
+	optimizeDeps: {
+		include: [
+			'unplugin-vue-router/runtime',
+			'base64-arraybuffer',
+			'@vueuse/core',
+			'uuid',
+			'vuetify-birthdaypicker',
+			'vue-instantsearch/vue3/es',
+			'algoliasearch/lite',
 		],
-		define: {
-			'process.env.DEBUG': false,
-		},
-	});
-};
+		exclude: ['vuetify'],
+	},
+});

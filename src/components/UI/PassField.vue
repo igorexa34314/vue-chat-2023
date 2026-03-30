@@ -46,8 +46,6 @@ import { ref } from 'vue';
 import validations from '@/utils/validations';
 import type { VTextField } from 'vuetify/components';
 
-type Password = VTextField['modelValue'];
-
 const {
 	placeholder = 'Enter password',
 	label = 'Password',
@@ -63,7 +61,7 @@ const {
 	repeaterLabel?: string;
 	placeholder?: VTextField['placeholder'];
 	repeaterPlaceholder?: VTextField['placeholder'];
-	rules?: ((v: Password) => boolean | string)[];
+	rules?: ((v: string) => boolean | string)[];
 	variant?: VTextField['variant'];
 	repeaterClass?: string;
 }>();
@@ -73,5 +71,5 @@ const passFieldState = ref({
 	showRepeater: false,
 });
 
-const password = defineModel<Password>('modelValue', { default: '' });
+const password = defineModel<string>({ default: '' });
 </script>

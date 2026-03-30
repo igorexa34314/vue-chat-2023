@@ -27,8 +27,7 @@
 <script setup lang="ts">
 import { mdiDelete } from '@mdi/js';
 import ImageLoader from '@/components/chat/ImageLoader.vue';
-import { ref } from 'vue';
-import type { VImg } from 'vuetify/components';
+import { useTemplateRef } from 'vue';
 import type { AttachedContent } from '@/components/chat/attach/AttachDialog.vue';
 import type { MediaAttachment } from '@/services/message';
 
@@ -42,9 +41,9 @@ const emit = defineEmits<{
 	'delete-item': [itemId: MediaAttachment['id']];
 }>();
 
-const imgEl = ref<VImg | null>(null);
+const imgRef = useTemplateRef('imgEl');
 
-defineExpose({ imgEl });
+defineExpose({ imgEl: imgRef });
 </script>
 
 <style lang="scss" scoped>

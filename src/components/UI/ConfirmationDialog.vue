@@ -6,8 +6,8 @@
 		width="auto"
 		eager
 		content-class="w-100">
-		<template #activator="{ props, isActive }">
-			<slot name="activator" v-bind="{ props, isActive }"></slot>
+		<template #activator="activatorProps">
+			<slot name="activator" v-bind="activatorProps"></slot>
 		</template>
 		<template #default="{ isActive }">
 			<v-card v-bind="{ maxWidth, width }" :class="contentClass" class="mx-auto pt-2 pt-sm-4">
@@ -39,8 +39,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, nextTick } from 'vue';
-import type { VBtn, VDialog } from 'vuetify/components';
+import { watch, nextTick, useTemplateRef, type VNode } from 'vue';
+import type { VDialog } from 'vuetify/components';
 
 const {
 	maxWidth = '550px',
@@ -69,23 +69,23 @@ const emit = defineEmits<{
 	onCancel: [];
 }>();
 
-const confirmationDialog = defineModel<boolean>('modelValue', { default: false });
+const confirmationDialog = defineModel<boolean>();
 
 const slots = defineSlots<{
 	title: VDialog['$slots']['default'];
 	default: VDialog['$slots']['default'];
 	activator: VDialog['$slots']['activator'];
-	cancel(arg: { cancelEvent: () => void }): any;
-	submit(arg: { submitEvent: () => void }): any;
+	cancel(arg: { cancelEvent: () => void }): VNode;
+	submit(arg: { submitEvent: () => void }): VNode;
 }>();
 
-const submitBtn = ref<VBtn | null>(null);
+const submitBtnRef = useTemplateRef('submitBtn');
 
 watch(
 	confirmationDialog,
 	newVal => {
 		if (newVal) {
-			nextTick().then(() => (submitBtn.value?.$el as HTMLButtonElement | null)?.focus());
+			nextTick().then(() => (submitBtnRef.value?.$el as HTMLButtonElement | null)?.focus());
 		}
 	},
 	{ flush: 'post' }

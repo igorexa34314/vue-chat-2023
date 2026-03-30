@@ -8,6 +8,7 @@ import {
 	onAuthStateChanged,
 	type ErrorFn,
 	type User,
+	type AuthProvider,
 } from 'firebase/auth';
 import { auth } from '@/firebase';
 import { fbErrorHandler } from '@/utils/errorHandler';
@@ -19,77 +20,75 @@ interface UserCredentials {
 
 let currentUser: User | null = null;
 
-export class AuthService {
-	static getCurrentUser() {
-		return new Promise((resolve: (user: typeof currentUser) => void, reject: ErrorFn) => {
-			if (currentUser) {
-				resolve(currentUser);
-			} else {
-				const unsubscribe = onAuthStateChanged(
-					auth,
-					user => {
-						unsubscribe();
-						currentUser = user;
-						resolve(currentUser);
-					},
-					reject
-				);
-			}
-		});
-	}
-
-	static async getUid() {
-		const user = await AuthService.getCurrentUser();
-		if (!user) {
-			throw new Error('User unauthenticated');
+export function getCurrentUser() {
+	return new Promise((resolve: (user: typeof currentUser) => void, reject: ErrorFn) => {
+		if (currentUser) {
+			resolve(currentUser);
+		} else {
+			const unsubscribe = onAuthStateChanged(
+				auth,
+				user => {
+					unsubscribe();
+					currentUser = user;
+					resolve(currentUser);
+				},
+				reject
+			);
 		}
-		return user.uid;
-	}
+	});
+}
 
-	static async signInWithGoogle() {
-		try {
-			const user = await this.signInWithProvider(new GoogleAuthProvider());
-			return user;
-		} catch (e) {
-			return fbErrorHandler(e);
-		}
+export async function getUid() {
+	const user = await getCurrentUser();
+	if (!user) {
+		throw new Error('User unauthenticated');
 	}
+	return user.uid;
+}
 
-	static async handleRedirectResult() {
-		const result = await getRedirectResult(auth);
-		if (result?.user) {
-			currentUser = result.user;
-		}
+export async function signInWithGoogle() {
+	try {
+		const user = await signInWithProvider(new GoogleAuthProvider());
+		return user;
+	} catch (e) {
+		return fbErrorHandler(e);
 	}
+}
 
-	private static async signInWithProvider(provider: any) {
-		return signInWithRedirect(auth, provider);
+export async function handleRedirectResult() {
+	const result = await getRedirectResult(auth);
+	if (result?.user) {
+		currentUser = result.user;
 	}
+}
 
-	static async registerWithEmail({ email, password }: UserCredentials) {
-		try {
-			const user = (await createUserWithEmailAndPassword(auth, email, password)).user;
-			return user;
-		} catch (e) {
-			return fbErrorHandler(e);
-		}
+async function signInWithProvider(provider: AuthProvider) {
+	return signInWithRedirect(auth, provider);
+}
+
+export async function registerWithEmail({ email, password }: UserCredentials) {
+	try {
+		const user = (await createUserWithEmailAndPassword(auth, email, password)).user;
+		return user;
+	} catch (e) {
+		return fbErrorHandler(e);
 	}
+}
 
-	static async loginWithEmail({ email, password }: UserCredentials) {
-		try {
-			const creds = await signInWithEmailAndPassword(auth, email, password);
-			return creds.user;
-		} catch (e) {
-			return fbErrorHandler(e);
-		}
+export async function loginWithEmail({ email, password }: UserCredentials) {
+	try {
+		const creds = await signInWithEmailAndPassword(auth, email, password);
+		return creds.user;
+	} catch (e) {
+		return fbErrorHandler(e);
 	}
+}
 
-	static async logout() {
-		try {
-			await signOut(auth);
-			currentUser = null;
-		} catch (e) {
-			return fbErrorHandler(e);
-		}
+export async function logout() {
+	try {
+		await signOut(auth);
+		currentUser = null;
+	} catch (e) {
+		return fbErrorHandler(e);
 	}
 }

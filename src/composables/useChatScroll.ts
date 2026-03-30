@@ -1,16 +1,15 @@
-import { computed, toRefs, nextTick, watch, type Ref } from 'vue';
+import { computed, toRefs, nextTick, watch, type MaybeRefOrGetter, toValue } from 'vue';
 import { useScroll, watchPausable } from '@vueuse/core';
 import { useMessagesStore, type Direction } from '@/stores/messages';
-import { gsap } from 'gsap';
-import { ScrollToPlugin } from 'gsap/all';
 import type { VInfiniteScroll } from 'vuetify/components';
-
-gsap.registerPlugin(ScrollToPlugin);
+import { useGoTo } from 'vuetify';
 
 export const useChatScroll = (
-	scrollEl: Ref<HTMLElement | null>,
+	scrollRef: MaybeRefOrGetter<HTMLElement | null>,
 	onLoadMore: (direction: Direction) => void | Promise<void>
 ) => {
+	const goTo = useGoTo();
+
 	// Messages store
 	const messagesStore = useMessagesStore();
 
@@ -18,7 +17,7 @@ export const useChatScroll = (
 	const lastVisible = computed(() => messagesStore.lastVisible);
 
 	// Hiding scroll when inactive
-	const { arrivedState, isScrolling } = useScroll(scrollEl, {
+	const { arrivedState, isScrolling } = useScroll(scrollRef, {
 		offset: { bottom: 300 },
 	});
 	const { bottom } = toRefs(arrivedState);
@@ -27,34 +26,25 @@ export const useChatScroll = (
 		messagesStore.isLoading
 			? undefined
 			: lastVisible.value.top && lastVisible.value.bottom
-			? 'both'
-			: lastVisible.value.top
-			? 'start'
-			: lastVisible.value.bottom
-			? 'end'
-			: undefined
+				? 'both'
+				: lastVisible.value.top
+					? 'start'
+					: lastVisible.value.bottom
+						? 'end'
+						: undefined
 	);
-
-	// watchEffect(onCleanup => {
-	// 	onCleanup(() => gsap.set('.chat__content', { '--v-scroll-bg': 'transparent' }));
-	// 	if (isScrolling.value) {
-	// 		gsap.set('.chat__content', { '--v-scroll-bg': 'rgba(255, 255, 255, 0.2)' });
-	// 	}
-	// });
 
 	// Scroll bottom with smooth or auto mode
 	const scrollBottom = (behavior: ScrollBehavior = 'auto') => {
-		if (scrollEl.value && scrollEl.value?.scrollHeight > scrollEl.value?.clientHeight) {
+		const scrollEl = toValue(scrollRef);
+		if (scrollEl && scrollEl.scrollHeight > scrollEl.clientHeight) {
 			if (behavior !== 'smooth') {
-				scrollEl.value?.scrollTo({
-					top: scrollEl.value?.scrollHeight,
-					behavior,
-				});
+				scrollEl.scrollTop = scrollEl.scrollHeight;
 			} else {
-				gsap.to(scrollEl.value, {
-					scrollTo: { y: 'max' },
+				goTo(scrollEl.scrollHeight, {
+					container: scrollEl,
 					duration: 1,
-					ease: 'power2.out',
+					easing: 'easeInOutCubic',
 				});
 			}
 		}

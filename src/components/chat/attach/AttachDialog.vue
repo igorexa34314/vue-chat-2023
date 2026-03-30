@@ -17,10 +17,10 @@
 						(contentType === 'media'
 							? 'image'
 							: attachedFiles.length === 1
-							? 'file'
-							: attachedFiles.length > 4
-							? 'files'
-							: 'files')
+								? 'file'
+								: attachedFiles.length > 4
+									? 'files'
+									: 'files')
 					}}
 				</h3>
 				<v-menu location="bottom left" :offset="[0, -30]" :elevation="8">
@@ -29,7 +29,10 @@
 					</template>
 					<v-list density="compact" class="bg-blue-grey-darken-4" min-width="180">
 						<v-list-item style="cursor: pointer" class="add-attachment pa-0">
-							<label for="add-more" style="cursor: pointer; padding: 4px 0.7em" class="d-block">
+							<label
+								for="add-more"
+								style="cursor: pointer; padding: 4px 0.7em"
+								class="d-block">
 								<v-icon :icon="mdiPlus" class="mr-3" />
 								<span>Add more</span>
 								<input
@@ -42,16 +45,25 @@
 							</label>
 						</v-list-item>
 						<v-list-item
-							v-if="contentType !== 'file' || attachedFiles.every(f => f.fileData.type.startsWith('image/'))"
+							v-if="
+								contentType !== 'file' ||
+								attachedFiles.every(f => f.fileData.type.startsWith('image/'))
+							"
 							density="compact"
 							@click="emit('changeContentType')"
 							class="px-3">
 							<template #prepend>
 								<v-icon
-									:icon="contentType !== 'file' ? mdiFileMultipleOutline : mdiFolderMultipleImage"
+									:icon="
+										contentType !== 'file'
+											? mdiFileMultipleOutline
+											: mdiFolderMultipleImage
+									"
 									class="mr-3" />
 							</template>
-							<v-list-item-title>{{ `Send as ${contentType !== 'file' ? 'file' : 'media'}` }}</v-list-item-title>
+							<v-list-item-title>{{
+								`Send as ${contentType !== 'file' ? 'file' : 'media'}`
+							}}</v-list-item-title>
 						</v-list-item>
 					</v-list>
 				</v-menu>
@@ -95,10 +107,16 @@
 </template>
 
 <script setup lang="ts">
-import { mdiClose, mdiDotsVertical, mdiPlus, mdiFileMultipleOutline, mdiFolderMultipleImage } from '@mdi/js';
+import {
+	mdiClose,
+	mdiDotsVertical,
+	mdiPlus,
+	mdiFileMultipleOutline,
+	mdiFolderMultipleImage,
+} from '@mdi/js';
 import FileAttachment from '@/components/chat/attach/FileAttachment.vue';
 import MediaAttachment from '@/components/chat/attach/MediaAttachment.vue';
-import { ref, computed, watch, type Ref } from 'vue';
+import { ref, computed, watch, type Ref, useTemplateRef } from 'vue';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { getFileThumbAndSizes } from '@/utils/resizeFile';
 import { useDisplay } from 'vuetify';
@@ -121,23 +139,23 @@ const emit = defineEmits<{
 	close: [];
 }>();
 
-const dialog = defineModel<boolean>('modelValue', { default: false });
+const dialog = defineModel<boolean>();
 const subtitle = defineModel<string>('subtitleText', { default: '' });
 
 const { showMessage } = useSnackbarStore();
 const { mobile } = useDisplay();
 
-type AttachComponent<T extends AttachmentType = AttachmentType> = InstanceType<
-	T extends 'media' ? typeof MediaAttachment : typeof FileAttachment
->;
-const attachComponent = ref<AttachComponent | null>(null);
+type AttachComponent<T extends AttachmentType = AttachmentType> = T extends 'media'
+	? InstanceType<typeof MediaAttachment>
+	: InstanceType<typeof FileAttachment>;
+const attachComponentRef = useTemplateRef<AttachComponent>('attachComponent');
 
 const attachedFiles = ref([]) as Ref<AttachedContent[]>;
 const isDialogReady = computed(() => {
 	if (contentType === 'media') {
-		return (attachComponent.value as AttachComponent<'media'> | undefined)?.isImgsReady;
+		return (attachComponentRef.value as AttachComponent<'media'> | null)?.isImgsReady;
 	} else if (contentType === 'file') {
-		return (attachComponent.value as AttachComponent<'file'> | undefined)?.isFilesReady;
+		return (attachComponentRef.value as AttachComponent<'file'> | null)?.isFilesReady;
 	}
 	return true;
 });
@@ -193,8 +211,9 @@ const deleteAttachItem = (fileId: AttachedContent['id']) => {
 
 <style lang="scss" scoped>
 // Custom scroll
-$scroll-width: 0.35rem !important;
-@import '@/assets/styles/scroll';
+@use '@/assets/styles/scroll' with (
+	$scroll-width: 0.35rem
+);
 
 .attachments {
 	max-height: 420px;

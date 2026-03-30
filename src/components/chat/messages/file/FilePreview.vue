@@ -32,7 +32,7 @@ import type { MessageAttachment } from '@/services/message';
 
 const { file, isHovering, hoverProps } = defineProps<{
 	file: MessageAttachment;
-	isHovering: Boolean;
+	isHovering: boolean;
 	hoverProps: Record<string, unknown>;
 }>();
 const emit = defineEmits<{

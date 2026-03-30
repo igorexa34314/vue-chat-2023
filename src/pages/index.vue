@@ -1,6 +1,6 @@
 <template>
 	<v-layout class="app">
-		<AppNavbar @drawer="drawer = !drawer" :title="navbarTitle" @logout="logout" />
+		<AppNavbar @drawer="drawer = !drawer" :title="navbarTitle" @logout="tryLogout" />
 
 		<AppSidebar v-model="drawer" />
 
@@ -15,31 +15,37 @@ import AppNavbar from '@/components/app/AppNavbar.vue';
 import AppSidebar from '@/components/app/AppSidebar.vue';
 import messages from '@/utils/messages.json';
 import { ref, onBeforeUnmount, provide, watchEffect } from 'vue';
-import { UserService } from '@/services/user';
+import { fetchAuthUser } from '@/services/user';
 import { useAsyncState } from '@vueuse/core';
 import { globalLoadingKey } from '@/injection-keys';
 import { useUserStore } from '@/stores/user';
-import { useRoute, useRouter, definePage } from 'vue-router/auto';
+import { useRoute, useRouter } from 'vue-router';
 import { useSnackbarStore } from '@/stores/snackbar';
-import { AuthService } from '@/services/auth';
+import { logout } from '@/services/auth';
 
 definePage({ meta: { auth: true, requiresAuth: true } });
 const drawer = ref(true);
 const navbarTitle = ref<string>('');
 
 // Fetching all auth userdata
-const { push } = useRouter();
+const router = useRouter();
 const route = useRoute();
 const { showMessage } = useSnackbarStore();
 const { $reset } = useUserStore();
 
+const msg = route.query.message as keyof typeof messages;
+
+if (msg && messages[msg]) {
+	showMessage(messages[msg]);
+}
+
 watchEffect(() => {
-	if (route.name !== '/chat/[chatId]') {
+	if (route.name !== '//chat/[chatId]') {
 		navbarTitle.value = 'My chat';
 	}
 });
 
-const { state: unsub, isLoading } = useAsyncState(UserService.fetchAuthUser, null, {
+const { state: unsub, isLoading } = useAsyncState(fetchAuthUser, null, {
 	onError: e => {
 		console.error(e);
 		showMessage(messages[e as keyof typeof messages] || (e as string), 'red-darken-3', 2000);
@@ -48,10 +54,10 @@ const { state: unsub, isLoading } = useAsyncState(UserService.fetchAuthUser, nul
 
 provide(globalLoadingKey, isLoading);
 
-const logout = async () => {
+const tryLogout = async () => {
 	try {
-		await AuthService.logout();
-		push('/login');
+		await logout();
+		router.push('/login');
 	} catch (e) {
 		showMessage(messages[e as keyof typeof messages] || (e as string), 'red-darken-3', 2000);
 	}

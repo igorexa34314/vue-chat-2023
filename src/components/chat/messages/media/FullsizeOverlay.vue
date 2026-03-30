@@ -20,7 +20,11 @@
 					v-if="smAndUp && overlayItem"
 					class="carousel__control d-flex align-center carousel__control-prev"
 					@click="props.onClick">
-					<v-icon :icon="mdiChevronLeft" size="60px" color="#ffffffbf" class="carousel-prev-btn" />
+					<v-icon
+						:icon="mdiChevronLeft"
+						size="60px"
+						color="#ffffffbf"
+						class="carousel-prev-btn" />
 				</div>
 			</template>
 			<template #next="{ props }">
@@ -44,7 +48,10 @@
 						max-height="100%"
 						max-width="100%"
 						:style="{ transform: `scale(${zoomed ? '2' : '1'})` }">
-						<v-img :src="item.raw.previewURL" :alt="alt || item.fullname" :width="item.raw.sizes?.w">
+						<v-img
+							:src="item.raw.previewURL"
+							:alt="alt || item.fullname"
+							:width="item.raw.sizes?.w">
 							<template #placeholder>
 								<ImageLoader />
 							</template>
@@ -69,7 +76,12 @@
 				:href="content[currentItem || 0].raw.previewURL"
 				:download="content[currentItem || 0].fullname || 'image.png'"
 				title="Download" />
-			<v-btn class="close__btn" :icon="mdiClose" variant="text" @click="closeOverlay" title="Close" />
+			<v-btn
+				class="close__btn"
+				:icon="mdiClose"
+				variant="text"
+				@click="closeOverlay"
+				title="Close" />
 		</div>
 	</v-overlay>
 </template>
@@ -97,7 +109,7 @@ const emit = defineEmits<{
 	close: [];
 }>();
 
-const showOverlay = defineModel<boolean>('modelValue', { default: false });
+const showOverlay = defineModel<boolean>();
 const overlayItem = defineModel<number>('currentItem', { default: 0 });
 
 const { smAndUp } = useDisplay();

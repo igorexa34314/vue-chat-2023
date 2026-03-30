@@ -7,7 +7,9 @@ import {
 } from 'firebase/firestore';
 import type { ParsedTimestamps } from '@/types/db/helpers';
 
-export const parseTimestamp = <T extends object, K extends keyof T>(obj: T): ParsedTimestamps<T> => {
+export const parseTimestamp = <T extends object, K extends keyof T>(
+	obj: T
+): ParsedTimestamps<T> => {
 	if (obj instanceof Timestamp) {
 		return obj.toDate() as ParsedTimestamps<T>;
 	} else if (obj instanceof DocumentReference) {
@@ -16,7 +18,7 @@ export const parseTimestamp = <T extends object, K extends keyof T>(obj: T): Par
 		return obj.map(parseTimestamp) as ParsedTimestamps<T>;
 	} else if (obj && typeof obj === 'object') {
 		return Object.keys(obj).reduce((res, key) => {
-			(res[key as K] as ParsedTimestamps<T>) = parseTimestamp(obj[key as K] as any);
+			(res[key as K] as ParsedTimestamps<T>) = parseTimestamp(obj[key as K] as T);
 			return res;
 		}, {} as ParsedTimestamps<T>);
 	}

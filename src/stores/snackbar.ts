@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { readonly, shallowRef } from 'vue';
 
 export interface SnackbarOptions {
 	text: string;
@@ -8,7 +8,7 @@ export interface SnackbarOptions {
 }
 
 export const useSnackbarStore = defineStore('snackbar', () => {
-	const snackbarState = ref<SnackbarOptions>({
+	const snackbarState = shallowRef<SnackbarOptions>({
 		text: '',
 		color: '',
 		timeout: 0,
@@ -22,7 +22,7 @@ export const useSnackbarStore = defineStore('snackbar', () => {
 		snackbarState.value = { text, color, timeout };
 	};
 	return {
-		snackbarState,
+		snackbarState: readonly(snackbarState),
 		showMessage,
 	};
 });

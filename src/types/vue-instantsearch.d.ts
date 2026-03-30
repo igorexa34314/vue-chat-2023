@@ -1,6 +1,9 @@
-import { SearchClient } from 'algoliasearch';
+/* eslint-disable  */
+// @ts-nocheck
 
 declare module 'vue-instantsearch/vue3/es' {
+	import { SearchClient } from 'algoliasearch';
+
 	export interface SearchItem {
 		value: string;
 		count: number;

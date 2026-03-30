@@ -46,7 +46,12 @@
 
 		<div class="mt-3 mt-md-5" style="max-width: 500px">
 			<v-card variant="outlined" max-width="250" class="mb-5" elevation="9">
-				<v-img :lazy-src="defaultAvatar" :src="info.photoURL || defaultAvatar" alt="Photo URL" cover eager>
+				<v-img
+					:lazy-src="defaultAvatar"
+					:src="info.photoURL || defaultAvatar"
+					alt="Photo URL"
+					cover
+					eager>
 					<template #placeholder>
 						<ImageLoader />
 					</template>
@@ -73,15 +78,15 @@
 <script setup lang="ts">
 import ImageLoader from '@/components/chat/ImageLoader.vue';
 import validations from '@/utils/validations';
-import { ref } from 'vue';
+import { ref, useTemplateRef } from 'vue';
 import { useDisplay } from 'vuetify';
 import { defaultAvatar } from '@/global-vars';
 import { VBirthdayPicker } from 'vuetify-birthdaypicker';
 import { type PublicUserInfo } from '@/services/user';
-import type { VForm } from 'vuetify/components';
 import { useI18n } from 'vue-i18n';
 
-export interface IProfileForm extends Pick<PublicUserInfo, 'firstname' | 'lastname' | 'gender' | 'birthday_date'> {
+export interface IProfileForm
+	extends Pick<PublicUserInfo, 'firstname' | 'lastname' | 'gender' | 'birthday_date'> {
 	birthday_date: Date;
 	avatar: File[];
 }
@@ -96,7 +101,7 @@ const emit = defineEmits<{
 
 const { d } = useI18n();
 const { xs } = useDisplay();
-const formEl = ref<VForm | null>(null);
+const formRef = useTemplateRef('formEl');
 const formState = ref<IProfileForm>({
 	firstname: info.firstname,
 	lastname: info.lastname,
@@ -112,7 +117,7 @@ const genderItems = [
 ];
 
 const submitForm = async () => {
-	const valid = (await formEl.value?.validate())?.valid;
+	const valid = (await formRef.value?.validate())?.valid;
 	if (valid) {
 		emit('submit', formState.value);
 		formState.value.avatar = [];

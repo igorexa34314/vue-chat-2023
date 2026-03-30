@@ -1,6 +1,12 @@
 <template>
 	<div
-		:class="{ 'self justify-end': self, 'ml-6': xs && self, 'mr-6': xs && !self }"
+		:class="{
+			'self justify-end': self,
+			'ml-6': xs && self,
+			'mr-6': xs && !self,
+			selected,
+			highlighted,
+		}"
 		class="message d-flex"
 		@contextmenu.prevent="emit('contextmenu', $event)">
 		<v-avatar
@@ -18,22 +24,30 @@
 			class="message__card"
 			:class="self ? 'self bg-light-blue-darken-3' : ''"
 			variant="tonal">
-			<v-card-title v-if="content.type === 'text'" class="message__head d-flex flex-row align-center">
-				<small class="sender__name text-truncate" @click="openUserProfile"> {{ setUserDisplayName(sender) }}</small>
+			<v-card-title
+				v-if="content.type === 'text'"
+				class="message__head d-flex flex-row align-center">
+				<small class="sender__name text-truncate" @click="openUserProfile">
+					{{ setUserDisplayName(sender) }}</small
+				>
 			</v-card-title>
 
 			<v-card-text
 				class="message__content pb-1 pr-3"
-				:class="{ 'pl-2 pt-2': content.type === 'file', 'pl-3 pt-3': content.type === 'media' }">
+				:class="{
+					'pl-2 pt-2': content.type === 'file',
+					'pl-3 pt-3': content.type === 'media',
+				}">
 				<component
-					:is="messageComponent1"
+					:is="messageComponent"
 					v-bind="{ content }"
 					:class="{ 'pr-2 pr-sm-3': content.type === 'file' }"
 					v-on="
 						content.type !== 'text'
 							? {
-									openInOverlay: (imgId: MediaAttachment['id']) => emit('openInOverlay', imgId),
-							  }
+									openInOverlay: (imgId: MediaAttachment['id']) =>
+										emit('openInOverlay', imgId),
+								}
 							: {}
 					" />
 
@@ -57,20 +71,22 @@ import MediaMessage from '@/components/chat/messages/media/MediaMessage.vue';
 import FileMessage from '@/components/chat/messages/file/FileMessage.vue';
 import TextMessage from '@/components/chat/messages/text/TextMessage.vue';
 import { useDisplay } from 'vuetify';
-import { computed, defineAsyncComponent } from 'vue';
-import { useRouter } from 'vue-router/auto';
+import { computed } from 'vue';
+import { useRouter } from 'vue-router';
 import { formatDate } from '@/utils/filters/messages';
 import { defaultAvatar } from '@/global-vars';
 import type { Message, MediaAttachment } from '@/services/message';
 import { useI18n } from 'vue-i18n';
 import { setUserDisplayName } from '@/utils/user';
 
-const { content, sender, created_at, updated_at, self } = defineProps<{
+const { content, sender, created_at, updated_at, self, selected, highlighted } = defineProps<{
 	content: Message['content'];
 	sender: Message['sender'];
 	created_at: Message['created_at'];
 	updated_at: Message['updated_at'];
 	self?: boolean;
+	selected?: boolean;
+	highlighted?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -80,21 +96,14 @@ const emit = defineEmits<{
 
 const { d } = useI18n();
 const { xs, smAndUp } = useDisplay();
-const { push } = useRouter();
+const router = useRouter();
 
-const messageComponent1 = computed(() =>
+const messageComponent = computed(() =>
 	content.type === 'media' ? MediaMessage : content.type === 'file' ? FileMessage : TextMessage
 );
 
-const messageComponent = defineAsyncComponent<any>(() =>
-	content.type === 'media'
-		? import('@/components/chat/messages/media/MediaMessage.vue')
-		: content.type === 'file'
-		? import('@/components/chat/messages/file/FileMessage.vue')
-		: import('@/components/chat/messages/text/TextMessage.vue')
-);
 const openUserProfile = async () => {
-	push({ name: '/user/[userId]', params: { userId: sender.uid } });
+	router.push({ name: '//user/[userId]', params: { userId: sender.uid } });
 };
 </script>
 
@@ -106,13 +115,14 @@ const openUserProfile = async () => {
 		display: block;
 		visibility: hidden;
 		position: absolute;
-		top: 0;
-		bottom: 0;
+		top: -0.4rem;
+		bottom: -0.4rem;
 		left: -50%;
 		right: -25%;
 		z-index: -1;
 		background-color: rgb(255, 255, 255);
 		opacity: 0;
+		transition: opacity 0.2s ease-out 0s;
 	}
 	&__content {
 		line-height: 1.5;
@@ -124,6 +134,30 @@ const openUserProfile = async () => {
 	::-moz-selection,
 	::selection {
 		background-color: #1a237e;
+	}
+
+	&.self {
+		.sender__avatar {
+			order: 2 !important;
+		}
+		.message__card {
+			order: 1 !important;
+		}
+	}
+
+	&.selected {
+		& > :deep(.highlighter) {
+			visibility: visible;
+			opacity: 0.1;
+		}
+	}
+
+	&.highlighted {
+		& > :deep(.highlighter) {
+			visibility: visible;
+			opacity: 0.1;
+			transition: opacity 0.3s ease-out 0s;
+		}
 	}
 }
 .sender {
@@ -140,14 +174,6 @@ const openUserProfile = async () => {
 		:deep(img) {
 			pointer-events: none;
 		}
-	}
-}
-.self {
-	.sender__avatar {
-		order: 2 !important;
-	}
-	.message__card {
-		order: 1 !important;
 	}
 }
 </style>

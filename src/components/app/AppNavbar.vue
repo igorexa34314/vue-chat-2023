@@ -54,11 +54,10 @@
 </template>
 
 <script setup lang="ts">
-import { mdiMagnify, mdiFilter, mdiDotsVertical, mdiAccountCircleOutline, mdiLogout } from '@mdi/js';
-import { ref, nextTick, defineAsyncComponent } from 'vue';
+import SearchBox from '@/components/UI/SearchBox.vue';
+import { mdiMagnify, mdiDotsVertical, mdiAccountCircleOutline, mdiLogout } from '@mdi/js';
+import { ref, nextTick, useTemplateRef, type VNode } from 'vue';
 import { useDisplay } from 'vuetify';
-
-const SearchBox = defineAsyncComponent(() => import('@/components/UI/SearchBox.vue'));
 
 const { title } = defineProps<{
 	title?: string;
@@ -70,11 +69,11 @@ const emit = defineEmits<{
 }>();
 
 const slots = defineSlots<{
-	title(): any;
+	title(): VNode;
 }>();
 
 const { xs } = useDisplay();
-const searchEl = ref<InstanceType<typeof SearchBox> | null>(null);
+const searchRef = useTemplateRef('searchEl');
 const searchState = ref({
 	enabled: false,
 	text: '',
@@ -83,6 +82,6 @@ const searchState = ref({
 const enableSearch = async () => {
 	searchState.value.enabled = true;
 	await nextTick();
-	searchEl.value?.$el?.focus();
+	searchRef.value?.$el?.focus();
 };
 </script>

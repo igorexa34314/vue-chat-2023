@@ -25,7 +25,7 @@
 <script setup lang="ts">
 import TextMessage from '@/components/chat/messages/text/TextMessage.vue';
 import ImageFrame from '@/components/chat/messages/media/ImageFrame.vue';
-import { watchEffect, computed } from 'vue';
+import { computed } from 'vue';
 import { calcImageCols as calcCols } from '@/utils/images';
 import type { MessageContent, MediaAttachment } from '@/services/message';
 import { maxMessageMedia, maxMessageMediaSm } from '@/global-vars';
@@ -41,7 +41,9 @@ const emit = defineEmits<{
 const { smAndUp } = useDisplay();
 
 const imageSize = smAndUp.value ? maxMessageMedia : maxMessageMediaSm;
-const calcImageCols = computed(() => (imgIdx: number) => calcCols(content.attachments.length, imgIdx));
+const calcImageCols = computed(
+	() => (imgIdx: number) => calcCols(content.attachments.length, imgIdx)
+);
 </script>
 
 <style lang="scss" scoped>

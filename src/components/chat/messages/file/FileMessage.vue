@@ -1,6 +1,9 @@
 <template>
 	<div v-if="content.attachments.length" class="file-message__wrapper">
-		<TextMessage v-if="content.text.length" v-bind="{ content }" class="message__subtitle mb-sm-3 mb-1" />
+		<TextMessage
+			v-if="content.text.length"
+			v-bind="{ content }"
+			class="message__subtitle mb-sm-3 mb-1" />
 
 		<div
 			v-for="(file, index) in content.attachments"
@@ -10,7 +13,7 @@
 			<v-hover #default="{ isHovering, props: hoverProps }">
 				<component
 					:is="file.thumbnail && file.raw.sizes ? FilePreview : FileExtension"
-					v-bind="{ file, hoverProps, isHovering, loading: isLoading }"
+					v-bind="{ file, hoverProps, isHovering: isHovering ?? false, loading: isLoading }"
 					@downloadFile="downloadFile(file)"
 					@openFile="emit('openInOverlay', file.id)"
 					class="file__wrapper"

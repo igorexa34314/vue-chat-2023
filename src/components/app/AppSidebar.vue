@@ -5,7 +5,7 @@
 			class="user-info py-1 mt-3 bg-blue-grey-darken-4 pr-2"
 			density="compact"
 			variant="text"
-			@click="push('/profile')"
+			@click="router.push('/profile')"
 			draggable="false">
 			<template #prepend>
 				<v-avatar>
@@ -17,15 +17,22 @@
 			<template #title>{{ setUserDisplayName(userStore.info) }}</template>
 		</v-card>
 
-		<v-skeleton-loader v-else type="list-item-avatar" width="100%" color="navbar" max-width="240px" />
+		<v-skeleton-loader
+			v-else
+			type="list-item-avatar"
+			width="100%"
+			color="navbar"
+			max-width="240px" />
 
 		<v-divider thickness="2" class="mt-2" />
 
 		<div v-if="userStore.isChatsLoading">
-			<page-loader />
+			<PageLoader />
 		</div>
 
-		<ChatList v-else-if="userStore.chats.length" :chats="userStore.chats.map(chat => chat.info)" />
+		<ChatList
+			v-else-if="userStore.chats.length"
+			:chats="userStore.chats.map(chat => chat.info)" />
 
 		<div v-else class="mt-4 pa-3">
 			<p class="text-h6 text-center">No chats</p>
@@ -34,18 +41,16 @@
 </template>
 
 <script lang="ts" setup>
-import { defineAsyncComponent } from 'vue';
+import ChatList from '@/components/chat/ChatList.vue';
 import { useUserStore } from '@/stores/user';
 import { defaultAvatar } from '@/global-vars';
-import { useRouter } from 'vue-router/auto';
+import { useRouter } from 'vue-router';
 import { setUserDisplayName } from '@/utils/user';
 
-const ChatList = defineAsyncComponent(() => import('@/components/chat/ChatList.vue'));
-
-const { push } = useRouter();
+const router = useRouter();
 const userStore = useUserStore();
 
-const drawer = defineModel<boolean>('modelValue', { default: false });
+const drawer = defineModel<boolean>();
 </script>
 
 <style lang="scss" scoped>

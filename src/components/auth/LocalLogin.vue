@@ -11,7 +11,7 @@
 			autocomplete="on"
 			required />
 
-		<pass-field v-model.trim="formState.password" class="mt-5" />
+		<PassField v-model.trim="formState.password" class="mt-5" />
 
 		<v-btn type="submit" color="success" v-bind="{ loading }" class="btn mt-6"> Sign In </v-btn>
 	</v-form>
@@ -20,9 +20,8 @@
 <script setup lang="ts">
 import PassField from '@/components/UI/PassField.vue';
 import validations from '@/utils/validations';
-import { ref } from 'vue';
-import { AuthService } from '@/services/auth';
-import type { VForm } from 'vuetify/components';
+import { ref, useTemplateRef } from 'vue';
+import { loginWithEmail } from '@/services/auth';
 import type { User } from 'firebase/auth';
 
 const emit = defineEmits<{
@@ -30,7 +29,7 @@ const emit = defineEmits<{
 	error: [err: unknown];
 }>();
 
-const formEl = ref<VForm | null>(null);
+const formRef = useTemplateRef('formEl');
 const loading = ref(false);
 const formState = ref({
 	email: '',
@@ -38,11 +37,11 @@ const formState = ref({
 });
 
 const submitForm = async () => {
-	const valid = (await formEl.value?.validate())?.valid;
+	const valid = (await formRef.value?.validate())?.valid;
 	if (valid) {
 		try {
 			loading.value = true;
-			const user = await AuthService.loginWithEmail(formState.value);
+			const user = await loginWithEmail(formState.value);
 			emit('success', user);
 		} catch (e) {
 			emit('error', e);

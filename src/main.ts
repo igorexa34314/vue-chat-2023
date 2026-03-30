@@ -1,6 +1,6 @@
-import { AuthService } from '@/services/auth';
+import { handleRedirectResult } from '@/services/auth';
 import { createApp } from 'vue';
-import { createMetaManager } from 'vue-meta';
+import { createHead } from '@unhead/vue';
 import pinia from '@/plugins/pinia';
 import vueI18n from '@/plugins/i18n';
 import App from '@/App.vue';
@@ -8,9 +8,18 @@ import router from '@/router';
 import vuetify from '@/plugins/vuetify';
 import PageLoader from '@/components/UI/PageLoader.vue';
 
-AuthService.handleRedirectResult().then(() => {
+handleRedirectResult().then(() => {
 	const app = createApp(App);
 
-	app.component('page-loader', PageLoader);
-	app.use(vuetify).use(vueI18n).use(router).use(pinia).use(createMetaManager()).mount('#app');
+	app.use(createHead()).use(router).use(vueI18n).use(vuetify).use(pinia);
+
+	app.component('PageLoader', PageLoader);
+
+	app.mount('#app');
 });
+
+// declare module 'vue' {
+// 	export interface GlobalComponents {
+// 		PageLoader: (typeof import('@/components/UI/PageLoader.vue'))['default'];
+// 	}
+// }

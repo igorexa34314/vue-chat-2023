@@ -4,7 +4,7 @@
 			v-for="chat of chats"
 			:key="chat.id"
 			:title="setChatName(chat)"
-			:to="{ name: '/chat/[chatId]', params: { chatId: chat.id } }"
+			:to="{ name: '//chat/[chatId]', params: { chatId: chat.id } }"
 			class="py-3 mb-3"
 			draggable="false">
 			<template #prepend>

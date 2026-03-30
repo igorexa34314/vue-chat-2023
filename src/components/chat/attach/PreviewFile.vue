@@ -1,5 +1,7 @@
 <template>
-	<div v-if="previewItem.fileData.type.startsWith('image/')" class="file-preview d-flex w-100 h-100 pa-1">
+	<div
+		v-if="previewItem.fileData.type.startsWith('image/')"
+		class="file-preview d-flex w-100 h-100 pa-1">
 		<v-card height="100%" width="100%" variant="tonal">
 			<v-img
 				aspect-ratio="1"
@@ -19,7 +21,11 @@
 	<div v-else class="file-icon d-inline-block">
 		<v-icon :icon="mdiFile" size="80px" />
 		<span class="file-icon-ext font-weight-black text-brown-darken-4">
-			{{ getFileExt(previewItem.fileData.name).length <= 5 ? getFileExt(previewItem.fileData.name) : '' }}</span
+			{{
+				getFileExt(previewItem.fileData.name).length <= 5
+					? getFileExt(previewItem.fileData.name)
+					: ''
+			}}</span
 		>
 	</div>
 
@@ -38,10 +44,9 @@
 <script setup lang="ts">
 import { mdiFile, mdiTrashCanOutline } from '@mdi/js';
 import ImageLoader from '@/components/chat/ImageLoader.vue';
-import { ref } from 'vue';
+import { useTemplateRef } from 'vue';
 import { formatFileSize, getFileExt } from '@/utils/filters/messages';
 import type { FileAttachment } from '@/services/message';
-import type { VImg } from 'vuetify/components';
 import type { AttachedContent } from '@/components/chat/attach/AttachDialog.vue';
 
 const { previewItem } = defineProps<{
@@ -52,9 +57,9 @@ const emit = defineEmits<{
 	'delete-item': [itemId: FileAttachment['id']];
 }>();
 
-const imgEl = ref<VImg | null>(null);
+const imgRef = useTemplateRef('imgEl');
 
-defineExpose({ imgEl });
+defineExpose({ imgEl: imgRef });
 </script>
 
 <style lang="scss" scoped>

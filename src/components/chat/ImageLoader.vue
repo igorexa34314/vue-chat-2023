@@ -30,7 +30,7 @@ const emit = defineEmits<{
 	cancel: [];
 }>();
 
-const modelValue = defineModel<string | number>('modelValue');
+const modelValue = defineModel<string | number>();
 
 const { smAndUp } = useDisplay();
 </script>

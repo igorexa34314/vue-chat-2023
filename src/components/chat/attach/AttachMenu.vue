@@ -1,7 +1,7 @@
 <template>
 	<v-menu>
-		<template #activator="{ props, isActive }">
-			<slot name="activator" v-bind="{ props, isActive }"></slot>
+		<template #activator="activatorProps">
+			<slot name="activator" v-bind="activatorProps"></slot>
 		</template>
 		<v-list density="compact" class="attach-menu" :width="smAndUp ? '180px' : 'auto'">
 			<v-list-item

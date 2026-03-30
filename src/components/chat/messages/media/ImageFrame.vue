@@ -18,13 +18,15 @@
 			@load="imageLoaded"
 			cover
 			draggable="false"
-			:aspect-ratio="aspectRatio || (image.raw.sizes ? image.raw.sizes!.w / image.raw.sizes!.h : 1)"
+			:aspect-ratio="
+				aspectRatio || (image.raw.sizes ? image.raw.sizes!.w / image.raw.sizes!.h : 1)
+			"
 			:height="height || calcImageSize.h">
 			<template #placeholder>
 				<ImageLoader
 					v-bind="loader"
-					:model-value="getUploadingStateById(image.id)?.progress"
-					@cancel="cancelImageLoading(image.id)" />
+					:model-value="loadingStore.getUploadingStateById(image.id)?.progress"
+					@cancel="loadingStore.cancelLoading(image.id)" />
 			</template>
 		</v-img>
 
@@ -35,9 +37,8 @@
 <script setup lang="ts">
 import ImageLoader from '@/components/chat/ImageLoader.vue';
 import { onUnmounted, watch, toRef, computed } from 'vue';
-import { MessagesService } from '@/services/message';
+import { loadPreviewbyFullpath } from '@/services/message';
 import { useDisplay } from 'vuetify';
-import { storeToRefs } from 'pinia';
 import { useLoadingStore } from '@/stores/loading';
 import { maxMessageMedia, maxMessageMediaSm } from '@/global-vars';
 import { type MessageAttachment } from '@/services/message';
@@ -70,8 +71,6 @@ const emit = defineEmits<{
 
 const { smAndUp } = useDisplay();
 const loadingStore = useLoadingStore();
-const { cancelLoading: cancelImageLoading, deleteLoading } = loadingStore;
-const { getUploadingStateById } = storeToRefs(loadingStore);
 const imageRef = toRef(() => image);
 let previewURL = '';
 
@@ -79,8 +78,8 @@ watch(
 	() => image.raw,
 	async (newRaw, oldRaw) => {
 		if (newRaw.fullpath && newRaw.fullpath !== oldRaw?.fullpath && !previewURL) {
-			previewURL = await MessagesService.loadPreviewbyFullpath(newRaw.fullpath);
-			deleteLoading(image.id);
+			previewURL = await loadPreviewbyFullpath(newRaw.fullpath);
+			loadingStore.deleteLoading(image.id);
 		}
 		imageRef.value.raw.previewURL = previewURL;
 	},

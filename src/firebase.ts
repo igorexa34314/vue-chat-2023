@@ -7,12 +7,7 @@ import {
 	browserSessionPersistence,
 	browserPopupRedirectResolver,
 } from 'firebase/auth';
-import {
-	CACHE_SIZE_UNLIMITED,
-	initializeFirestore,
-	persistentLocalCache,
-	persistentMultipleTabManager,
-} from 'firebase/firestore';
+import { initializeFirestore } from 'firebase/firestore';
 import { getFunctions } from 'firebase/functions';
 import { getStorage } from 'firebase/storage';
 import { initializeAnalytics } from 'firebase/analytics';

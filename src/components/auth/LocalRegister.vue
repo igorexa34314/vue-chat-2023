@@ -12,9 +12,16 @@
 
 		<pass-field v-model="formState.password" class="mt-3" repeater />
 
-		<v-checkbox v-model="formState.agreeTerms" :rules="validations.terms" required density="compact" class="mt-3">
+		<v-checkbox
+			v-model="formState.agreeTerms"
+			:rules="validations.terms"
+			required
+			density="compact"
+			class="mt-3">
 			<template #label>
-				<div class="">Agree with <a href="https://uml.ua/pro-licej/himn/" target="_blank">rules</a></div>
+				<div class="">
+					Agree with <a href="https://uml.ua/pro-licej/himn/" target="_blank">rules</a>
+				</div>
 			</template>
 		</v-checkbox>
 
@@ -25,9 +32,8 @@
 <script setup lang="ts">
 import PassField from '@/components/UI/PassField.vue';
 import validations from '@/utils/validations';
-import { ref } from 'vue';
-import { AuthService } from '@/services/auth';
-import type { VForm } from 'vuetify/components';
+import { ref, useTemplateRef } from 'vue';
+import { registerWithEmail } from '@/services/auth';
 import type { User } from 'firebase/auth';
 
 const emit = defineEmits<{
@@ -35,7 +41,7 @@ const emit = defineEmits<{
 	error: [err: unknown];
 }>();
 
-const formEl = ref<VForm | null>(null);
+const formRef = useTemplateRef('formEl');
 const loading = ref(false);
 const formState = ref({
 	password: '',
@@ -44,12 +50,12 @@ const formState = ref({
 });
 
 const submitForm = async () => {
-	const valid = (await formEl.value?.validate())?.valid;
+	const valid = (await formRef.value?.validate())?.valid;
 	if (valid) {
 		const { agreeTerms, ...formData } = formState.value;
 		try {
 			loading.value = true;
-			const user = await AuthService.registerWithEmail(formData);
+			const user = await registerWithEmail(formData);
 			emit('success', user);
 		} catch (e) {
 			emit('error', e);

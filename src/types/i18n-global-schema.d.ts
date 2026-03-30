@@ -1,6 +1,6 @@
 /* eslint-disable */
-/* prettier-ignore */
 // @ts-nocheck
+
 /**
  * you need to import the some interfaces
  */
